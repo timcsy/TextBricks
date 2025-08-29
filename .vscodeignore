@@ -1,0 +1,38 @@
+# Source files
+src/**
+.vscode/**
+.claude/**
+
+# Node modules
+node_modules/**
+
+# Development files
+.eslintrc.json
+jest.config.js
+tsconfig.json
+.gitignore
+*.test.ts
+**/__tests__/**
+
+# Git files
+.git/**
+.github/**
+
+# Logs and temp files
+*.log
+*.tmp
+*.temp
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Test and coverage files
+coverage/**
+.nyc_output/**
+
+# Lock files
+package-lock.json
+
+# Development documentation (keep main docs)
+# Keep: README.md, LICENSE, PRD.md

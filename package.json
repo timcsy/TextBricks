@@ -2,8 +2,8 @@
   "name": "textbricks",
   "displayName": "TextBricks - C Language Learning Assistant",
   "description": "A VSCode extension providing C language code templates for beginners",
-  "version": "1.0.0",
-  "publisher": "textbricks",
+  "version": "0.0.1",
+  "publisher": "timcsy",
   "repository": {
     "type": "git",
     "url": "https://github.com/your-username/TextBricks-VSCode.git"
@@ -12,7 +12,7 @@
     "url": "https://github.com/your-username/TextBricks-VSCode/issues"
   },
   "homepage": "https://github.com/your-username/TextBricks-VSCode#readme",
-  "icon": "icons/TextBricks.svg",
+  "icon": "icons/TextBricks.ico",
   "engines": {
     "vscode": "^1.74.0"
   },
