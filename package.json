@@ -1,0 +1,93 @@
+{
+  "name": "textbricks",
+  "displayName": "TextBricks - C Language Learning Assistant",
+  "description": "A VSCode extension providing C language code templates for beginners",
+  "version": "1.0.0",
+  "publisher": "textbricks",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-username/TextBricks-VSCode.git"
+  },
+  "bugs": {
+    "url": "https://github.com/your-username/TextBricks-VSCode/issues"
+  },
+  "homepage": "https://github.com/your-username/TextBricks-VSCode#readme",
+  "icon": "icons/TextBricks.svg",
+  "engines": {
+    "vscode": "^1.74.0"
+  },
+  "categories": [
+    "Education",
+    "Snippets"
+  ],
+  "keywords": [
+    "c",
+    "education",
+    "learning",
+    "templates",
+    "beginners"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "textbricks-container",
+          "title": "TextBricks",
+          "icon": "icons/TextBricks.svg"
+        }
+      ]
+    },
+    "views": {
+      "textbricks-container": [
+        {
+          "id": "textbricks-webview",
+          "name": "Templates",
+          "type": "webview"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "textbricks.refreshTemplates",
+        "title": "Refresh",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "textbricks.copyTemplate",
+        "title": "Copy Template"
+      }
+    ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "textbricks.refreshTemplates",
+          "when": "view == textbricks-webview",
+          "group": "navigation"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./ && npm run copy-data",
+    "copy-data": "mkdir -p out/data out/media out/icons && cp src/data/templates.json out/data/ && cp -r media/* out/media/ && cp -r icons/* out/icons/",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile && npm run lint",
+    "lint": "eslint src --ext ts",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.74.0",
+    "@types/node": "16.x",
+    "@types/jest": "^29.5.0",
+    "@typescript-eslint/eslint-plugin": "^5.45.0",
+    "@typescript-eslint/parser": "^5.45.0",
+    "eslint": "^8.28.0",
+    "jest": "^29.5.0",
+    "ts-jest": "^29.1.0",
+    "typescript": "^4.9.4"
+  }
+}

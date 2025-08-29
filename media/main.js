@@ -1,0 +1,664 @@
+// TextBricks Webview JavaScript
+
+(function() {
+    const vscode = acquireVsCodeApi();
+
+    // Track drag state
+    let isDragging = false;
+    let draggedTemplateId = null;
+    
+    // Track tooltip state
+    let currentTooltip = null;
+    let tooltipTimeout = null;
+    let tooltipHideTimeout = null;
+    let isTooltipHovered = false;
+    let isPreviewBtnHovered = false;
+    let currentPreviewBtn = null;
+
+    // Initialize the webview
+    function initialize() {
+        setupEventListeners();
+        console.log('TextBricks webview initialized');
+    }
+
+    function setupEventListeners() {
+        // Handle template card interactions
+        document.addEventListener('click', handleClick);
+        document.addEventListener('dblclick', handleDoubleClick);
+        
+        // Handle drag and drop
+        document.addEventListener('dragstart', handleDragStart);
+        document.addEventListener('dragend', handleDragEnd);
+        
+        // Handle button clicks
+        document.addEventListener('click', handleButtonClick);
+        
+        // Handle category collapse/expand
+        document.addEventListener('click', handleCategoryToggle);
+        
+        // Handle tooltip on preview buttons only
+        document.addEventListener('mouseenter', handleMouseEnter, true);
+        document.addEventListener('mouseleave', handleMouseLeave, true);
+        
+        // Handle global clicks to hide tooltip
+        document.addEventListener('click', handleGlobalClick);
+        
+        
+        // Keep tooltips open even on window blur - only close on mouse leave
+    }
+
+    function handleClick(event) {
+        const templateCard = event.target.closest('.template-card');
+        if (!templateCard) return;
+
+        // Prevent default behavior for button clicks
+        if (event.target.closest('.action-btn')) {
+            return;
+        }
+
+        const templateId = templateCard.dataset.templateId;
+        if (templateId) {
+            // Single click - copy template
+            copyTemplate(templateId);
+            
+            // Visual feedback
+            templateCard.style.animation = 'none';
+            setTimeout(() => {
+                templateCard.style.animation = 'templateInsert 0.3s ease';
+            }, 10);
+        }
+    }
+
+    function handleDoubleClick(event) {
+        const templateCard = event.target.closest('.template-card');
+        if (!templateCard) return;
+
+        // Prevent button double-clicks
+        if (event.target.closest('.action-btn')) {
+            return;
+        }
+
+        const templateId = templateCard.dataset.templateId;
+        if (templateId) {
+            // Double click - copy template (insert functionality removed)
+            copyTemplate(templateId);
+            
+            // Visual feedback
+            templateCard.style.animation = 'templateInsert 0.3s ease';
+            setTimeout(() => {
+                templateCard.style.animation = '';
+            }, 300);
+        }
+    }
+
+    function handleButtonClick(event) {
+        if (!event.target.closest('.action-btn')) return;
+        
+        event.stopPropagation(); // Prevent card click
+        
+        const button = event.target.closest('.action-btn');
+        const templateCard = button.closest('.template-card');
+        const templateId = templateCard.dataset.templateId;
+        
+        if (button.classList.contains('copy-btn')) {
+            copyTemplate(templateId);
+            // Visual feedback for copy button
+            const icon = button.querySelector('.icon');
+            const originalText = icon.textContent;
+            icon.textContent = '✅';
+            setTimeout(() => {
+                icon.textContent = originalText;
+            }, 1000);
+        }
+    }
+
+    function handleDragStart(event) {
+        const templateCard = event.target.closest('.template-card');
+        if (!templateCard) return;
+
+        const templateId = templateCard.dataset.templateId;
+        const templateCode = templateCard.dataset.templateCode;
+        
+        if (templateId && templateCode) {
+            isDragging = true;
+            draggedTemplateId = templateId;
+            
+            // Set drag data
+            event.dataTransfer.setData('text/plain', templateCode);
+            event.dataTransfer.setData('application/vscode-template', JSON.stringify({
+                id: templateId,
+                code: templateCode
+            }));
+            
+            // Visual feedback
+            templateCard.classList.add('dragging');
+            
+            // Set drag image
+            const dragImage = createDragImage(templateCard);
+            event.dataTransfer.setDragImage(dragImage, 0, 0);
+            
+            // Notify extension about drag start
+            vscode.postMessage({
+                type: 'dragTemplate',
+                templateId: templateId,
+                text: templateCode
+            });
+            
+            console.log('Started dragging template:', templateId);
+        }
+    }
+
+    function handleDragEnd(event) {
+        const templateCard = event.target.closest('.template-card');
+        if (templateCard) {
+            templateCard.classList.remove('dragging');
+        }
+        
+        isDragging = false;
+        draggedTemplateId = null;
+        
+        console.log('Ended dragging template');
+    }
+
+    function createDragImage(templateCard) {
+        const dragImage = templateCard.cloneNode(true);
+        dragImage.style.position = 'absolute';
+        dragImage.style.top = '-1000px';
+        dragImage.style.left = '-1000px';
+        dragImage.style.width = templateCard.offsetWidth + 'px';
+        dragImage.style.opacity = '0.8';
+        dragImage.style.transform = 'rotate(2deg)';
+        dragImage.style.pointerEvents = 'none';
+        
+        document.body.appendChild(dragImage);
+        
+        // Clean up after a short delay
+        setTimeout(() => {
+            if (document.body.contains(dragImage)) {
+                document.body.removeChild(dragImage);
+            }
+        }, 1000);
+        
+        return dragImage;
+    }
+
+    function copyTemplate(templateId) {
+        vscode.postMessage({
+            type: 'copyTemplate',
+            templateId: templateId
+        });
+        
+        console.log('Copy template:', templateId);
+    }
+
+
+    function handleGlobalClick(event) {
+        // Only hide tooltip if clicking outside of tooltip area
+        const tooltip = event.target.closest('.template-tooltip');
+        
+        if (!tooltip && currentTooltip) {
+            console.log('Global click outside tooltip - hiding');
+            forceHideTooltip();
+        }
+    }
+    
+
+    // Category collapse/expand functionality
+    function handleCategoryToggle(event) {
+        const categoryHeader = event.target.closest('.category-header');
+        if (!categoryHeader) return;
+        
+        event.stopPropagation();
+        
+        const category = categoryHeader.closest('.category');
+        const templatesGrid = category.querySelector('.templates-grid');
+        
+        // Toggle collapsed state
+        categoryHeader.classList.toggle('collapsed');
+        templatesGrid.classList.toggle('collapsed');
+        
+        console.log('Toggle category:', category.dataset.level);
+    }
+
+    function handleMouseEnter(event) {
+        const previewBtn = event.target.closest('.preview-btn');
+        const tooltip = event.target.closest('.template-tooltip');
+        
+        if (tooltip) {
+            // Mouse entered tooltip - cancel hide timeout
+            isTooltipHovered = true;
+            if (tooltipHideTimeout) {
+                clearTimeout(tooltipHideTimeout);
+                tooltipHideTimeout = null;
+            }
+            return;
+        }
+        
+        if (!previewBtn) return;
+        
+        const templateCard = previewBtn.closest('.template-card');
+        if (!templateCard) return;
+        
+        // Hide any existing tooltip
+        if (currentTooltip && currentPreviewBtn !== previewBtn) {
+            hideTooltip();
+        }
+        
+        currentPreviewBtn = previewBtn;
+        isPreviewBtnHovered = true;
+        
+        // Clear any existing timeout
+        if (tooltipTimeout) {
+            clearTimeout(tooltipTimeout);
+        }
+        
+        // Show tooltip after delay
+        tooltipTimeout = setTimeout(() => {
+            if (isPreviewBtnHovered && currentPreviewBtn === previewBtn) {
+                showTooltip(templateCard, previewBtn);
+            }
+        }, 300);
+    }
+
+    function handleMouseLeave(event) {
+        const previewBtn = event.target.closest('.preview-btn');
+        const tooltip = event.target.closest('.template-tooltip');
+        
+        if (tooltip) {
+            // Only handle tooltip leave events - ignore all other events inside tooltip
+            return;
+        }
+        
+        if (!previewBtn) return;
+        
+        // Mouse left preview button
+        isPreviewBtnHovered = false;
+        currentPreviewBtn = null;
+        
+        // Clear show timeout
+        if (tooltipTimeout) {
+            clearTimeout(tooltipTimeout);
+            tooltipTimeout = null;
+        }
+        
+        // Only hide if not hovering tooltip
+        if (!isTooltipHovered) {
+            scheduleHideTooltip();
+        }
+    }
+
+    function scheduleHideTooltip() {
+        if (tooltipHideTimeout) {
+            clearTimeout(tooltipHideTimeout);
+        }
+        
+        tooltipHideTimeout = setTimeout(() => {
+            // Only hide if mouse is not over tooltip or preview button
+            if (!isTooltipHovered && !isPreviewBtnHovered) {
+                hideTooltip();
+            } else {
+                // Reschedule check if still hovering
+                scheduleHideTooltip();
+            }
+        }, 200);
+    }
+
+
+    function showTooltip(templateCard, previewBtn) {
+        // Force hide any existing tooltip first to prevent stacking
+        if (currentTooltip) {
+            forceHideTooltip();
+        }
+        
+        const templateId = templateCard.dataset.templateId;
+        const templateCode = templateCard.dataset.templateCode;
+        const title = templateCard.querySelector('.template-title').textContent;
+        const description = templateCard.querySelector('.template-description').textContent;
+        const languageTag = templateCard.querySelector('.language-tag').textContent;
+        
+        // Create tooltip element
+        const tooltip = document.createElement('div');
+        tooltip.className = 'template-tooltip';
+        tooltip.innerHTML = `
+            <div class="tooltip-header">
+                <div class="tooltip-title-wrapper">
+                    <div class="tooltip-title">${escapeHtml(title)}</div>
+                    <div class="tooltip-actions">
+                        <button class="tooltip-action-btn copy-all-btn" data-template-id="${templateId}">📋 複製</button>
+                        <div class="tooltip-drag-handle" draggable="true" data-template-id="${templateId}" title="拖曳到編輯器">✋ 拖曳</div>
+                    </div>
+                </div>
+                <button class="tooltip-close" title="關閉">✕</button>
+            </div>
+            <div class="tooltip-description">${escapeHtml(description)}</div>
+            <div class="tooltip-code">
+                <pre><code>${escapeHtml(templateCode)}</code></pre>
+            </div>
+            <div class="tooltip-footer">
+                <span class="language-tag">${languageTag}</span>
+                <span class="tooltip-hint">可選取文字複製 • 可滾動查看</span>
+            </div>
+        `;
+        
+        // Position tooltip using fixed positioning relative to preview button
+        const rect = previewBtn.getBoundingClientRect();
+        
+        // Add to body first to measure actual size  
+        document.body.appendChild(tooltip);
+        
+        // Force layout to get actual dimensions
+        tooltip.offsetHeight;
+        const tooltipRect = tooltip.getBoundingClientRect();
+        const tooltipWidth = tooltipRect.width;
+        const tooltipHeight = tooltipRect.height;
+        
+        // Calculate position relative to viewport, positioned from the preview button
+        let left = rect.right + 10;
+        let top = rect.top;
+        
+        // Adjust if tooltip would go beyond screen horizontally
+        if (left + tooltipWidth > window.innerWidth - 20) {
+            // Try positioning to the left of the button
+            left = rect.left - tooltipWidth - 10;
+            // If still doesn't fit, position at right edge of screen
+            if (left < 10) {
+                left = window.innerWidth - tooltipWidth - 20;
+            }
+        }
+        
+        // Adjust if tooltip would go beyond screen vertically  
+        if (top + tooltipHeight > window.innerHeight - 20) {
+            // Position at bottom edge of screen
+            top = window.innerHeight - tooltipHeight - 20;
+        }
+        
+        // Final bounds checking to ensure tooltip stays within screen
+        left = Math.max(10, Math.min(left, window.innerWidth - tooltipWidth - 20));
+        top = Math.max(10, Math.min(top, window.innerHeight - tooltipHeight - 20));
+        
+        tooltip.style.left = left + 'px';
+        tooltip.style.top = top + 'px';
+        
+        // Add event listeners to tooltip
+        setupTooltipEventListeners(tooltip, templateId, templateCode);
+        
+        // Show tooltip with animation
+        requestAnimationFrame(() => {
+            tooltip.classList.add('visible');
+        });
+        
+        currentTooltip = tooltip;
+        
+        console.log('Show tooltip for:', templateId);
+    }
+
+    function hideTooltip() {
+        if (currentTooltip) {
+            currentTooltip.remove();
+            currentTooltip = null;
+        }
+        
+        // Reset states
+        isTooltipHovered = false;
+        isPreviewBtnHovered = false;
+        currentPreviewBtn = null;
+        
+        // Clear timeouts
+        if (tooltipTimeout) {
+            clearTimeout(tooltipTimeout);
+            tooltipTimeout = null;
+        }
+        if (tooltipHideTimeout) {
+            clearTimeout(tooltipHideTimeout);
+            tooltipHideTimeout = null;
+        }
+    }
+
+    function forceHideTooltip() {
+        // Remove all tooltips from DOM
+        document.querySelectorAll('.template-tooltip').forEach(tooltip => tooltip.remove());
+        
+        // Reset all states
+        currentTooltip = null;
+        isTooltipHovered = false;
+        isPreviewBtnHovered = false;
+        currentPreviewBtn = null;
+        
+        // Clear all timeouts
+        if (tooltipTimeout) {
+            clearTimeout(tooltipTimeout);
+            tooltipTimeout = null;
+        }
+        if (tooltipHideTimeout) {
+            clearTimeout(tooltipHideTimeout);
+            tooltipHideTimeout = null;
+        }
+    }
+
+
+    function setupTooltipEventListeners(tooltip, templateId, templateCode) {
+        // Handle close button
+        const closeBtn = tooltip.querySelector('.tooltip-close');
+        closeBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            forceHideTooltip();
+        });
+        
+        // Handle copy button
+        const copyBtn = tooltip.querySelector('.copy-all-btn');
+        copyBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const templateId = e.target.dataset.templateId;
+            copyTemplate(templateId);
+            
+            // Visual feedback
+            copyBtn.textContent = '✅ 已複製';
+            copyBtn.classList.add('success');
+            setTimeout(() => {
+                copyBtn.textContent = '📋 複製';
+                copyBtn.classList.remove('success');
+            }, 2000);
+        });
+        
+        // Handle drag handle
+        const dragHandle = tooltip.querySelector('.tooltip-drag-handle');
+        dragHandle.addEventListener('dragstart', (e) => {
+            if (templateId && templateCode) {
+                isDragging = true;
+                draggedTemplateId = templateId;
+                
+                // Use original template code (unescaped)
+                e.dataTransfer.setData('text/plain', templateCode);
+                e.dataTransfer.setData('application/vscode-template', JSON.stringify({
+                    id: templateId,
+                    code: templateCode
+                }));
+                
+                // Visual feedback
+                dragHandle.style.opacity = '0.5';
+                
+                // Notify extension about drag start
+                vscode.postMessage({
+                    type: 'dragTemplate',
+                    templateId: templateId,
+                    text: templateCode
+                });
+                
+                console.log('Started dragging from tooltip drag handle:', templateId);
+            }
+        });
+        
+        dragHandle.addEventListener('dragend', (e) => {
+            // Reset visual feedback
+            dragHandle.style.opacity = '';
+            
+            isDragging = false;
+            draggedTemplateId = null;
+            
+            console.log('Ended dragging from tooltip drag handle');
+        });
+        
+        // Handle text selection in code area
+        const codeArea = tooltip.querySelector('.tooltip-code');
+        
+        // Allow all interactions inside code area without closing tooltip
+        codeArea.addEventListener('mousedown', (e) => {
+            e.stopPropagation();
+        });
+        
+        codeArea.addEventListener('mouseup', (e) => {
+            e.stopPropagation();
+        });
+        
+        codeArea.addEventListener('selectstart', (e) => {
+            e.stopPropagation();
+        });
+        
+        
+        // Ensure tooltip hover state is properly maintained
+        tooltip.addEventListener('mouseenter', () => {
+            isTooltipHovered = true;
+            if (tooltipHideTimeout) {
+                clearTimeout(tooltipHideTimeout);
+                tooltipHideTimeout = null;
+            }
+        });
+        
+        tooltip.addEventListener('mouseleave', () => {
+            isTooltipHovered = false;
+            scheduleHideTooltip();
+        });
+        
+        // Prevent tooltip from closing when interacting inside
+        tooltip.addEventListener('click', (e) => {
+            e.stopPropagation();
+        });
+        
+        tooltip.addEventListener('mousedown', (e) => {
+            e.stopPropagation();
+        });
+    }
+
+
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    // Utility functions for simple tooltips (different from template tooltips)
+    function showSimpleTooltip(element, message) {
+        // Create simple tooltip element
+        const tooltip = document.createElement('div');
+        tooltip.textContent = message;
+        tooltip.style.cssText = `
+            position: absolute;
+            background: var(--vscode-editorHoverWidget-background);
+            color: var(--vscode-editorHoverWidget-foreground);
+            border: 1px solid var(--vscode-editorHoverWidget-border);
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            z-index: 1000;
+            pointer-events: none;
+        `;
+        
+        // Position tooltip
+        const rect = element.getBoundingClientRect();
+        tooltip.style.left = (rect.left + rect.width / 2) + 'px';
+        tooltip.style.top = (rect.top - 30) + 'px';
+        
+        document.body.appendChild(tooltip);
+        
+        // Remove tooltip after delay
+        setTimeout(() => {
+            if (document.body.contains(tooltip)) {
+                document.body.removeChild(tooltip);
+            }
+        }, 2000);
+    }
+
+    // Handle keyboard shortcuts
+    document.addEventListener('keydown', function(event) {
+        // Handle Escape key to clear any ongoing operations
+        if (event.key === 'Escape') {
+            // Force hide tooltip
+            if (currentTooltip) {
+                forceHideTooltip();
+            }
+            
+            if (isDragging) {
+                // Cancel drag operation
+                isDragging = false;
+                draggedTemplateId = null;
+                
+                // Remove dragging visual state
+                const draggingCard = document.querySelector('.template-card.dragging');
+                if (draggingCard) {
+                    draggingCard.classList.remove('dragging');
+                }
+            }
+        }
+        
+        // Handle Ctrl+C / Cmd+C on focused card
+        if ((event.ctrlKey || event.metaKey) && event.key === 'c') {
+            const focusedCard = document.querySelector('.template-card:focus');
+            if (focusedCard) {
+                event.preventDefault();
+                const templateId = focusedCard.dataset.templateId;
+                if (templateId) {
+                    copyTemplate(templateId);
+                }
+            }
+        }
+    });
+
+    // Make template cards focusable for keyboard navigation
+    function makeFocusable() {
+        const templateCards = document.querySelectorAll('.template-card');
+        templateCards.forEach((card, index) => {
+            card.setAttribute('tabindex', '0');
+            card.setAttribute('role', 'button');
+            card.setAttribute('aria-label', `Template: ${card.querySelector('.template-title').textContent}`);
+            
+            // Handle Enter key on focused cards
+            card.addEventListener('keydown', function(event) {
+                if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    const templateId = card.dataset.templateId;
+                    if (templateId) {
+                        // Only copy functionality - insert removed
+                        copyTemplate(templateId);
+                    }
+                }
+            });
+        });
+    }
+
+    // Initialize when DOM is ready
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', function() {
+            initialize();
+            makeFocusable();
+        });
+    } else {
+        initialize();
+        makeFocusable();
+    }
+
+    // Handle window messages (for future use)
+    window.addEventListener('message', function(event) {
+        const message = event.data;
+        switch (message.type) {
+            case 'refresh':
+                // Handle refresh request
+                location.reload();
+                break;
+            case 'theme-changed':
+                // Handle theme change
+                console.log('Theme changed');
+                break;
+        }
+    });
+
+})();

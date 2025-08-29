@@ -1,0 +1,126 @@
+{
+  "categories": [
+    {
+      "id": "level1",
+      "name": "基礎語法",
+      "description": "C語言基本語法和概念",
+      "level": 1
+    },
+    {
+      "id": "level2",
+      "name": "控制結構",
+      "description": "條件判斷和迴圈結構",
+      "level": 2
+    },
+    {
+      "id": "level3",
+      "name": "函數與陣列",
+      "description": "函數定義和陣列操作",
+      "level": 3
+    },
+    {
+      "id": "level4",
+      "name": "進階概念",
+      "description": "指標、結構體和檔案操作",
+      "level": 4
+    }
+  ],
+  "templates": [
+    {
+      "id": "hello-world",
+      "title": "Hello World",
+      "description": "經典的第一個程式",
+      "code": "#include <stdio.h>\n\nint main() {\n    printf(\"Hello, World!\\n\");\n    return 0;\n}",
+      "language": "c",
+      "categoryId": "level1"
+    },
+    {
+      "id": "variable-declaration",
+      "title": "變數宣告",
+      "description": "基本變數宣告和初始化",
+      "code": "int number = 42;\nchar character = 'A';\nfloat decimal = 3.14f;\ndouble precision = 2.71828;",
+      "language": "c",
+      "categoryId": "level1"
+    },
+    {
+      "id": "input-output",
+      "title": "輸入輸出",
+      "description": "基本輸入輸出操作",
+      "code": "#include <stdio.h>\n\nint main() {\n    int number;\n    printf(\"請輸入一個數字: \");\n    scanf(\"%d\", &number);\n    printf(\"您輸入的數字是: %d\\n\", number);\n    return 0;\n}",
+      "language": "c",
+      "categoryId": "level1"
+    },
+    {
+      "id": "if-else",
+      "title": "If-Else 條件判斷",
+      "description": "基本條件判斷結構",
+      "code": "if (condition) {\n    // 條件為真時執行\n} else if (another_condition) {\n    // 另一個條件為真時執行\n} else {\n    // 所有條件都為假時執行\n}",
+      "language": "c",
+      "categoryId": "level2"
+    },
+    {
+      "id": "for-loop",
+      "title": "For 迴圈",
+      "description": "基本for迴圈結構",
+      "code": "for (int i = 0; i < 10; i++) {\n    printf(\"第 %d 次迴圈\\n\", i + 1);\n}",
+      "language": "c",
+      "categoryId": "level2"
+    },
+    {
+      "id": "while-loop",
+      "title": "While 迴圈",
+      "description": "基本while迴圈結構",
+      "code": "int count = 0;\nwhile (count < 10) {\n    printf(\"計數: %d\\n\", count);\n    count++;\n}",
+      "language": "c",
+      "categoryId": "level2"
+    },
+    {
+      "id": "function-definition",
+      "title": "函數定義",
+      "description": "基本函數定義和呼叫",
+      "code": "// 函數定義\nint add(int a, int b) {\n    return a + b;\n}\n\nint main() {\n    int result = add(5, 3);\n    printf(\"結果: %d\\n\", result);\n    return 0;\n}",
+      "language": "c",
+      "categoryId": "level3"
+    },
+    {
+      "id": "array-1d",
+      "title": "一維陣列",
+      "description": "一維陣列宣告和使用",
+      "code": "int numbers[5] = {1, 2, 3, 4, 5};\n\nfor (int i = 0; i < 5; i++) {\n    printf(\"numbers[%d] = %d\\n\", i, numbers[i]);\n}",
+      "language": "c",
+      "categoryId": "level3"
+    },
+    {
+      "id": "array-2d",
+      "title": "二維陣列",
+      "description": "二維陣列宣告和使用",
+      "code": "int matrix[3][3] = {\n    {1, 2, 3},\n    {4, 5, 6},\n    {7, 8, 9}\n};\n\nfor (int i = 0; i < 3; i++) {\n    for (int j = 0; j < 3; j++) {\n        printf(\"%d \", matrix[i][j]);\n    }\n    printf(\"\\n\");\n}",
+      "language": "c",
+      "categoryId": "level3"
+    },
+    {
+      "id": "pointer-basic",
+      "title": "基礎指標",
+      "description": "指標的宣告和基本使用",
+      "code": "int number = 42;\nint *ptr = &number;\n\nprintf(\"變數值: %d\\n\", number);\nprintf(\"變數位址: %p\\n\", &number);\nprintf(\"指標值: %p\\n\", ptr);\nprintf(\"指標指向的值: %d\\n\", *ptr);",
+      "language": "c",
+      "categoryId": "level4"
+    },
+    {
+      "id": "struct-basic",
+      "title": "基本結構體",
+      "description": "結構體定義和使用",
+      "code": "struct Student {\n    char name[50];\n    int age;\n    float grade;\n};\n\nstruct Student student1;\nstrcpy(student1.name, \"小明\");\nstudent1.age = 18;\nstudent1.grade = 85.5;\n\nprintf(\"姓名: %s\\n\", student1.name);\nprintf(\"年齡: %d\\n\", student1.age);\nprintf(\"成績: %.1f\\n\", student1.grade);",
+      "language": "c",
+      "categoryId": "level4"
+    },
+    {
+      "id": "file-io",
+      "title": "檔案輸入輸出",
+      "description": "基本檔案讀寫操作",
+      "code": "#include <stdio.h>\n\nint main() {\n    FILE *file;\n    \n    // 寫入檔案\n    file = fopen(\"output.txt\", \"w\");\n    if (file != NULL) {\n        fprintf(file, \"Hello, File!\\n\");\n        fclose(file);\n    }\n    \n    // 讀取檔案\n    file = fopen(\"output.txt\", \"r\");\n    if (file != NULL) {\n        char buffer[100];\n        fgets(buffer, 100, file);\n        printf(\"從檔案讀取: %s\", buffer);\n        fclose(file);\n    }\n    \n    return 0;\n}",
+      "language": "c",
+      "categoryId": "level4"
+    }
+  ]
+}
