@@ -1,7 +1,7 @@
 {
   "name": "textbricks",
-  "displayName": "TextBricks - C Language Learning Assistant",
-  "description": "A VSCode extension providing C language code templates for beginners",
+  "displayName": "TextBricks - Multi-Language Learning Assistant",
+  "description": "A VSCode extension providing code templates for multiple programming languages for beginners",
   "version": "0.0.1",
   "publisher": "timcsy",
   "repository": {
@@ -21,11 +21,16 @@
     "Snippets"
   ],
   "keywords": [
+    "programming",
+    "multi-language",
     "c",
+    "python",
+    "javascript",
     "education",
     "learning",
     "templates",
-    "beginners"
+    "beginners",
+    "code-snippets"
   ],
   "main": "./out/extension.js",
   "contributes": {
@@ -56,6 +61,26 @@
       {
         "command": "textbricks.copyTemplate",
         "title": "Copy Template"
+      },
+      {
+        "command": "textbricks.openTemplateManager",
+        "title": "Open Template Manager",
+        "icon": "$(settings-gear)"
+      },
+      {
+        "command": "textbricks.createTemplate",
+        "title": "Create New Template",
+        "icon": "$(add)"
+      },
+      {
+        "command": "textbricks.importTemplates",
+        "title": "Import Templates",
+        "icon": "$(cloud-download)"
+      },
+      {
+        "command": "textbricks.exportTemplates",
+        "title": "Export Templates",
+        "icon": "$(cloud-upload)"
       }
     ],
     "menus": {
@@ -64,6 +89,29 @@
           "command": "textbricks.refreshTemplates",
           "when": "view == textbricks-webview",
           "group": "navigation"
+        },
+        {
+          "command": "textbricks.openTemplateManager",
+          "when": "view == textbricks-webview",
+          "group": "navigation"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "textbricks.openTemplateManager",
+          "title": "TextBricks: Open Template Manager"
+        },
+        {
+          "command": "textbricks.createTemplate",
+          "title": "TextBricks: Create New Template"
+        },
+        {
+          "command": "textbricks.importTemplates",
+          "title": "TextBricks: Import Templates"
+        },
+        {
+          "command": "textbricks.exportTemplates",
+          "title": "TextBricks: Export Templates"
         }
       ]
     }

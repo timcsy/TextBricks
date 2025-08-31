@@ -1,16 +1,21 @@
 import * as vscode from 'vscode';
 import { TemplateManager } from '../services/TemplateManager';
-import { Template, TemplateCategory } from '../models/Template';
+import { Template, TemplateCategory, Language } from '../models/Template';
 
 export class WebviewProvider implements vscode.WebviewViewProvider {
     public static readonly viewType = 'textbricks-webview';
     
     private _view?: vscode.WebviewView;
+    private _selectedLanguage: string;
 
     constructor(
         private readonly _extensionUri: vscode.Uri,
-        private readonly templateManager: TemplateManager
-    ) {}
+        private readonly templateManager: TemplateManager,
+        private readonly _context: vscode.ExtensionContext
+    ) {
+        // Load saved language preference or default to 'c'
+        this._selectedLanguage = this._context.globalState.get('textbricks.selectedLanguage', 'c');
+    }
 
     public resolveWebviewView(
         webviewView: vscode.WebviewView,
@@ -37,6 +42,9 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
                         break;
                     case 'dragTemplate':
                         this._handleDragTemplate(message.templateId, message.text);
+                        break;
+                    case 'changeLanguage':
+                        this._changeLanguage(message.languageId);
                         break;
                 }
             },
@@ -73,8 +81,24 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
         console.log(`Dragging template ${templateId}: ${text.substring(0, 50)}...`);
     }
 
+    private _changeLanguage(languageId: string) {
+        this._selectedLanguage = languageId;
+        
+        // Save the language preference
+        this._context.globalState.update('textbricks.selectedLanguage', languageId);
+        
+        this.refresh();
+        
+        // Show a message to let the user know the language has been changed
+        const language = this.templateManager.getLanguageById(languageId);
+        if (language) {
+            vscode.window.showInformationMessage(`已切換至 ${language.displayName} 語言模板`);
+        }
+    }
+
     private _getHtmlForWebview(webview: vscode.Webview): string {
         const categories = this.templateManager.getCategories();
+        const languages = this.templateManager.getLanguages();
         
         // Get CSS and JS URIs
         const styleUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'media', 'style.css'));
@@ -93,8 +117,18 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
 </head>
 <body>
     <div class="header">
-        <h2><span style="display: inline-block; background: white; border-radius: 4px; padding: 2px; margin-right: 8px; vertical-align: middle;"><img src="${webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'icons', 'TextBricks.svg'))}" alt="TextBricks" style="width: 20px; height: 20px; display: block;"></span>TextBricks</h2>
-        <p class="subtitle">點擊複製 • 拖曳插入</p>
+        <div class="header-top">
+            <div class="title-section">
+                <h2><span class="logo"><img src="${webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'icons', 'TextBricks.svg'))}" alt="TextBricks"></span>TextBricks</h2>
+                <p class="subtitle">點擊複製 • 拖曳插入</p>
+            </div>
+            <div class="language-selector">
+                <label for="language-select" class="language-label">🌐</label>
+                <select id="language-select" class="language-select">
+                    ${this._generateLanguageOptionsHtml(languages)}
+                </select>
+            </div>
+        </div>
     </div>
     
     <div class="container">
@@ -106,9 +140,20 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
 </html>`;
     }
 
+    private _generateLanguageOptionsHtml(languages: Language[]): string {
+        return languages.map(language => {
+            const selected = language.id === this._selectedLanguage ? 'selected' : '';
+            return `<option value="${language.id}" ${selected}>${language.displayName}</option>`;
+        }).join('');
+    }
+
     private _generateCategoriesHtml(categories: TemplateCategory[]): string {
         return categories.map(category => {
-            const templates = this.templateManager.getTemplatesByCategory(category.id);
+            const templates = this.templateManager.getTemplatesByLanguageAndCategory(this._selectedLanguage, category.id);
+            if (templates.length === 0) {
+                return ''; // Don't show empty categories
+            }
+            
             const templatesHtml = templates.map(template => this._generateTemplateCardHtml(template)).join('');
             
             return `

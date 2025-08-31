@@ -43,6 +43,11 @@
         // Handle global clicks to hide tooltip
         document.addEventListener('click', handleGlobalClick);
         
+        // Handle language selection
+        const languageSelect = document.getElementById('language-select');
+        if (languageSelect) {
+            languageSelect.addEventListener('change', handleLanguageChange);
+        }
         
         // Keep tooltips open even on window blur - only close on mouse leave
     }
@@ -189,6 +194,23 @@
         });
         
         console.log('Copy template:', templateId);
+    }
+
+    function handleLanguageChange(event) {
+        const selectedLanguage = event.target.value;
+        
+        // Hide any open tooltips when language changes
+        if (currentTooltip) {
+            forceHideTooltip();
+        }
+        
+        // Send message to extension
+        vscode.postMessage({
+            type: 'changeLanguage',
+            languageId: selectedLanguage
+        });
+        
+        console.log('Language changed to:', selectedLanguage);
     }
 
 

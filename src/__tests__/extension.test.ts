@@ -1,9 +1,7 @@
 import * as vscode from 'vscode';
 import { activate, deactivate } from '../extension';
 
-// Mock the provider and command handler classes
-jest.mock('../providers/TemplateProvider');
-jest.mock('../commands/CommandHandler');
+// Mock the services
 jest.mock('../services/TemplateManager');
 
 describe('Extension', () => {
@@ -13,36 +11,46 @@ describe('Extension', () => {
     // Reset all mocks
     jest.clearAllMocks();
     
-    // Create mock context
+    // Create mock URI
+    const mockUri = {
+      path: '/test',
+      scheme: 'file',
+      toString: () => 'file:///test'
+    } as vscode.Uri;
+    
+    // Create mock context with globalState
     mockContext = {
-      subscriptions: []
+      subscriptions: [],
+      extensionUri: mockUri,
+      globalState: {
+        get: jest.fn().mockReturnValue('c'),
+        update: jest.fn()
+      }
     } as any;
   });
 
   describe('activate', () => {
-    it('should register tree data provider', () => {
-      const registerTreeDataProviderSpy = jest.spyOn(vscode.window, 'registerTreeDataProvider');
+    it('should register webview view provider', () => {
+      const registerWebviewViewProviderSpy = jest.spyOn(vscode.window, 'registerWebviewViewProvider');
       
       activate(mockContext);
       
-      expect(registerTreeDataProviderSpy).toHaveBeenCalledWith('educode-templates', expect.any(Object));
+      expect(registerWebviewViewProviderSpy).toHaveBeenCalledWith('textbricks-webview', expect.any(Object));
     });
 
-    it('should register all commands', () => {
+    it('should register refresh command', () => {
       const registerCommandSpy = jest.spyOn(vscode.commands, 'registerCommand');
       
       activate(mockContext);
       
-      expect(registerCommandSpy).toHaveBeenCalledWith('educode.refreshTemplates', expect.any(Function));
-      expect(registerCommandSpy).toHaveBeenCalledWith('educode.copyTemplate', expect.any(Function));
-      expect(registerCommandSpy).toHaveBeenCalledWith('educode.insertTemplate', expect.any(Function));
-      expect(registerCommandSpy).toHaveBeenCalledTimes(3);
+      expect(registerCommandSpy).toHaveBeenCalledWith('textbricks.refreshTemplates', expect.any(Function));
+      expect(registerCommandSpy).toHaveBeenCalledTimes(1);
     });
 
-    it('should add commands to context subscriptions', () => {
+    it('should add registrations to context subscriptions', () => {
       activate(mockContext);
       
-      expect(mockContext.subscriptions).toHaveLength(3);
+      expect(mockContext.subscriptions).toHaveLength(2); // webview provider + refresh command
     });
   });
 
