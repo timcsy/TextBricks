@@ -270,8 +270,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## Support
 
 - **Documentation**: See [PRD.md](PRD.md) for detailed specifications
-- **Issues**: Report bugs on GitHub Issues
-- **Email**: Contact the development team for support
+- **Issues**: Report bugs on [GitHub Issues](https://github.com/timcsy/TextBricks-VSCode/issues)
+- **Repository**: View source code on [GitHub](https://github.com/timcsy/TextBricks-VSCode)
 
 ---
 
