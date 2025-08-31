@@ -1,18 +1,25 @@
 # TextBricks
 
-A VSCode extension providing structured C programming templates for beginners to learn programming efficiently.
+A VSCode extension providing structured programming templates for multiple languages (C, Python, JavaScript) to help beginners learn programming efficiently.
 
 <!-- TextBricks Logo -->
 
 ## Features
 
+### 🌐 **Multi-Language Support**
+TextBricks supports multiple programming languages:
+- **C** - Traditional system programming language
+- **Python** - Modern, beginner-friendly language
+- **JavaScript** - Web development and scripting
+- Easily switch between languages with the integrated language selector
+
 ### 🎯 **Structured Learning Path**
-TextBricks organizes C programming concepts into 4 progressive levels:
+TextBricks organizes programming concepts into 4 progressive levels:
 
 - **Level 1: Basic Syntax** - Hello World, Variables, Input/Output
 - **Level 2: Control Structures** - If-Else, For Loops, While Loops  
 - **Level 3: Functions & Arrays** - Function Definition, 1D/2D Arrays
-- **Level 4: Advanced Concepts** - Pointers, Structs, File I/O
+- **Level 4: Advanced Concepts** - Pointers/References, Data Structures, File I/O
 
 ### 🚀 **Easy Code Insertion**
 - **Click to Copy**: Click any template card to copy code to clipboard
@@ -24,7 +31,14 @@ TextBricks organizes C programming concepts into 4 progressive levels:
 - Integrated sidebar panel in VS Code
 - Collapsible category sections
 - Template cards with clear descriptions
+- Compact language selector in header
 - Language tags and visual feedback
+
+### 🛠️ **Advanced Template Management**
+- **Template Manager**: Comprehensive CRUD operations for templates, categories, and languages
+- **Import/Export**: Backup and share template collections
+- **JSON Batch Import**: Quickly add multiple templates using JSON format
+- **Template Validation**: Built-in validation for template data integrity
 
 ## Installation
 
@@ -45,16 +59,25 @@ TextBricks organizes C programming concepts into 4 progressive levels:
 
 ### Getting Started
 1. **Install the extension** and restart VS Code
-2. **Open a C file** (`.c` or `.h`)
+2. **Open a code file** (`.c`, `.py`, `.js`, etc.)
 3. **Find TextBricks panel** in the activity bar sidebar
-4. **Browse templates** organized by learning level
-5. **Click or drag** templates to use them
+4. **Select your language** using the language selector (🌐)
+5. **Browse templates** organized by learning level
+6. **Click or drag** templates to use them
 
-### Template Categories
+### Available Commands
+- **TextBricks: Open Template Manager** - Launch the comprehensive template management interface
+- **TextBricks: Create Template** - Quick template creation from command palette
+- **TextBricks: Import Templates** - Import template collections from JSON files
+- **TextBricks: Export Templates** - Export your templates to JSON format
+- **TextBricks: Refresh Templates** - Reload template data
+
+### Template Examples
 
 #### 📚 Level 1: Basic Syntax
+
+**C - Hello World**
 ```c
-// Hello World - Your first C program
 #include <stdio.h>
 
 int main() {
@@ -63,28 +86,64 @@ int main() {
 }
 ```
 
+**Python - Hello World**
+```python
+print("Hello, World!")
+```
+
+**JavaScript - Hello World**
+```javascript
+console.log("Hello, World!");
+```
+
 #### 🔧 Level 2: Control Structures  
+
+**C - For Loop**
 ```c
-// For Loop - Basic iteration
 for (int i = 0; i < 10; i++) {
     printf("第 %d 次迴圈\n", i + 1);
 }
 ```
 
-#### ⚙️ Level 3: Functions & Arrays
-```c
-// Function Definition - Reusable code blocks
-int add(int a, int b) {
-    return a + b;
+**Python - For Loop**
+```python
+for i in range(10):
+    print(f"第 {i + 1} 次迴圈")
+```
+
+**JavaScript - For Loop**
+```javascript
+for (let i = 0; i < 10; i++) {
+    console.log(`第 ${i + 1} 次迴圈`);
 }
 ```
 
-#### 🎖️ Level 4: Advanced Concepts
-```c
-// Basic Pointer - Memory addresses
-int number = 42;
-int *ptr = &number;
-printf("Value: %d\n", *ptr);
+### Template Manager Features
+
+The Template Manager provides a comprehensive interface for managing your template collection:
+
+#### 🎛️ **CRUD Operations**
+- Create, edit, and delete templates with full validation
+- Manage template categories and difficulty levels
+- Add and configure programming languages
+
+#### 📦 **Import/Export System**
+- **Standard Import**: Use VS Code's file dialog for JSON imports
+- **JSON Batch Import**: Paste JSON directly for quick bulk additions
+- **Export Filters**: Export specific templates by language or category
+- **Data Validation**: Automatic validation of imported data
+
+#### 🔧 **JSON Format for Batch Import**
+```json
+[
+  {
+    "title": "Hello World",
+    "description": "Basic hello world program",
+    "code": "print('Hello, World!')",
+    "language": "python",
+    "categoryId": "beginner"
+  }
+]
 ```
 
 ## Development
@@ -92,19 +151,26 @@ printf("Value: %d\n", *ptr);
 ### Project Structure
 ```
 TextBricks-VSCode/
-├── src/                    # TypeScript source code
-│   ├── extension.ts        # Main extension file
-│   ├── commands/           # Command handlers
-│   ├── providers/          # Webview and template providers
-│   ├── services/           # Business logic services
-│   ├── models/             # Data models
-│   └── data/               # Template data
-├── media/                  # Webview assets
-│   ├── main.js             # Frontend JavaScript
-│   └── style.css           # UI styling
-├── icons/                  # Extension icons
-├── package.json            # Extension manifest
-└── README.md               # This file
+├── src/                           # TypeScript source code
+│   ├── extension.ts               # Main extension file
+│   ├── providers/                 # Webview and provider classes
+│   │   ├── WebviewProvider.ts     # Main template display panel
+│   │   └── TemplateManagerProvider.ts # Template management interface
+│   ├── services/                  # Business logic services
+│   │   ├── TemplateManager.ts     # Core template operations
+│   │   └── TemplateManagementService.ts # CRUD and import/export
+│   ├── models/                    # Data models and interfaces
+│   │   └── Template.ts            # Template, category, language types
+│   └── data/                      # Template data
+│       └── templates.json         # Template database
+├── media/                         # Webview assets
+│   ├── style.css                  # Main panel styling
+│   ├── template-manager.css       # Template manager styling
+│   ├── main.js                    # Main panel frontend
+│   └── template-manager.js        # Template manager frontend
+├── icons/                         # Extension icons
+├── package.json                   # Extension manifest
+└── README.md                      # This file
 ```
 
 ### Building from Source
@@ -125,19 +191,33 @@ vsce package
 ### Architecture
 
 - **Extension Host**: Main TypeScript extension running in Node.js
-- **Webview Panel**: HTML/CSS/JS frontend for template display
-- **Template Manager**: Handles loading and formatting of code templates
-- **Drag & Drop**: Native VS Code APIs for seamless code insertion
+- **Webview Panels**: 
+  - **Main Panel**: Template browsing and selection interface
+  - **Management Panel**: Comprehensive template administration interface
+- **Service Layer**: 
+  - **TemplateManager**: Core template loading and organization
+  - **TemplateManagementService**: Advanced CRUD operations and data management
+- **Data Layer**: JSON-based template storage with validation
+- **Multi-Language Support**: Dynamic language switching and template filtering
 
 ## Contributing
 
 We welcome contributions! Here's how you can help:
 
 ### Adding New Templates
+
+#### Method 1: Using Template Manager (Recommended)
+1. Open TextBricks Template Manager via command palette
+2. Use "新增模板" button or JSON batch import
+3. Fill in template details with validation
+4. Test the template in the main panel
+
+#### Method 2: Direct JSON Editing
 1. Edit `src/data/templates.json`
 2. Add your template with proper category and metadata
-3. Test the template in the webview
-4. Submit a pull request
+3. Ensure proper language and category IDs
+4. Test the template in the webview
+5. Submit a pull request
 
 ### Reporting Issues
 - Use GitHub Issues to report bugs
@@ -160,22 +240,28 @@ We welcome contributions! Here's how you can help:
 
 This extension contributes the following settings:
 
-- Currently no configurable settings
-- Future versions may include customization options
+- **Language Preference**: Automatically saved when switching languages
+- **Template Manager**: Access via command palette or menu
+- Currently no additional configurable settings
+- Future versions may include theme and behavior customization
 
 ## Known Issues
 
-- Tooltip positioning may need adjustment on different screen sizes
-- Some complex templates may require manual formatting after insertion
+- Template Manager modal may require multiple clicks to close in some VS Code themes
+- Very long template names may be truncated in narrow sidebar widths
+- JSON batch import validation messages appear briefly for valid input
 
 ## Release Notes
 
-### 1.0.0
-- Initial release with 4 learning levels
-- 13 essential C programming templates
-- Click-to-copy and drag-to-insert functionality
-- Interactive tooltip previews
-- Collapsible category sections
+### 0.1.1 (Current)
+- **Multi-Language Support**: Added Python and JavaScript templates alongside C
+- **Template Manager**: Comprehensive template management interface with CRUD operations
+- **JSON Batch Import**: Quick bulk template addition feature with validation
+- **Improved UI**: Compact header design and optimized space utilization
+- **Import/Export**: Full template collection backup and sharing capabilities
+- **Enhanced Validation**: Real-time validation for template data integrity
+- **Language Selector**: Easy switching between programming languages
+- **Extensible Architecture**: Built for future expansion and customization
 
 ## License
 
