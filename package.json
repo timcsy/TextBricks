@@ -1,7 +1,7 @@
 {
   "name": "textbricks",
-  "displayName": "TextBricks - Multi-Language Learning Assistant",
-  "description": "A VSCode extension providing code templates for multiple programming languages for beginners",
+  "displayName": "TextBricks - Multi-Language Development Assistant",
+  "description": "A VSCode extension providing structured templates for multiple languages to develop efficiently",
   "version": "0.1.2",
   "publisher": "timcsy",
   "repository": {
@@ -17,20 +17,22 @@
     "vscode": "^1.74.0"
   },
   "categories": [
-    "Education",
-    "Snippets"
+    "Snippets",
+    "Education"
   ],
   "keywords": [
     "programming",
     "multi-language",
+    "extensible",
     "c",
     "python",
     "javascript",
-    "education",
-    "learning",
+    "productivity",
+    "development",
     "templates",
-    "beginners",
-    "code-snippets"
+    "code-snippets",
+    "structured-templates",
+    "efficiency"
   ],
   "main": "./out/extension.js",
   "contributes": {

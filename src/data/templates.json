@@ -26,7 +26,7 @@
     {
       "id": "level1",
       "name": "基礎語法",
-      "description": "C語言基本語法和概念",
+      "description": "程式語言基本語法和概念",
       "level": 1
     },
     {
@@ -44,7 +44,7 @@
     {
       "id": "level4",
       "name": "進階概念",
-      "description": "指標、結構體和檔案操作",
+      "description": "進階程式設計概念和專業技巧",
       "level": 4
     }
   ],

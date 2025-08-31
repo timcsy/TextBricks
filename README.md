@@ -14,12 +14,12 @@ TextBricks supports multiple programming languages:
 - Easily switch between languages with the integrated language selector
 
 ### 🎯 **Structured Learning Path**
-TextBricks organizes programming concepts into 4 progressive levels:
+TextBricks organizes programming concepts into progressive categories:
 
-- **Level 1: Basic Syntax** - Hello World, Variables, Input/Output
-- **Level 2: Control Structures** - If-Else, For Loops, While Loops  
-- **Level 3: Functions & Arrays** - Function Definition, 1D/2D Arrays
-- **Level 4: Advanced Concepts** - Pointers/References, Data Structures, File I/O
+- **Basic Syntax** - Hello World, Variables, Input/Output fundamentals
+- **Control Structures** - Conditional logic, loops, and program flow  
+- **Functions & Data** - Function definition, data structures, and modular programming
+- **Advanced Applications** - Object-oriented programming, file operations, and complex patterns
 
 ### 🚀 **Easy Code Insertion**
 - **Click to Copy**: Click any template card to copy code to clipboard
@@ -74,7 +74,7 @@ TextBricks organizes programming concepts into 4 progressive levels:
 
 ### Template Examples
 
-#### 📚 Level 1: Basic Syntax
+#### 📚 Basic Syntax Examples
 
 **C - Hello World**
 ```c
@@ -96,7 +96,7 @@ print("Hello, World!")
 console.log("Hello, World!");
 ```
 
-#### 🔧 Level 2: Control Structures  
+#### 🔧 Control Structure Examples  
 
 **C - For Loop**
 ```c
