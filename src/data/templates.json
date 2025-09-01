@@ -55,7 +55,12 @@
       "description": "經典的第一個程式",
       "code": "#include <stdio.h>\n\nint main() {\n    printf(\"Hello, World!\\n\");\n    return 0;\n}",
       "language": "c",
-      "categoryId": "level1"
+      "categoryId": "level1",
+      "metadata": {
+        "usage": 8,
+        "popularity": 85,
+        "lastUsedAt": "2025-01-15T10:30:00.000Z"
+      }
     },
     {
       "id": "variable-declaration",
@@ -87,7 +92,12 @@
       "description": "基本for迴圈結構",
       "code": "for (int i = 0; i < 10; i++) {\n    printf(\"第 %d 次迴圈\\n\", i + 1);\n}",
       "language": "c",
-      "categoryId": "level2"
+      "categoryId": "level2",
+      "metadata": {
+        "usage": 12,
+        "popularity": 90,
+        "lastUsedAt": "2025-01-15T09:15:00.000Z"
+      }
     },
     {
       "id": "while-loop",
@@ -151,7 +161,12 @@
       "description": "Python的第一個程式",
       "code": "print(\"Hello, World!\")",
       "language": "python",
-      "categoryId": "level1"
+      "categoryId": "level1",
+      "metadata": {
+        "usage": 15,
+        "popularity": 95,
+        "lastUsedAt": "2025-01-15T11:45:00.000Z"
+      }
     },
     {
       "id": "python-variables",
@@ -183,7 +198,12 @@
       "description": "Python的for迴圈結構",
       "code": "# 基本for迴圈\nfor i in range(5):\n    print(f\"第 {i + 1} 次迴圈\")\n\n# 遍歷列表\nfruits = [\"蘋果\", \"香蕉\", \"橘子\"]\nfor fruit in fruits:\n    print(f\"我喜歡 {fruit}\")\n\n# 使用enumerate\nfor index, fruit in enumerate(fruits):\n    print(f\"{index + 1}. {fruit}\")",
       "language": "python",
-      "categoryId": "level2"
+      "categoryId": "level2",
+      "metadata": {
+        "usage": 7,
+        "popularity": 70,
+        "lastUsedAt": "2025-01-15T08:30:00.000Z"
+      }
     },
     {
       "id": "python-while-loop",
@@ -239,7 +259,12 @@
       "description": "JavaScript的第一個程式",
       "code": "console.log(\"Hello, World!\");",
       "language": "javascript",
-      "categoryId": "level1"
+      "categoryId": "level1",
+      "metadata": {
+        "usage": 5,
+        "popularity": 60,
+        "lastUsedAt": "2025-01-14T16:20:00.000Z"
+      }
     },
     {
       "id": "js-variables",

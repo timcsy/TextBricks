@@ -77,6 +77,32 @@ body {
 
 .category {
     margin-bottom: 20px;
+    position: relative;
+    border-radius: 6px;
+    padding: 4px;
+    transition: all 0.25s cubic-bezier(0.4, 0.0, 0.2, 1);
+    background: linear-gradient(135deg, 
+        rgba(var(--vscode-focusBorder), 0.05) 0%, 
+        transparent 50%);
+}
+
+.category::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: linear-gradient(180deg, 
+        var(--vscode-focusBorder) 0%, 
+        transparent 100%);
+    border-radius: 0 2px 2px 0;
+    opacity: 0;
+    transition: opacity 0.25s cubic-bezier(0.4, 0.0, 0.2, 1);
+}
+
+.category:hover::before {
+    opacity: 0.7;
 }
 
 .category-header {
@@ -86,17 +112,48 @@ body {
     background-color: var(--vscode-sideBar-background);
     border: 1px solid var(--vscode-panel-border);
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all 0.25s cubic-bezier(0.4, 0.0, 0.2, 1);
     user-select: none;
+    position: relative;
+    overflow: hidden;
+}
+
+.category-header::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(90deg, 
+        var(--vscode-focusBorder) 0%, 
+        transparent 20%);
+    opacity: 0;
+    transition: opacity 0.25s cubic-bezier(0.4, 0.0, 0.2, 1);
+    z-index: -1;
 }
 
 .category-header:hover {
     background-color: var(--vscode-list-hoverBackground);
     border-color: var(--vscode-focusBorder);
+    transform: translateX(2px);
+}
+
+.category-header:hover::after {
+    opacity: 0.1;
 }
 
 .category-header.collapsed {
     margin-bottom: 8px;
+    background-color: var(--vscode-list-inactiveSelectionBackground);
+    opacity: 0.8;
+    border-style: dashed;
+}
+
+.category-header.collapsed:hover {
+    opacity: 1;
+    background-color: var(--vscode-list-hoverBackground);
+    border-style: solid;
 }
 
 .category-title {
@@ -120,17 +177,28 @@ body {
     color: var(--vscode-foreground);
     font-size: 10px;
     font-weight: bold;
-    transition: all 0.2s ease;
+    transition: all 0.25s cubic-bezier(0.4, 0.0, 0.2, 1);
     margin-right: 4px;
+    transform: rotate(0deg);
 }
 
 .category-header:hover .category-toggle {
     background-color: var(--vscode-button-hoverBackground);
+    transform: rotate(0deg) scale(1.1);
+}
+
+.category-header.collapsed .category-toggle {
+    transform: rotate(90deg);
+}
+
+.category-header.collapsed:hover .category-toggle {
+    transform: rotate(90deg) scale(1.1);
 }
 
 .category-toggle::before {
     content: '−';
     line-height: 1;
+    transition: all 0.25s cubic-bezier(0.4, 0.0, 0.2, 1);
 }
 
 .category-header.collapsed .category-toggle::before {
@@ -158,8 +226,14 @@ body {
     display: grid;
     grid-template-columns: 1fr;
     gap: 6px;
-    transition: all 0.3s ease;
+    transition: all 0.35s cubic-bezier(0.4, 0.0, 0.2, 1);
     overflow: hidden;
+    transform-origin: top;
+    max-height: 2000px; /* 預設足夠大的高度以容納所有內容 */
+    opacity: 1;
+    margin-top: 8px;
+    padding-top: 0;
+    transform: scaleY(1);
 }
 
 .templates-grid.collapsed {
@@ -167,6 +241,7 @@ body {
     opacity: 0;
     margin-top: 0;
     padding-top: 0;
+    transform: scaleY(0.3);
 }
 
 /* Template Cards */
@@ -176,11 +251,26 @@ body {
     border-radius: 6px;
     padding: 8px 10px;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all 0.25s cubic-bezier(0.4, 0.0, 0.2, 1);
     position: relative;
     min-height: 55px;
     display: flex;
     flex-direction: column;
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* 為展開時的模板卡片添加延遲入場動畫 */
+.templates-grid:not(.collapsed) .template-card {
+    animation: slideInUp 0.3s cubic-bezier(0.4, 0.0, 0.2, 1) forwards;
+}
+
+.templates-grid:not(.collapsed) .template-card:nth-child(1) { animation-delay: 0.05s; }
+.templates-grid:not(.collapsed) .template-card:nth-child(2) { animation-delay: 0.1s; }
+.templates-grid:not(.collapsed) .template-card:nth-child(3) { animation-delay: 0.15s; }
+.templates-grid:not(.collapsed) .template-card:nth-child(4) { animation-delay: 0.2s; }
+.templates-grid:not(.collapsed) .template-card:nth-child(5) { animation-delay: 0.25s; }
+.templates-grid:not(.collapsed) .template-card:nth-child(n+6) { animation-delay: 0.3s; }
     justify-content: space-between;
 }
 
@@ -523,14 +613,143 @@ body {
     100% { transform: scale(1); }
 }
 
+/* Animation for template cards appearing when expanding */
+@keyframes slideInUp {
+    0% { 
+        opacity: 0;
+        transform: translateY(20px) scale(0.95);
+    }
+    100% { 
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
 .template-card.inserting {
     animation: templateInsert 0.3s ease;
+}
+
+/* Recommended Category - simple design */
+.recommended-category {
+    border-left: 3px solid #FFD700;
+}
+
+.recommended-category .category-title {
+    color: var(--vscode-foreground);
+}
+
+/* Override the blue left border on hover */
+.recommended-category::before {
+    background: linear-gradient(180deg, 
+        #FFD700 0%, 
+        transparent 100%) !important;
+}
+
+.recommended-category:hover::before {
+    opacity: 0 !important;
+}
+
+/* Complete override of blue styles for recommended category */
+.recommended-category .category-header:hover {
+    border-color: rgba(255, 215, 0, 0.5) !important;
+    background-color: var(--vscode-sideBar-background) !important;
+}
+
+.recommended-category .category-header:hover::after {
+    background: linear-gradient(90deg, 
+        #FFD700 0%, 
+        transparent 20%) !important;
+}
+
+.recommended-category .category-header.collapsed:hover {
+    border-color: rgba(255, 215, 0, 0.5) !important;
+    background-color: var(--vscode-sideBar-background) !important;
+}
+
+/* Override focus styles */
+.recommended-category .category-header:focus {
+    border-color: rgba(255, 215, 0, 0.7) !important;
+    background-color: var(--vscode-sideBar-background) !important;
+}
+
+.recommended-category .category-header:focus::after {
+    background: linear-gradient(90deg, 
+        #FFD700 0%, 
+        transparent 20%) !important;
+}
+
+/* Override toggle button color for recommended category */
+.recommended-category .category-toggle {
+    color: #FFD700 !important;
+    background-color: rgba(255, 215, 0, 0.1) !important;
+    border: 1px solid rgba(255, 215, 0, 0.3) !important;
+}
+
+.recommended-category .category-header:hover .category-toggle {
+    color: #FFA500 !important;
+    background-color: rgba(255, 215, 0, 0.2) !important;
+    border: 1px solid rgba(255, 215, 0, 0.5) !important;
+}
+
+.recommended-category .category-header.collapsed .category-toggle {
+    color: #FFD700 !important;
+    background-color: rgba(255, 215, 0, 0.1) !important;
+    border: 1px solid rgba(255, 215, 0, 0.3) !important;
+}
+
+.recommended-category .category-header.collapsed:hover .category-toggle {
+    color: #FFA500 !important;
+    background-color: rgba(255, 215, 0, 0.2) !important;
+    border: 1px solid rgba(255, 215, 0, 0.5) !important;
+}
+
+.recommended-badge {
+    font-size: 12px;
+    padding: 2px 6px;
+    border-radius: 12px;
+    font-weight: 500;
+    background: linear-gradient(45deg, #FFD700, #FFA500);
+    color: #000;
+    margin-right: 8px;
+    box-shadow: 0 1px 3px rgba(255, 215, 0, 0.3);
+}
+
+/* Recommended template cards styling */
+.template-card.recommended-template {
+    border: 1px solid rgba(255, 215, 0, 0.3);
+}
+
+.template-card.recommended-template:hover {
+    border-color: rgba(255, 215, 0, 0.5);
+}
+
+/* Recommended star icon */
+.recommended-star {
+    font-size: 12px;
+    margin-right: 4px;
+    opacity: 0.8;
+    display: inline-flex;
+    align-items: center;
+    height: 20px;
+    vertical-align: middle;
+}
+
+/* Usage count styling */
+.usage-count {
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 8px;
+    background: rgba(var(--vscode-badge-background), 0.8);
+    color: var(--vscode-badge-foreground);
+    font-weight: 500;
+    margin-right: 4px;
 }
 
 /* Dark theme adjustments */
 body.vscode-dark .template-card {
     border-color: rgba(255, 255, 255, 0.1);
 }
+
 
 body.vscode-dark .template-code {
     background-color: rgba(255, 255, 255, 0.05);

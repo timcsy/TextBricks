@@ -13,7 +13,7 @@ export function activate(context: vscode.ExtensionContext) {
     templateManager.loadTemplates();
     
     // Initialize providers
-    const webviewProvider = new WebviewProvider(context.extensionUri, templateManager, context);
+    const webviewProvider = new WebviewProvider(context.extensionUri, templateManager, context, managementService);
     const templateManagerProvider = new TemplateManagerProvider(context.extensionUri, managementService);
 
     // Register webview view

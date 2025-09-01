@@ -1,6 +1,8 @@
 import * as vscode from 'vscode';
+import * as path from 'path';
 import { TemplateManager } from '../services/TemplateManager';
-import { Template, TemplateCategory, Language } from '../models/Template';
+import { TemplateManagementService } from '../services/TemplateManagementService';
+import { Template, TemplateCategory, Language, ProgrammingContext } from '../models/Template';
 
 export class WebviewProvider implements vscode.WebviewViewProvider {
     public static readonly viewType = 'textbricks-webview';
@@ -11,7 +13,8 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
     constructor(
         private readonly _extensionUri: vscode.Uri,
         private readonly templateManager: TemplateManager,
-        private readonly _context: vscode.ExtensionContext
+        private readonly _context: vscode.ExtensionContext,
+        private readonly managementService?: TemplateManagementService
     ) {
         // Load saved language preference or default to 'c'
         this._selectedLanguage = this._context.globalState.get('textbricks.selectedLanguage', 'c');
@@ -70,6 +73,11 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
             const formattedCode = this.templateManager.formatTemplate(template);
             await vscode.env.clipboard.writeText(formattedCode);
             vscode.window.showInformationMessage(`Template '${template.title}' copied to clipboard`);
+            
+            // 記錄模板使用統計
+            if (this.managementService) {
+                await this.managementService.recordTemplateUsage(templateId);
+            }
         } catch (error) {
             vscode.window.showErrorMessage(`Failed to copy template: ${error}`);
         }
@@ -132,6 +140,7 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
     </div>
     
     <div class="container">
+        ${this._generateRecommendedTemplatesHtml()}
         ${this._generateCategoriesHtml(categories)}
     </div>
 
@@ -145,6 +154,86 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
             const selected = language.id === this._selectedLanguage ? 'selected' : '';
             return `<option value="${language.id}" ${selected}>${language.displayName}</option>`;
         }).join('');
+    }
+
+    private _generateRecommendedTemplatesHtml(): string {
+        console.log('[DEBUG] _generateRecommendedTemplatesHtml called');
+        
+        if (!this.managementService) {
+            console.log('[DEBUG] No managementService available');
+            return ''; // 如果沒有 managementService，不顯示推薦區域
+        }
+
+        // 獲取推薦模板
+        const recommendedTemplates = this.managementService.getRecommendedTemplates(6);
+
+        console.log('[DEBUG] Recommended templates count:', recommendedTemplates.length);
+        console.log('[DEBUG] Recommended data:', recommendedTemplates);
+
+        // 如果沒有推薦模板，不顯示區域
+        if (recommendedTemplates.length === 0) {
+            console.log('[DEBUG] No templates to show - returning empty string');
+            return '';
+        }
+
+        // 推薦模板區域
+        const filteredRecommended = recommendedTemplates.filter(template => 
+            template.language === this._selectedLanguage
+        );
+
+        if (filteredRecommended.length === 0) {
+            return '';
+        }
+
+        const recommendedHtml = filteredRecommended
+            .map(template => this._generateRecommendedTemplateCardHtml(template))
+            .join('');
+
+        return `
+            <div class="category recommended-category" data-level="0">
+                <div class="category-header">
+                    <h3 class="category-title">
+                        <span class="category-toggle"></span>
+                        <span class="recommended-badge">⭐ 推薦</span>
+                        推薦模板
+                    </h3>
+                    <p class="category-description">基於您的使用習慣智能推薦</p>
+                </div>
+                <div class="templates-grid">
+                    ${recommendedHtml}
+                </div>
+            </div>
+        `;
+    }
+
+    private _generateRecommendedTemplateCardHtml(template: any): string {
+        const usageCount = template.metadata?.usage || 0;
+
+        return `
+            <div class="template-card recommended-template" 
+                 data-template-id="${template.id}" 
+                 data-template-code="${this._escapeHtml(template.code)}"
+                 draggable="true">
+                <div class="template-header">
+                    <h4 class="template-title">${this._escapeHtml(template.title)}</h4>
+                    <div class="template-actions">
+                        <span class="recommended-star">⭐</span>
+                        ${usageCount > 0 ? `<span class="usage-count">${usageCount} 次</span>` : ''}
+                        <button class="action-btn preview-btn" title="預覽程式碼">
+                            <span class="icon">👁️</span>
+                        </button>
+                        <button class="action-btn copy-btn" title="複製到剪貼簿">
+                            <span class="icon">📋</span>
+                        </button>
+                    </div>
+                </div>
+                <p class="template-description">${this._escapeHtml(template.description)}</p>
+                <div class="template-footer">
+                    <span></span>
+                    <span class="language-tag">${template.language.toUpperCase()}</span>
+                </div>
+            </div>
+        `;
     }
 
     private _generateCategoriesHtml(categories: TemplateCategory[]): string {
@@ -175,14 +264,19 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
     }
 
     private _generateTemplateCardHtml(template: Template): string {        
+        // Check if this template is recommended
+        const isRecommended = this._isTemplateRecommended(template.id);
+        const templateClass = isRecommended ? 'template-card recommended-template' : 'template-card';
+        
         return `
-            <div class="template-card" 
+            <div class="${templateClass}" 
                  data-template-id="${template.id}" 
                  data-template-code="${this._escapeHtml(template.code)}"
                  draggable="true">
                 <div class="template-header">
                     <h4 class="template-title">${this._escapeHtml(template.title)}</h4>
                     <div class="template-actions">
+                        ${isRecommended ? '<span class="recommended-star">⭐</span>' : ''}
                         <button class="action-btn preview-btn" title="預覽程式碼">
                             <span class="icon">👁️</span>
                         </button>
@@ -198,6 +292,23 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
                 </div>
             </div>
         `;
+    }
+
+    private _isTemplateRecommended(templateId: string): boolean {
+        if (!this.managementService) {
+            return false;
+        }
+        
+        try {
+            // 只檢查實際顯示在推薦區的模板
+            const recommendedTemplates = this.managementService.getRecommendedTemplates(6);
+            const filteredRecommended = recommendedTemplates.filter(template => 
+                template.language === this._selectedLanguage
+            );
+            return filteredRecommended.some(template => template.id === templateId);
+        } catch (error) {
+            return false;
+        }
     }
 
     private _escapeHtml(text: string): string {
@@ -216,5 +327,249 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
             text += possible.charAt(Math.floor(Math.random() * possible.length));
         }
         return text;
+    }
+
+    // === 上下文資料收集功能 (預留) ===
+
+    // 收集當前編程上下文信息
+    private async collectProgrammingContext(): Promise<ProgrammingContext> {
+        const context: ProgrammingContext = {};
+
+        try {
+            // 收集當前活動編輯器信息
+            const activeEditor = vscode.window.activeTextEditor;
+            if (activeEditor) {
+                context.currentFile = {
+                    path: activeEditor.document.fileName,
+                    language: activeEditor.document.languageId,
+                    extension: path.extname(activeEditor.document.fileName),
+                    size: activeEditor.document.getText().length
+                };
+
+                // 收集游標位置和周圍代碼
+                const position = activeEditor.selection.active;
+                context.cursor = {
+                    line: position.line,
+                    column: position.character,
+                    surroundingCode: this.getSurroundingCode(activeEditor, position),
+                    currentFunction: await this.getCurrentFunction(activeEditor, position),
+                    currentClass: await this.getCurrentClass(activeEditor, position)
+                };
+            }
+
+            // 收集工作區和項目信息
+            context.project = await this.collectProjectInfo();
+
+            // 收集最近的編程活動
+            context.recentActivity = await this.collectRecentActivity();
+
+            // 收集用戶工作習慣（從設定中）
+            context.workingStyle = this.collectWorkingStyle();
+
+            // 收集技能等級信息（從使用歷史推斷）
+            context.skillLevel = await this.estimateSkillLevel();
+
+        } catch (error) {
+            console.warn('Failed to collect programming context:', error);
+        }
+
+        return context;
+    }
+
+    // 獲取游標周圍的代碼片段
+    private getSurroundingCode(editor: vscode.TextEditor, position: vscode.Position): string {
+        try {
+            const startLine = Math.max(0, position.line - 5);
+            const endLine = Math.min(editor.document.lineCount - 1, position.line + 5);
+            
+            const range = new vscode.Range(startLine, 0, endLine, editor.document.lineAt(endLine).text.length);
+            return editor.document.getText(range);
+        } catch {
+            return '';
+        }
+    }
+
+    // 檢測當前函數（預留實現）
+    private async getCurrentFunction(editor: vscode.TextEditor, position: vscode.Position): Promise<string | undefined> {
+        try {
+            // 使用 VS Code 符號提供者檢測函數
+            const symbols = await vscode.commands.executeCommand<vscode.DocumentSymbol[]>(
+                'vscode.executeDocumentSymbolProvider',
+                editor.document.uri
+            );
+            
+            if (symbols) {
+                return this.findContainingSymbol(symbols, position, vscode.SymbolKind.Function)?.name;
+            }
+        } catch {
+            // 靜默處理錯誤，使用正則匹配
+        }
+        
+        const surroundingCode = this.getSurroundingCode(editor, position);
+        const functionMatch = surroundingCode.match(/(?:function|def|func)\s+(\w+)/);
+        return functionMatch ? functionMatch[1] : undefined;
+    }
+
+    // 檢測當前類別（預留實現）
+    private async getCurrentClass(editor: vscode.TextEditor, position: vscode.Position): Promise<string | undefined> {
+        try {
+            const symbols = await vscode.commands.executeCommand<vscode.DocumentSymbol[]>(
+                'vscode.executeDocumentSymbolProvider',
+                editor.document.uri
+            );
+            
+            if (symbols) {
+                return this.findContainingSymbol(symbols, position, vscode.SymbolKind.Class)?.name;
+            }
+        } catch {
+            // 靜默處理錯誤
+        }
+        
+        const surroundingCode = this.getSurroundingCode(editor, position);
+        const classMatch = surroundingCode.match(/class\s+(\w+)/);
+        return classMatch ? classMatch[1] : undefined;
+    }
+
+    // 在符號樹中查找包含指定位置的符號
+    private findContainingSymbol(
+        symbols: vscode.DocumentSymbol[], 
+        position: vscode.Position, 
+        kind?: vscode.SymbolKind
+    ): vscode.DocumentSymbol | undefined {
+        for (const symbol of symbols) {
+            if (symbol.range.contains(position)) {
+                if (!kind || symbol.kind === kind) {
+                    return symbol;
+                }
+                const childSymbol = this.findContainingSymbol(symbol.children, position, kind);
+                if (childSymbol) return childSymbol;
+            }
+        }
+        return undefined;
+    }
+
+    // 收集項目信息（預留實現框架）
+    private async collectProjectInfo(): Promise<ProgrammingContext['project']> {
+        try {
+            const workspaceFolders = vscode.workspace.workspaceFolders;
+            if (!workspaceFolders || workspaceFolders.length === 0) {
+                return undefined;
+            }
+
+            const workspaceRoot = workspaceFolders[0].uri.fsPath;
+            
+            return {
+                type: await this.detectProjectType(workspaceRoot),
+                framework: await this.detectFramework(workspaceRoot),
+                hasTests: await this.hasTestDirectory(workspaceRoot),
+                hasLinter: await this.hasLinterConfig(workspaceRoot)
+            };
+        } catch {
+            return undefined;
+        }
+    }
+
+    // 項目類型檢測（預留具體實現）
+    private async detectProjectType(workspaceRoot: string): Promise<any> {
+        // TODO: 檢查 package.json, requirements.txt, Cargo.toml 等判斷項目類型
+        return 'unknown';
+    }
+
+    // 框架檢測（預留具體實現）
+    private async detectFramework(workspaceRoot: string): Promise<string | undefined> {
+        // TODO: 檢測 React, Vue, Angular, Express, Django, Flask 等
+        return undefined;
+    }
+
+    // 測試目錄檢測（預留具體實現）
+    private async hasTestDirectory(workspaceRoot: string): Promise<boolean> {
+        // TODO: 檢查 tests/, test/, __tests__ 目錄
+        return false;
+    }
+
+    // Linter 配置檢測（預留具體實現）
+    private async hasLinterConfig(workspaceRoot: string): Promise<boolean> {
+        // TODO: 檢查 .eslintrc, .pylintrc, rustfmt.toml 等
+        return false;
+    }
+
+    // 收集最近編程活動（預留實現）
+    private async collectRecentActivity(): Promise<ProgrammingContext['recentActivity']> {
+        // TODO: 從 VS Code API 收集最近檔案、命令歷史等
+        return {
+            recentFiles: [],
+            recentCommands: [],
+            recentSearch: [],
+            editingPatterns: []
+        };
+    }
+
+    // 收集用戶工作習慣
+    private collectWorkingStyle(): ProgrammingContext['workingStyle'] {
+        try {
+            const config = vscode.workspace.getConfiguration();
+            
+            return {
+                preferredIndentation: config.get('editor.insertSpaces') ? 'spaces' : 'tabs',
+                preferredQuotes: 'single', // TODO: 從代碼分析中檢測
+                codeStyle: 'mixed', // TODO: 從模板使用模式推斷
+                complexityPreference: 'simple' // TODO: 從模板選擇歷史推斷
+            };
+        } catch {
+            return undefined;
+        }
+    }
+
+    // 估計技能等級（預留實現）
+    private async estimateSkillLevel(): Promise<ProgrammingContext['skillLevel']> {
+        // TODO: 基於模板使用歷史、代碼複雜度分析等推斷技能等級
+        return [{
+            language: this._selectedLanguage,
+            level: 'intermediate',
+            estimatedProgress: 50,
+            weakAreas: [],
+            strengths: []
+        }];
+    }
+
+    // === 上下文感知推薦的公開接口 ===
+
+    // 獲取基於當前上下文的推薦模板
+    public async getContextAwareRecommendations(limit: number = 6) {
+        if (!this.managementService) {
+            return [];
+        }
+
+        try {
+            const context = await this.collectProgrammingContext();
+            return await this.managementService.getContextualRecommendations(context, limit);
+        } catch (error) {
+            console.warn('Failed to get context-aware recommendations:', error);
+            return this.managementService.getRecommendedTemplates(limit);
+        }
+    }
+
+    // 根據當前游標位置獲取推薦
+    public async getPositionBasedRecommendations(limit: number = 3) {
+        if (!this.managementService) return [];
+
+        const activeEditor = vscode.window.activeTextEditor;
+        if (!activeEditor) return [];
+
+        try {
+            const position = activeEditor.selection.active;
+            const surroundingCode = this.getSurroundingCode(activeEditor, position);
+            
+            return await this.managementService.getPositionAwareRecommendations(
+                activeEditor.document.fileName,
+                position.line,
+                position.character,
+                surroundingCode,
+                limit
+            );
+        } catch (error) {
+            console.warn('Failed to get position-based recommendations:', error);
+            return [];
+        }
     }
 }

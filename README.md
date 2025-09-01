@@ -40,6 +40,13 @@ TextBricks organizes programming concepts into progressive categories:
 - **JSON Batch Import**: Quickly add multiple templates using JSON format
 - **Template Validation**: Built-in validation for template data integrity
 
+### ⭐ **Smart Recommendation System**
+- **Intelligent Recommendations**: AI-powered template suggestions based on your usage patterns
+- **Usage Tracking**: Automatic tracking of template usage frequency and timing
+- **Visual Indicators**: Recommended templates marked with golden star icons (⭐)
+- **Unified Design**: Clean, consistent interface with golden theme for recommendations
+- **Context Awareness**: Reserved architecture for future context-based suggestions
+
 ## Installation
 
 ### From VS Code Marketplace
@@ -63,7 +70,8 @@ TextBricks organizes programming concepts into progressive categories:
 3. **Find TextBricks panel** in the activity bar sidebar
 4. **Select your language** using the language selector (🌐)
 5. **Browse templates** organized by learning level
-6. **Click or drag** templates to use them
+6. **Check recommendations** - Look for the "⭐ 推薦" section at the top for personalized suggestions
+7. **Click or drag** templates to use them - Usage is tracked for better recommendations
 
 ### Available Commands
 - **TextBricks: Open Template Manager** - Launch the comprehensive template management interface

@@ -1,17 +1,17 @@
-import { Template, TemplateCategory, Language } from '../models/Template';
+import { Template, TemplateCategory, Language, ExtendedTemplate } from '../models/Template';
 import * as path from 'path';
 import * as fs from 'fs';
 
 interface TemplateData {
   languages: Language[];
   categories: TemplateCategory[];
-  templates: Template[];
+  templates: ExtendedTemplate[];
 }
 
 export class TemplateManager {
   private languages: Language[] = [];
   private categories: TemplateCategory[] = [];
-  private templates: Template[] = [];
+  private templates: ExtendedTemplate[] = [];
 
   loadTemplates(): void {
     try {
@@ -31,11 +31,11 @@ export class TemplateManager {
     }
   }
 
-  getTemplateById(id: string): Template | undefined {
+  getTemplateById(id: string): ExtendedTemplate | undefined {
     return this.templates.find(template => template.id === id);
   }
 
-  getTemplatesByCategory(categoryId: string): Template[] {
+  getTemplatesByCategory(categoryId: string): ExtendedTemplate[] {
     return this.templates.filter(template => template.categoryId === categoryId);
   }
 
@@ -43,7 +43,7 @@ export class TemplateManager {
     return [...this.categories];
   }
 
-  getAllTemplates(): Template[] {
+  getAllTemplates(): ExtendedTemplate[] {
     return [...this.templates];
   }
 
@@ -55,17 +55,17 @@ export class TemplateManager {
     return this.languages.find(language => language.id === id);
   }
 
-  getTemplatesByLanguage(languageId: string): Template[] {
+  getTemplatesByLanguage(languageId: string): ExtendedTemplate[] {
     return this.templates.filter(template => template.language === languageId);
   }
 
-  getTemplatesByLanguageAndCategory(languageId: string, categoryId: string): Template[] {
+  getTemplatesByLanguageAndCategory(languageId: string, categoryId: string): ExtendedTemplate[] {
     return this.templates.filter(
       template => template.language === languageId && template.categoryId === categoryId
     );
   }
 
-  formatTemplate(template: Template): string {
+  formatTemplate(template: ExtendedTemplate): string {
     return template.code;
   }
 }
