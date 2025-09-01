@@ -261,7 +261,7 @@ This extension contributes the following settings:
 
 ## Release Notes
 
-### 0.1.2 (Current)
+### 0.1.2
 - **Multi-Language Support**: Added Python and JavaScript templates alongside C
 - **Template Manager**: Comprehensive template management interface with CRUD operations
 - **JSON Batch Import**: Quick bulk template addition feature with validation
