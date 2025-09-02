@@ -318,9 +318,50 @@ export class DocumentationProvider {
         // Links
         html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" onclick="handleLinkClick(\'$2\')">$1</a>');
 
-        // Lists
-        html = html.replace(/^- (.*$)/gm, '<li>$1</li>');
-        html = html.replace(/(<li>.*<\/li>)/gs, '<ul>$1</ul>');
+        // Lists - improved handling to avoid cross-paragraph merging
+        const lines = html.split('\n');
+        let processedLines: string[] = [];
+        let inList = false;
+        
+        for (let i = 0; i < lines.length; i++) {
+            const line = lines[i];
+            const isListItem = /^- (.*)/.test(line);
+            
+            if (isListItem) {
+                const content = line.replace(/^- (.*)/, '$1');
+                if (!inList) {
+                    processedLines.push('<ul>');
+                    inList = true;
+                }
+                processedLines.push(`<li>${content}</li>`);
+            } else {
+                if (inList && line.trim() === '') {
+                    // Empty line after list items - check if next non-empty line is also a list item
+                    let nextNonEmptyIndex = i + 1;
+                    while (nextNonEmptyIndex < lines.length && lines[nextNonEmptyIndex].trim() === '') {
+                        nextNonEmptyIndex++;
+                    }
+                    
+                    if (nextNonEmptyIndex >= lines.length || !/^- (.*)/.test(lines[nextNonEmptyIndex])) {
+                        // Close the list
+                        processedLines.push('</ul>');
+                        inList = false;
+                    }
+                } else if (inList) {
+                    // Non-list line while in list - close the list
+                    processedLines.push('</ul>');
+                    inList = false;
+                }
+                processedLines.push(line);
+            }
+        }
+        
+        // Close list if still open at end
+        if (inList) {
+            processedLines.push('</ul>');
+        }
+        
+        html = processedLines.join('\n');
 
         // Paragraphs
         html = html.replace(/\n\n/g, '</p><p>');
