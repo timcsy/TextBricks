@@ -13,6 +13,7 @@ export interface Template {
   code: string;
   language: string;
   categoryId: string;
+  documentation?: string; // Markdown content, local file path, or URL
 }
 
 export interface TemplateCategory {
@@ -51,6 +52,20 @@ export interface TemplateManagementMetadata {
 
 export interface ExtendedTemplate extends Template {
   metadata?: TemplateManagementMetadata;
+}
+
+// Documentation type enumeration
+export enum DocumentationType {
+  MARKDOWN = 'markdown',
+  FILE = 'file', 
+  URL = 'url'
+}
+
+// Documentation processing result
+export interface DocumentationContent {
+  type: DocumentationType;
+  content: string;
+  error?: string;
 }
 
 export interface TemplateImportData {

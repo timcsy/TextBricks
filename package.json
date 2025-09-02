@@ -2,7 +2,7 @@
   "name": "textbricks",
   "displayName": "TextBricks - Multi-Language Development Assistant",
   "description": "A VSCode extension providing structured templates for multiple languages to develop efficiently",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "publisher": "timcsy",
   "repository": {
     "type": "git",
@@ -83,6 +83,11 @@
         "command": "textbricks.exportTemplates",
         "title": "Export Templates",
         "icon": "$(cloud-upload)"
+      },
+      {
+        "command": "textbricks.showDocumentation",
+        "title": "Show Template Documentation",
+        "icon": "$(book)"
       }
     ],
     "menus": {
@@ -114,6 +119,10 @@
         {
           "command": "textbricks.exportTemplates",
           "title": "TextBricks: Export Templates"
+        },
+        {
+          "command": "textbricks.showDocumentation",
+          "title": "TextBricks: Show Template Documentation"
         }
       ]
     }

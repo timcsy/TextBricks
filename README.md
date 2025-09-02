@@ -47,6 +47,15 @@ TextBricks organizes programming concepts into progressive categories:
 - **Unified Design**: Clean, consistent interface with golden theme for recommendations
 - **Context Awareness**: Reserved architecture for future context-based suggestions
 
+### 📖 **Documentation System** ⭐ New in v0.1.4
+- **Comprehensive Template Docs**: Rich Markdown documentation for each template with examples and explanations
+- **Multiple Doc Types**: Support for embedded Markdown, local files (.md), and external URLs
+- **Template Manager Integration**: Edit and preview documentation with modal preview window
+- **Intelligent Content Detection**: Automatically distinguish between file paths and Markdown content
+- **Side Panel Display**: Documentation opens in editor side panel with syntax highlighting
+- **Clean UI Integration**: Documentation buttons integrated into hover tooltips (📖 icon)
+- **Standard Format**: Consistent documentation structure with overview, examples, and key concepts
+
 ## Installation
 
 ### From VS Code Marketplace
@@ -72,6 +81,14 @@ TextBricks organizes programming concepts into progressive categories:
 5. **Browse templates** organized by learning level
 6. **Check recommendations** - Look for the "⭐ 推薦" section at the top for personalized suggestions
 7. **Click or drag** templates to use them - Usage is tracked for better recommendations
+8. **View documentation** - Hover over templates and click 📖 in tooltips to see detailed explanations
+
+### Using Documentation (New in v0.1.4)
+1. **Hover over template cards** to see preview tooltip
+2. **Click the 📖 icon** in tooltips for templates with documentation
+3. **Documentation opens** in side panel next to your editor
+4. **Full Markdown support** with syntax highlighting and formatting
+5. **Template Manager** allows editing and previewing documentation with modal preview
 
 ### Available Commands
 - **TextBricks: Open Template Manager** - Launch the comprehensive template management interface
@@ -260,6 +277,23 @@ This extension contributes the following settings:
 - JSON batch import validation messages appear briefly for valid input
 
 ## Release Notes
+
+### 0.1.4 ⭐ Latest
+- **Documentation System**: Rich Markdown documentation for templates with examples and explanations
+- **Template Manager Integration**: Edit and preview documentation with modal preview window
+- **Side Panel Display**: Documentation opens in editor side panel with syntax highlighting
+- **Smart Content Detection**: Automatically distinguish between file paths, URLs, and Markdown content
+- **UI Integration**: Documentation buttons in hover tooltips (📖 icon) for clean interface
+- **Standard Format**: Consistent documentation structure with overview, examples, and key concepts
+- **Multiple Doc Types**: Support for embedded Markdown, local files (.md), and external URLs
+- **Bug Fixes**: Resolved Template Manager loading issues and documentation content processing
+
+### 0.1.3
+- **Smart Recommendation System**: AI-powered template suggestions based on usage patterns
+- **Usage Tracking**: Automatic tracking of template frequency and timing
+- **Visual Indicators**: Recommended templates marked with golden star icons (⭐)
+- **Dynamic UI**: Smooth animations and visual feedback for better user experience
+- **Golden Theme**: Unified design for recommendation sections
 
 ### 0.1.2
 - **Multi-Language Support**: Added Python and JavaScript templates alongside C

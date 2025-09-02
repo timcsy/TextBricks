@@ -255,6 +255,44 @@ body {
     justify-content: center;
 }
 
+.btn-small {
+    padding: 4px 8px;
+    font-size: 12px;
+}
+
+/* Documentation editing styles */
+.documentation-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.documentation-actions .btn {
+    font-size: 12px;
+    padding: 6px 12px;
+}
+
+#documentation-content-group {
+    border: 1px solid var(--vscode-input-border);
+    border-radius: 4px;
+    padding: 12px;
+    background-color: var(--vscode-input-background);
+}
+
+#documentation-input-container textarea {
+    font-family: var(--vscode-editor-font-family, 'Consolas', 'Monaco', monospace);
+    font-size: 13px;
+    line-height: 1.4;
+    resize: vertical;
+}
+
+#documentation-input-container .form-help {
+    margin-top: 6px;
+    font-size: 11px;
+    color: var(--vscode-descriptionForeground);
+    font-style: italic;
+}
+
 .btn .icon {
     font-size: 12px;
 }

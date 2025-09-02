@@ -2,6 +2,8 @@ import * as vscode from 'vscode';
 import * as path from 'path';
 import { TemplateManager } from '../services/TemplateManager';
 import { TemplateManagementService } from '../services/TemplateManagementService';
+import { DocumentationProvider } from './DocumentationProvider';
+import { DocumentationService } from '../services/DocumentationService';
 import { Template, TemplateCategory, Language, ProgrammingContext } from '../models/Template';
 
 export class WebviewProvider implements vscode.WebviewViewProvider {
@@ -9,6 +11,7 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
     
     private _view?: vscode.WebviewView;
     private _selectedLanguage: string;
+    private _documentationProvider?: DocumentationProvider;
 
     constructor(
         private readonly _extensionUri: vscode.Uri,
@@ -18,6 +21,10 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
     ) {
         // Load saved language preference or default to 'c'
         this._selectedLanguage = this._context.globalState.get('textbricks.selectedLanguage', 'c');
+        
+        // Initialize documentation provider
+        const documentationService = new DocumentationService(this._extensionUri);
+        this._documentationProvider = new DocumentationProvider(this._extensionUri, this.templateManager, documentationService);
     }
 
     public resolveWebviewView(
@@ -48,6 +55,9 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
                         break;
                     case 'changeLanguage':
                         this._changeLanguage(message.languageId);
+                        break;
+                    case 'showDocumentation':
+                        this._showDocumentation(message.templateId);
                         break;
                 }
             },
@@ -101,6 +111,14 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
         const language = this.templateManager.getLanguageById(languageId);
         if (language) {
             vscode.window.showInformationMessage(`已切換至 ${language.displayName} 語言模板`);
+        }
+    }
+
+    private _showDocumentation(templateId: string) {
+        if (this._documentationProvider) {
+            this._documentationProvider.showDocumentation(templateId);
+        } else {
+            vscode.window.showErrorMessage('說明文檔服務未初始化');
         }
     }
 
@@ -208,11 +226,13 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
 
     private _generateRecommendedTemplateCardHtml(template: any): string {
         const usageCount = template.metadata?.usage || 0;
+        const hasDocumentation = template.documentation && template.documentation.trim().length > 0;
 
         return `
             <div class="template-card recommended-template" 
                  data-template-id="${template.id}" 
                  data-template-code="${this._escapeHtml(template.code)}"
+                 data-has-documentation="${hasDocumentation}"
                  draggable="true">
                 <div class="template-header">
                     <h4 class="template-title">${this._escapeHtml(template.title)}</h4>
@@ -267,11 +287,13 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
         // Check if this template is recommended
         const isRecommended = this._isTemplateRecommended(template.id);
         const templateClass = isRecommended ? 'template-card recommended-template' : 'template-card';
+        const hasDocumentation = template.documentation && template.documentation.trim().length > 0;
         
         return `
             <div class="${templateClass}" 
                  data-template-id="${template.id}" 
                  data-template-code="${this._escapeHtml(template.code)}"
+                 data-has-documentation="${hasDocumentation}"
                  draggable="true">
                 <div class="template-header">
                     <h4 class="template-title">${this._escapeHtml(template.title)}</h4>

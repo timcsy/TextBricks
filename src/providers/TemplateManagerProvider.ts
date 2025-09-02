@@ -129,21 +129,45 @@ export class TemplateManagerProvider {
     }
 
     private async _sendData() {
+        console.log('_sendData called');
         if (this._panel) {
-            // 使用公開的getter方法來獲取數據
-            const templateManager = this.managementService.getTemplateManager();
-            const templates = templateManager.getAllTemplates();
-            const categories = templateManager.getCategories();
-            const languages = templateManager.getLanguages();
+            try {
+                // 使用公開的getter方法來獲取數據
+                console.log('Getting template manager...');
+                const templateManager = this.managementService.getTemplateManager();
+                console.log('Template manager:', templateManager);
+                
+                console.log('Getting templates...');
+                const templates = templateManager.getAllTemplates();
+                console.log('Templates count:', templates.length);
+                
+                console.log('Getting categories...');
+                const categories = templateManager.getCategories();
+                console.log('Categories count:', categories.length);
+                
+                console.log('Getting languages...');
+                const languages = templateManager.getLanguages();
+                console.log('Languages count:', languages.length);
 
-            this._panel.webview.postMessage({
-                type: 'dataLoaded',
-                data: {
-                    templates,
-                    categories,
-                    languages
-                }
-            });
+                console.log('Sending dataLoaded message...');
+                this._panel.webview.postMessage({
+                    type: 'dataLoaded',
+                    data: {
+                        templates,
+                        categories,
+                        languages
+                    }
+                });
+                console.log('dataLoaded message sent');
+            } catch (error) {
+                console.error('Error in _sendData:', error);
+                this._panel.webview.postMessage({
+                    type: 'error',
+                    message: 'Failed to load data: ' + (error instanceof Error ? error.message : String(error))
+                });
+            }
+        } else {
+            console.log('No panel available');
         }
     }
 

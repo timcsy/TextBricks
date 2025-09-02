@@ -77,6 +77,21 @@
         if (jsonInput) {
             jsonInput.addEventListener('input', validateJsonInput);
         }
+        
+        // Documentation editing event delegation (since elements are dynamically created)
+        document.addEventListener('change', function(e) {
+            if (e.target.id === 'template-documentation-type') {
+                handleDocumentationTypeChange(e.target.value);
+            }
+        });
+        
+        document.addEventListener('click', function(e) {
+            if (e.target.id === 'generate-doc-template') {
+                generateDocumentationTemplate();
+            } else if (e.target.id === 'preview-documentation') {
+                previewDocumentation();
+            }
+        });
         if (jsonModal) {
             jsonModal.addEventListener('click', (e) => {
                 if (e.target.id === 'json-modal') {
@@ -152,6 +167,12 @@
                 showLoading(false);
                 updateFilters();
                 renderCurrentTab();
+                break;
+            
+            case 'error':
+                console.error('Backend error:', message.message);
+                showLoading(false);
+                showError(message.message || '載入數據時發生未知錯誤');
                 break;
             
             default:
@@ -426,6 +447,18 @@ ${escapeHtml(template.code)}
         body.innerHTML = bodyHTML;
         modal.classList.add('active');
         modal.dataset.type = type;
+        
+        // Special handling for template modal - set documentation type and content
+        if (type === 'template' && item && item.documentation) {
+            setTimeout(() => {
+                const docTypeSelect = document.getElementById('template-documentation-type');
+                if (docTypeSelect) {
+                    const docType = getDocumentationType(item.documentation);
+                    docTypeSelect.value = docType;
+                    handleDocumentationTypeChange(docType);
+                }
+            }, 50);
+        }
 
         // Focus first input
         const firstInput = body.querySelector('input, textarea, select');
@@ -505,6 +538,28 @@ ${escapeHtml(template.code)}
                 <label for="template-tags">標籤</label>
                 <input type="text" id="template-tags" value="${template?.metadata?.tags ? template.metadata.tags.join(', ') : ''}" placeholder="用逗號分隔多個標籤">
                 <div class="form-help">例如：迴圈, 基礎, 練習</div>
+            </div>
+            
+            <div class="form-group">
+                <label for="template-documentation-type">說明文檔類型</label>
+                <select id="template-documentation-type">
+                    <option value="">無說明文檔</option>
+                    <option value="markdown">內嵌 Markdown</option>
+                    <option value="file">本地檔案路徑</option>
+                    <option value="url">外部 URL</option>
+                </select>
+                <div class="form-help">選擇說明文檔的提供方式</div>
+            </div>
+            
+            <div class="form-group" id="documentation-content-group" style="display: none;">
+                <label for="template-documentation">說明文檔內容</label>
+                <div id="documentation-input-container">
+                    <!-- Dynamic content based on type -->
+                </div>
+                <div class="documentation-actions">
+                    <button type="button" id="generate-doc-template" class="btn btn-secondary btn-small">生成標準格式</button>
+                    <button type="button" id="preview-documentation" class="btn btn-info btn-small">預覽</button>
+                </div>
             </div>
         `;
     }
@@ -644,6 +699,14 @@ ${escapeHtml(template.code)}
         if (author) data.metadata.author = author;
         if (difficulty) data.metadata.difficulty = difficulty;
         if (tags.length > 0) data.metadata.tags = tags;
+        
+        // Handle documentation
+        const docTypeSelect = document.getElementById('template-documentation-type');
+        const docInput = document.getElementById('template-documentation');
+        
+        if (docTypeSelect && docInput && docTypeSelect.value && docInput.value.trim()) {
+            data.documentation = docInput.value.trim();
+        }
 
         return data;
     }
@@ -940,6 +1003,479 @@ ${escapeHtml(template.code)}
         }
     }
 
+    // Documentation editing functions
+    function handleDocumentationTypeChange(type) {
+        const contentGroup = document.getElementById('documentation-content-group');
+        const inputContainer = document.getElementById('documentation-input-container');
+        
+        if (!contentGroup || !inputContainer) return;
+        
+        if (type === '') {
+            contentGroup.style.display = 'none';
+            return;
+        }
+        
+        contentGroup.style.display = 'block';
+        
+        let inputHTML = '';
+        switch (type) {
+            case 'markdown':
+                inputHTML = `
+                    <textarea id="template-documentation" rows="15" placeholder="# 模板標題\n\n## 功能簡介\n...\n\n## 模板內容\n...\n\n## 範例輸入\n...\n\n## 範例輸出\n..."></textarea>
+                `;
+                break;
+            case 'file':
+                inputHTML = `
+                    <input type="text" id="template-documentation" placeholder="例如：./docs/hello-world.md 或 /path/to/doc.md">
+                    <div class="form-help">請輸入 .md 檔案的相對或絕對路徑</div>
+                `;
+                break;
+            case 'url':
+                inputHTML = `
+                    <input type="url" id="template-documentation" placeholder="例如：https://example.com/documentation.html">
+                    <div class="form-help">請輸入外部網頁的完整 URL</div>
+                `;
+                break;
+        }
+        
+        inputContainer.innerHTML = inputHTML;
+        
+        // Set existing value if editing template
+        if (editingItem && editingItem.documentation) {
+            const currentType = getDocumentationType(editingItem.documentation);
+            if (currentType === type) {
+                const input = document.getElementById('template-documentation');
+                if (input) {
+                    input.value = editingItem.documentation;
+                }
+            }
+        }
+    }
+    
+    function getDocumentationType(documentation) {
+        if (!documentation) return '';
+        
+        // Check for URL
+        if (documentation.startsWith('http://') || documentation.startsWith('https://')) {
+            return 'url';
+        }
+        
+        // Check for file path - must be a simple path, not multiline content
+        const isLikelyFilePath = documentation.length < 500 && 
+                                !documentation.includes('\n') && 
+                                !documentation.includes('\r') &&
+                                (documentation.endsWith('.md') || 
+                                 (documentation.includes('/') || documentation.includes('\\')) &&
+                                 !documentation.startsWith('#')); // Markdown usually starts with #
+        
+        if (isLikelyFilePath) {
+            return 'file';
+        }
+        
+        return 'markdown';
+    }
+    
+    function generateDocumentationTemplate() {
+        const titleInput = document.getElementById('template-title');
+        const descriptionInput = document.getElementById('template-description');
+        const codeInput = document.getElementById('template-code');
+        const languageSelect = document.getElementById('template-language');
+        const docInput = document.getElementById('template-documentation');
+        
+        if (!titleInput || !descriptionInput || !codeInput || !languageSelect || !docInput) return;
+        
+        const title = titleInput.value || '模板標題';
+        const description = descriptionInput.value || '模板描述';
+        const code = codeInput.value || '';
+        const language = languageSelect.value || '';
+        
+        const template = `# ${title}
+
+## 功能簡介
+${description}
+
+## 模板內容
+\`\`\`${language}
+${code}
+\`\`\`
+
+## 範例輸入
+\`\`\`
+(如果需要輸入，請在此提供範例輸入)
+\`\`\`
+
+## 範例輸出
+\`\`\`
+(請在此提供預期的程式輸出結果)
+\`\`\`
+
+## 重點說明
+- 解釋關鍵概念和語法要點
+- 提供注意事項和常見錯誤
+- 建議延伸學習方向
+
+## 相關模板
+- 列出相關或進階的模板建議
+`;
+        
+        docInput.value = template;
+    }
+    
+    function previewDocumentation() {
+        const docInput = document.getElementById('template-documentation');
+        const typeSelect = document.getElementById('template-documentation-type');
+        
+        console.log('Preview documentation called');
+        console.log('docInput:', docInput);
+        console.log('typeSelect:', typeSelect);
+        
+        if (!docInput || !typeSelect) {
+            if (!typeSelect) {
+                showError('請先選擇說明文檔類型');
+                return;
+            }
+            if (!docInput) {
+                showError('找不到文檔輸入欄位，請先選擇說明文檔類型');
+                return;
+            }
+            return;
+        }
+        
+        const content = docInput.value;
+        const type = typeSelect.value;
+        
+        console.log('Content:', content);
+        console.log('Type:', type);
+        
+        if (!content) {
+            showError('請先輸入說明文檔內容');
+            return;
+        }
+        
+        // Create a modal preview instead of new window
+        showPreviewModal(content, type);
+    }
+    
+    function showPreviewModal(content, type) {
+        // Remove existing preview modal if any
+        const existingModal = document.getElementById('preview-modal');
+        if (existingModal) {
+            existingModal.remove();
+        }
+        
+        let previewContent;
+        switch (type) {
+            case 'markdown':
+                // Render markdown to HTML for preview using the same logic as DocumentationProvider
+                const renderedHtml = markdownToHtml(content);
+                previewContent = `
+                    <div class="preview-header">
+                        <h2>📖 說明文檔預覽</h2>
+                        <div class="preview-note">這是您的 Markdown 文檔的預覽效果</div>
+                    </div>
+                    <div class="documentation-content">
+                        ${renderedHtml}
+                    </div>
+                `;
+                break;
+            case 'file':
+                previewContent = `
+                    <div class="preview-header">
+                        <h2>📁 本地檔案路徑</h2>
+                        <div class="preview-note">這是檔案路徑類型的預覽</div>
+                    </div>
+                    <div class="documentation-content">
+                        <p><strong>檔案路徑：</strong> <code>${escapeHtml(content)}</code></p>
+                        <p>此文檔將從指定的本地檔案載入。請確保檔案存在且可讀取。</p>
+                    </div>
+                `;
+                break;
+            case 'url':
+                previewContent = `
+                    <div class="preview-header">
+                        <h2>🌐 外部 URL 連結</h2>
+                        <div class="preview-note">這是外部連結類型的預覽</div>
+                    </div>
+                    <div class="documentation-content">
+                        <p><strong>連結：</strong> <a href="${escapeHtml(content)}" target="_blank">${escapeHtml(content)}</a></p>
+                        <p>此文檔將連結到外部網頁。用戶點擊說明按鈕時會開啟此連結。</p>
+                        <p><a href="${escapeHtml(content)}" target="_blank">點擊測試連結</a></p>
+                    </div>
+                `;
+                break;
+        }
+        
+        // Create modal element
+        const modal = document.createElement('div');
+        modal.id = 'preview-modal';
+        modal.innerHTML = `
+            <div class="preview-modal-backdrop">
+                <div class="preview-modal-content">
+                    <div class="preview-modal-header">
+                        <h3>文檔預覽 - ${editingItem ? escapeHtml(editingItem.title) : '新模板'}</h3>
+                        <button class="preview-close-btn" title="關閉預覽">✕</button>
+                    </div>
+                    <div class="preview-modal-body">
+                        ${previewContent}
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        // Add to DOM
+        document.body.appendChild(modal);
+        
+        // Add event listeners
+        const backdrop = modal.querySelector('.preview-modal-backdrop');
+        const closeBtn = modal.querySelector('.preview-close-btn');
+        const modalContent = modal.querySelector('.preview-modal-content');
+        
+        // Close when clicking backdrop
+        backdrop.addEventListener('click', (e) => {
+            if (e.target === backdrop) {
+                closePreviewModal();
+            }
+        });
+        
+        // Close when clicking close button
+        closeBtn.addEventListener('click', closePreviewModal);
+        
+        // Prevent closing when clicking content
+        modalContent.addEventListener('click', (e) => {
+            e.stopPropagation();
+        });
+        
+        // Close with ESC key
+        const handleEsc = (e) => {
+            if (e.key === 'Escape') {
+                closePreviewModal();
+                document.removeEventListener('keydown', handleEsc);
+            }
+        };
+        document.addEventListener('keydown', handleEsc);
+        
+        // Store the handler for cleanup
+        modal._escHandler = handleEsc;
+        
+        // Add modal styles if not already added
+        if (!document.getElementById('preview-modal-styles')) {
+            const style = document.createElement('style');
+            style.id = 'preview-modal-styles';
+            style.textContent = getPreviewModalStyles();
+            document.head.appendChild(style);
+        }
+    }
+    
+    function closePreviewModal() {
+        console.log('Closing preview modal'); // Debug log
+        const modal = document.getElementById('preview-modal');
+        if (modal) {
+            // Clean up ESC key listener if stored
+            if (modal._escHandler) {
+                document.removeEventListener('keydown', modal._escHandler);
+                console.log('ESC handler removed'); // Debug log
+            }
+            
+            // Remove the modal element
+            modal.remove();
+            console.log('Preview modal removed'); // Debug log
+        } else {
+            console.log('Preview modal not found'); // Debug log
+        }
+    }
+    
+    function getPreviewModalStyles() {
+        return `
+            #preview-modal {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                z-index: 10000;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+            
+            .preview-modal-backdrop {
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.5);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+            
+            .preview-modal-content {
+                background: var(--vscode-editor-background, #fff);
+                color: var(--vscode-editor-foreground, #333);
+                border-radius: 8px;
+                max-width: 90vw;
+                max-height: 90vh;
+                width: 900px;
+                box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+                display: flex;
+                flex-direction: column;
+            }
+            
+            .preview-modal-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 16px 20px;
+                border-bottom: 1px solid var(--vscode-panel-border, #e1e4e8);
+            }
+            
+            .preview-modal-header h3 {
+                margin: 0;
+                font-size: 18px;
+                font-weight: 600;
+            }
+            
+            .preview-close-btn {
+                background: none;
+                border: none;
+                color: var(--vscode-editor-foreground, #333);
+                font-size: 18px;
+                cursor: pointer;
+                padding: 8px;
+                border-radius: 4px;
+                line-height: 1;
+            }
+            
+            .preview-close-btn:hover {
+                background: var(--vscode-list-hoverBackground, #f0f0f0);
+            }
+            
+            .preview-modal-body {
+                padding: 20px;
+                overflow-y: auto;
+                max-height: calc(90vh - 80px);
+            }
+            
+            /* Preview content styles */
+            .preview-header {
+                background: var(--vscode-editorWidget-background, #f1f3f4);
+                border: 1px solid var(--vscode-panel-border, #dadce0);
+                border-radius: 8px;
+                padding: 16px;
+                margin-bottom: 24px;
+                text-align: center;
+            }
+            
+            .preview-header h2 {
+                margin: 0;
+                color: var(--vscode-textLink-foreground, #1a73e8);
+                border: none;
+                padding: 0;
+                font-size: 20px;
+            }
+            
+            .preview-note {
+                font-size: 14px;
+                color: var(--vscode-descriptionForeground, #666);
+                margin-top: 8px;
+            }
+            
+            .documentation-content h1, .documentation-content h2, .documentation-content h3,
+            .documentation-content h4, .documentation-content h5, .documentation-content h6 {
+                margin-top: 24px;
+                margin-bottom: 12px;
+                font-weight: 600;
+                line-height: 1.3;
+                color: var(--vscode-editor-foreground, #333);
+            }
+            
+            .documentation-content h1 { font-size: 28px; border-bottom: 2px solid var(--vscode-panel-border, #e1e4e8); padding-bottom: 8px; }
+            .documentation-content h2 { font-size: 22px; border-bottom: 1px solid var(--vscode-panel-border, #e1e4e8); padding-bottom: 6px; }
+            .documentation-content h3 { font-size: 18px; color: var(--vscode-textLink-foreground, #0366d6); }
+            .documentation-content h4 { font-size: 16px; }
+            
+            .documentation-content pre {
+                background: var(--vscode-textCodeBlock-background, #f6f8fa);
+                border: 1px solid var(--vscode-panel-border, #e1e4e8);
+                border-radius: 6px;
+                padding: 16px;
+                overflow-x: auto;
+                margin: 16px 0;
+                font-family: var(--vscode-editor-font-family, 'SF Mono', Monaco, 'Cascadia Code', 'Consolas', 'Courier New', monospace);
+                font-size: 13px;
+                line-height: 1.5;
+            }
+            
+            .documentation-content pre code {
+                background: none;
+                padding: 0;
+                border-radius: 0;
+                font-size: inherit;
+            }
+            
+            .documentation-content code {
+                background: var(--vscode-textCodeBlock-background, #f6f8fa);
+                padding: 2px 6px;
+                border-radius: 3px;
+                font-family: var(--vscode-editor-font-family, 'SF Mono', Monaco, 'Cascadia Code', 'Consolas', 'Courier New', monospace);
+                font-size: 0.9em;
+            }
+            
+            .documentation-content ul, .documentation-content ol { margin: 12px 0; padding-left: 24px; }
+            .documentation-content li { margin: 6px 0; }
+            .documentation-content a { color: var(--vscode-textLink-foreground, #0366d6); text-decoration: underline; }
+            .documentation-content a:hover { color: var(--vscode-textLink-activeForeground, #0366d6); }
+            .documentation-content p { margin: 12px 0; }
+        `;
+    }
+    
+    // Markdown to HTML conversion (same logic as DocumentationProvider)
+    function markdownToHtml(markdown) {
+        // Simple markdown to HTML conversion
+        let html = markdown;
+        
+        // Headers
+        html = html.replace(/^### (.*$)/gm, '<h3>$1</h3>');
+        html = html.replace(/^## (.*$)/gm, '<h2>$1</h2>');
+        html = html.replace(/^# (.*$)/gm, '<h1>$1</h1>');
+        
+        // Code blocks
+        html = html.replace(/```(\w+)?\n([\s\S]*?)```/g, (match, lang, code) => {
+            const language = lang || '';
+            return `<pre><code class="language-${language}">${escapeHtml(code.trim())}</code></pre>`;
+        });
+        
+        // Inline code
+        html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
+        
+        // Bold and italic
+        html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+        html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
+        
+        // Links
+        html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank">$1</a>');
+        
+        // Lists
+        html = html.replace(/^- (.*$)/gm, '<li>$1</li>');
+        html = html.replace(/(<li>.*<\/li>)/gs, '<ul>$1</ul>');
+        
+        // Paragraphs
+        html = html.replace(/\n\n/g, '</p><p>');
+        html = '<p>' + html + '</p>';
+        
+        // Clean up empty paragraphs
+        html = html.replace(/<p><\/p>/g, '');
+        html = html.replace(/<p>(<h[1-6]>)/g, '$1');
+        html = html.replace(/(<\/h[1-6]>)<\/p>/g, '$1');
+        html = html.replace(/<p>(<pre>)/g, '$1');
+        html = html.replace(/(<\/pre>)<\/p>/g, '$1');
+        html = html.replace(/<p>(<ul>)/g, '$1');
+        html = html.replace(/(<\/ul>)<\/p>/g, '$1');
+        
+        return html;
+    }
+    
     function handleJsonImport() {
         const validation = validateJsonInput();
         
@@ -957,6 +1493,15 @@ ${escapeHtml(template.code)}
         });
 
         closeJsonModal();
+    }
+
+    // Utility function to show error messages
+    function showError(message) {
+        console.error('Template Manager Error:', message);
+        vscode.postMessage({
+            type: 'showError',
+            message: message
+        });
     }
 
     // Message listener

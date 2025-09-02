@@ -339,6 +339,33 @@ body {
     line-height: 1;
 }
 
+/* Documentation button specific styling */
+.doc-btn {
+    position: relative;
+    background: var(--vscode-button-secondaryBackground);
+}
+
+.doc-btn:hover {
+    background-color: var(--vscode-button-hoverBackground);
+    color: var(--vscode-textLink-foreground);
+}
+
+.doc-btn .icon {
+    color: var(--vscode-textLink-foreground);
+}
+
+/* Documentation button hover effect */
+.doc-btn:hover .icon {
+    animation: docBounce 0.3s ease;
+}
+
+@keyframes docBounce {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.2); }
+    100% { transform: scale(1); }
+}
+}
+
 .template-description {
     font-size: 11px;
     color: var(--vscode-descriptionForeground);

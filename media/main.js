@@ -114,6 +114,17 @@
             setTimeout(() => {
                 icon.textContent = originalText;
             }, 1000);
+        } else if (button.classList.contains('doc-btn')) {
+            showDocumentation(templateId);
+            // Visual feedback for documentation button
+            const icon = button.querySelector('.icon');
+            const originalText = icon.textContent;
+            icon.textContent = '📖';
+            button.style.opacity = '0.7';
+            setTimeout(() => {
+                icon.textContent = originalText;
+                button.style.opacity = '';
+            }, 1000);
         }
     }
 
@@ -194,6 +205,15 @@
         });
         
         console.log('Copy template:', templateId);
+    }
+
+    function showDocumentation(templateId) {
+        vscode.postMessage({
+            type: 'showDocumentation',
+            templateId: templateId
+        });
+        
+        console.log('Show documentation for template:', templateId);
     }
 
     function handleLanguageChange(event) {
@@ -338,6 +358,9 @@
         const description = templateCard.querySelector('.template-description').textContent;
         const languageTag = templateCard.querySelector('.language-tag').textContent;
         
+        // Check if template has documentation
+        const hasDocumentation = templateCard.dataset.hasDocumentation === 'true';
+        
         // Create tooltip element
         const tooltip = document.createElement('div');
         tooltip.className = 'template-tooltip';
@@ -346,6 +369,7 @@
                 <div class="tooltip-title-wrapper">
                     <div class="tooltip-title">${escapeHtml(title)}</div>
                     <div class="tooltip-actions">
+                        ${hasDocumentation ? `<button class="tooltip-action-btn doc-btn" data-template-id="${templateId}" title="查看說明文檔">📖 說明</button>` : ''}
                         <button class="tooltip-action-btn copy-all-btn" data-template-id="${templateId}">📋 複製</button>
                         <div class="tooltip-drag-handle" draggable="true" data-template-id="${templateId}" title="拖曳到編輯器">✋ 拖曳</div>
                     </div>
@@ -481,6 +505,25 @@
                 copyBtn.classList.remove('success');
             }, 2000);
         });
+        
+        // Handle documentation button
+        const docBtn = tooltip.querySelector('.doc-btn');
+        if (docBtn) {
+            docBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const templateId = e.target.dataset.templateId;
+                showDocumentation(templateId);
+                
+                // Visual feedback
+                const originalText = docBtn.textContent;
+                docBtn.textContent = '📖 開啟中...';
+                docBtn.style.opacity = '0.7';
+                setTimeout(() => {
+                    docBtn.textContent = originalText;
+                    docBtn.style.opacity = '';
+                }, 1000);
+            });
+        }
         
         // Handle drag handle
         const dragHandle = tooltip.querySelector('.tooltip-drag-handle');

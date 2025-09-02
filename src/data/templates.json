@@ -60,7 +60,8 @@
         "usage": 8,
         "popularity": 85,
         "lastUsedAt": "2025-01-15T10:30:00.000Z"
-      }
+      },
+      "documentation": "# Hello World\n\n## 功能簡介\n這是每個程式語言學習者的第一個程式，用於展示最基本的程式輸出功能。透過這個簡單的程式，你可以確認開發環境已正確設置，並了解 C 語言程式的基本結構。\n\n## 模板內容\n```c\n#include <stdio.h>\n\nint main() {\n    printf(\"Hello, World!\\n\");\n    return 0;\n}\n```\n\n## 範例輸入\n```\n(此程式不需要輸入)\n```\n\n## 範例輸出\n```\nHello, World!\n```\n\n## 重點說明\n- `#include <stdio.h>` - 包含標準輸入輸出庫，提供 printf 函數\n- `int main()` - 主函數，程式的入口點\n- `printf()` - 輸出函數，用於顯示文字到螢幕\n- `\\n` - 換行字符，讓輸出後游標移到下一行\n- `return 0` - 回傳值，表示程式正常結束\n\n## 相關模板\n- 變數宣告 - 學習如何宣告和使用變數\n- 輸入輸出 - 學習更複雜的輸入輸出操作"
     },
     {
       "id": "variable-declaration",
@@ -97,7 +98,8 @@
         "usage": 12,
         "popularity": 90,
         "lastUsedAt": "2025-01-15T09:15:00.000Z"
-      }
+      },
+      "documentation": "# For 迴圈\n\n## 功能簡介\nFor 迴圈是程式設計中最常用的迴圈結構，用於重複執行一段程式碼指定的次數。它特別適合用於已知迴圈次數的情況，如陣列遍歷、計數操作等。\n\n## 模板內容\n```c\nfor (int i = 0; i < 10; i++) {\n    printf(\"第 %d 次迴圈\\n\", i + 1);\n}\n```\n\n## 範例輸入\n```\n(此程式不需要輸入)\n```\n\n## 範例輸出\n```\n第 1 次迴圈\n第 2 次迴圈\n第 3 次迴圈\n...\n第 10 次迴圈\n```\n\n## 重點說明\n- `for (初始化; 條件; 更新)` - for 迴圈的三個部分\n- `int i = 0` - 迴圈變數初始化，通常從 0 開始\n- `i < 10` - 迴圈繼續條件，當條件為假時停止\n- `i++` - 每次迴圈後的更新操作，等同於 i = i + 1\n- `%d` - printf 中的格式化符號，用於輸出整數\n- 迴圈變數 i 的作用域僅在迴圈內\n\n## 相關模板\n- While 迴圈 - 學習另一種迴圈結構\n- 一維陣列 - 使用 for 迴圈遍歷陣列\n- 二維陣列 - 使用巢狀 for 迴圈"
     },
     {
       "id": "while-loop",
@@ -166,7 +168,8 @@
         "usage": 15,
         "popularity": 95,
         "lastUsedAt": "2025-01-15T11:45:00.000Z"
-      }
+      },
+      "documentation": "# Python Hello World\n\n## 功能簡介\nPython 的 Hello World 程式展示了 Python 語言的簡潔性。相較於其他程式語言，Python 只需要一行程式碼就能完成 Hello World 的輸出，這正體現了 Python「簡潔易讀」的設計哲學。\n\n## 模板內容\n```python\nprint(\"Hello, World!\")\n```\n\n## 範例輸入\n```\n(此程式不需要輸入)\n```\n\n## 範例輸出\n```\nHello, World!\n```\n\n## 重點說明\n- `print()` - Python 內建的輸出函數，會自動在結尾加上換行\n- 不需要 import 任何模組，print 是內建函數\n- 不需要宣告 main 函數，Python 會從上到下執行程式碼\n- 使用雙引號或單引號都可以表示字串\n- Python 語法簡潔，沒有分號結尾的要求\n\n## 相關模板\n- 變數宣告 - 學習 Python 變數的動態特性\n- 輸入輸出 - 學習 input() 函數和格式化輸出"
     },
     {
       "id": "python-variables",
@@ -264,7 +267,8 @@
         "usage": 5,
         "popularity": 60,
         "lastUsedAt": "2025-01-14T16:20:00.000Z"
-      }
+      },
+      "documentation": "# JavaScript Hello World\n\n## 功能簡介\nJavaScript 的 Hello World 程式使用 console.log() 函數將訊息輸出到開發者控制台。這是學習 JavaScript 的起點，無論是在瀏覽器環境還是 Node.js 環境都能執行。\n\n## 模板內容\n```javascript\nconsole.log(\"Hello, World!\");\n```\n\n## 範例輸入\n```\n(此程式不需要輸入)\n```\n\n## 範例輸出\n```\nHello, World!\n```\n\n## 重點說明\n- `console.log()` - JavaScript 內建的控制台輸出函數\n- 在瀏覽器中，輸出會顯示在開發者工具的 Console 頁籤\n- 在 Node.js 中，輸出會顯示在終端/命令列\n- JavaScript 語句建議以分號結尾（雖然不是強制性的）\n- 字串可以使用單引號、雙引號或反引號（模板字串）\n- console 是全域物件，不需要匯入\n\n## 相關模板\n- 變數宣告 - 學習 let、const、var 的使用\n- 輸入輸出 - 學習瀏覽器的 prompt() 和 alert()"
     },
     {
       "id": "js-variables",

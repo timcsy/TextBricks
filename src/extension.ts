@@ -1,13 +1,16 @@
 import * as vscode from 'vscode';
 import { WebviewProvider } from './providers/WebviewProvider';
 import { TemplateManagerProvider } from './providers/TemplateManagerProvider';
+import { DocumentationProvider } from './providers/DocumentationProvider';
 import { TemplateManager } from './services/TemplateManager';
 import { TemplateManagementService } from './services/TemplateManagementService';
+import { DocumentationService } from './services/DocumentationService';
 
 export function activate(context: vscode.ExtensionContext) {
     // Initialize core services
     const templateManager = new TemplateManager();
     const managementService = new TemplateManagementService(templateManager, context);
+    const documentationService = new DocumentationService(context.extensionUri);
     
     // Load templates on activation
     templateManager.loadTemplates();
@@ -15,6 +18,7 @@ export function activate(context: vscode.ExtensionContext) {
     // Initialize providers
     const webviewProvider = new WebviewProvider(context.extensionUri, templateManager, context, managementService);
     const templateManagerProvider = new TemplateManagerProvider(context.extensionUri, managementService);
+    const documentationProvider = new DocumentationProvider(context.extensionUri, templateManager, documentationService);
 
     // Register webview view
     context.subscriptions.push(
@@ -228,13 +232,41 @@ export function activate(context: vscode.ExtensionContext) {
         }
     });
 
+    const showDocumentationCommand = vscode.commands.registerCommand('textbricks.showDocumentation', async (templateId?: string) => {
+        if (!templateId) {
+            // If no template ID provided, show a quick pick to select template
+            const templates = templateManager.getAllTemplates().filter(t => t.documentation);
+            
+            if (templates.length === 0) {
+                vscode.window.showWarningMessage('沒有可用的說明文檔');
+                return;
+            }
+
+            const templateItems = templates.map(template => ({
+                label: template.title,
+                detail: template.description,
+                template: template
+            }));
+
+            const selected = await vscode.window.showQuickPick(templateItems, {
+                placeHolder: '選擇要查看說明文檔的模板'
+            });
+
+            if (!selected) {return;}
+            templateId = selected.template.id;
+        }
+
+        await documentationProvider.showDocumentation(templateId);
+    });
+
     // Register all commands
     context.subscriptions.push(
         refreshCommand,
         openManagerCommand,
         createTemplateCommand,
         importTemplatesCommand,
-        exportTemplatesCommand
+        exportTemplatesCommand,
+        showDocumentationCommand
     );
 }
 
