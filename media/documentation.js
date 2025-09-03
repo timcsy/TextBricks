@@ -113,6 +113,9 @@
         }
     }
 
+
+
+
     function initializeSyntaxHighlighting() {
         // If highlight.js is available, configure it
         if (typeof hljs !== 'undefined') {

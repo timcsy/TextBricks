@@ -142,7 +142,7 @@ describe('TemplateManager', () => {
   });
 
   describe('formatTemplate', () => {
-    it('should return template code', () => {
+    it('should return template code without indentation when no target indentation provided', () => {
       const template = mockTemplates[0];
       const formatted = templateManager.formatTemplate(template);
       
@@ -158,6 +158,101 @@ describe('TemplateManager', () => {
       const formatted = templateManager.formatTemplate(emptyTemplate);
       
       expect(formatted).toBe('');
+    });
+
+    it('should apply target indentation to multi-line code', () => {
+      const template: Template = {
+        ...mockTemplates[0],
+        code: 'function test() {\n    console.log("Hello");\n    return true;\n}'
+      };
+      const targetIndentation = '    '; // 4 spaces
+      const formatted = templateManager.formatTemplate(template, targetIndentation);
+      
+      const lines = formatted.split('\n');
+      expect(lines[0]).toBe('function test() {'); // First line unchanged
+      expect(lines[1]).toBe('        console.log("Hello");'); // Target + relative indent
+      expect(lines[2]).toBe('        return true;'); // Target + relative indent
+      expect(lines[3]).toBe('    }'); // Target indent only
+    });
+
+    it('should handle single line code with target indentation', () => {
+      const template: Template = {
+        ...mockTemplates[0],
+        code: 'const x = 42;'
+      };
+      const targetIndentation = '  '; // 2 spaces
+      const formatted = templateManager.formatTemplate(template, targetIndentation);
+      
+      expect(formatted).toBe('const x = 42;');
+    });
+
+    it('should preserve relative indentation with tabs', () => {
+      const template: Template = {
+        ...mockTemplates[0],
+        code: 'if (true) {\n\tlet x = 1;\n\tif (x > 0) {\n\t\tconsole.log(x);\n\t}\n}'
+      };
+      const targetIndentation = '\t'; // Tab indentation
+      const formatted = templateManager.formatTemplate(template, targetIndentation);
+      
+      const lines = formatted.split('\n');
+      expect(lines[0]).toBe('if (true) {');
+      expect(lines[1]).toBe('\t\tlet x = 1;'); // Target tab + relative tab
+      expect(lines[2]).toBe('\t\tif (x > 0) {');
+      expect(lines[3]).toBe('\t\t\tconsole.log(x);'); // Target tab + 2 relative tabs
+      expect(lines[4]).toBe('\t\t}');
+      expect(lines[5]).toBe('\t}');
+    });
+  });
+
+  describe('formatCodeSnippet', () => {
+    it('should format code snippet with target indentation', () => {
+      const code = 'function test() {\n    return true;\n}';
+      const targetIndentation = '  '; // 2 spaces
+      const formatted = templateManager.formatCodeSnippet(code, targetIndentation);
+      
+      const lines = formatted.split('\n');
+      expect(lines[0]).toBe('function test() {'); // First line: no additional indentation
+      expect(lines[1]).toBe('      return true;'); // Subsequent lines: target indent (2) + relative (4) = 6
+      expect(lines[2]).toBe('  }'); // Subsequent lines: target indent (2) + relative (0) = 2
+    });
+
+    it('should handle selected snippet with partial indentation', () => {
+      const selectedSnippet = '    console.log("Hello");\n    return value;';
+      const targetIndentation = '\t';
+      const formatted = templateManager.formatCodeSnippet(selectedSnippet, targetIndentation);
+      
+      const lines = formatted.split('\n');
+      expect(lines[0]).toBe('console.log("Hello");'); // First line: no additional indentation
+      expect(lines[1]).toBe('\treturn value;'); // Subsequent lines: target indent (\t) + relative (0) = \t
+    });
+
+    it('should return original code when no target indentation provided', () => {
+      const code = 'const x = 42;\nconsole.log(x);';
+      const formatted = templateManager.formatCodeSnippet(code);
+      
+      expect(formatted).toBe(code);
+    });
+
+    it('should handle text with no original indentation', () => {
+      const textWithoutIndent = 'printf("Hello, World!\\n");\nreturn 0;';
+      const targetIndentation = '    '; // 4 spaces
+      const formatted = templateManager.formatCodeSnippet(textWithoutIndent, targetIndentation);
+      
+      const lines = formatted.split('\n');
+      expect(lines[0]).toBe('printf("Hello, World!\\n");'); // First line: no additional indentation
+      expect(lines[1]).toBe('    return 0;'); // Subsequent lines: target indent (4) + relative (0) = 4
+    });
+
+    it('should handle mixed indentation properly', () => {
+      const mixedIndentCode = 'function test() {\nconsole.log("test");\n    return true;\n}';
+      const targetIndentation = '  ';
+      const formatted = templateManager.formatCodeSnippet(mixedIndentCode, targetIndentation);
+      
+      const lines = formatted.split('\n');
+      expect(lines[0]).toBe('function test() {'); // First line: no additional indentation
+      expect(lines[1]).toBe('  console.log("test");'); // Subsequent lines: target indent (2) + relative (0) = 2  
+      expect(lines[2]).toBe('      return true;'); // Subsequent lines: target indent (2) + relative (4) = 6
+      expect(lines[3]).toBe('  }'); // Subsequent lines: target indent (2) + relative (0) = 2
     });
   });
 

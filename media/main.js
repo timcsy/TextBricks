@@ -15,16 +15,109 @@
     let isPreviewBtnHovered = false;
     let currentPreviewBtn = null;
 
+    // Environment detection
+    const isCodespaces = checkCodespacesEnvironment();
+    const supportsDrag = checkDragSupport();
+
+    function checkCodespacesEnvironment() {
+        // Check for GitHub Codespaces indicators
+        return !!(
+            typeof window !== 'undefined' && 
+            (window.location?.hostname?.includes('github') ||
+             window.location?.hostname?.includes('codespaces') ||
+             window.navigator?.userAgent?.includes('Codespaces') ||
+             document?.documentElement?.getAttribute('data-vscode-context') === 'codespace')
+        );
+    }
+
+    function checkDragSupport() {
+        // Test basic drag support
+        try {
+            const testDiv = document.createElement('div');
+            testDiv.draggable = true;
+            return 'draggable' in testDiv && 
+                   'ondragstart' in testDiv && 
+                   'ondrop' in testDiv &&
+                   !isCodespaces; // Disable drag in Codespaces even if technically supported
+        } catch (e) {
+            return false;
+        }
+    }
+
     // Initialize the webview
     function initialize() {
         setupEventListeners();
-        console.log('TextBricks webview initialized');
+        setupEnvironmentSpecificFeatures();
+        console.log(`TextBricks webview initialized (Codespaces: ${isCodespaces}, Drag Support: ${supportsDrag})`);
+    }
+
+    function setupEnvironmentSpecificFeatures() {
+        // Add visual indicators for Codespaces users
+        if (isCodespaces) {
+            addCodespacesIndicators();
+            console.log('Codespaces environment detected - double-click to insert templates');
+        }
+        
+        // Disable draggable attribute if drag is not supported
+        if (!supportsDrag) {
+            setTimeout(() => {
+                document.querySelectorAll('.template-card[draggable="true"]').forEach(card => {
+                    card.draggable = false;
+                    card.style.cursor = 'pointer'; // Change cursor to indicate click action
+                });
+            }, 100);
+        }
+    }
+
+    function addCodespacesIndicators() {
+        // Add a subtle indicator to template cards
+        const style = document.createElement('style');
+        style.textContent = `
+            .template-card:not([draggable="true"])::before {
+                content: "👆 雙擊插入";
+                position: absolute;
+                top: 4px;
+                right: 4px;
+                font-size: 10px;
+                background: rgba(0, 123, 255, 0.8);
+                color: white;
+                padding: 1px 4px;
+                border-radius: 3px;
+                opacity: 0;
+                transition: opacity 0.2s ease;
+                pointer-events: none;
+                z-index: 10;
+            }
+            
+            .template-card:not([draggable="true"]):hover::before {
+                opacity: 1;
+            }
+            
+            .codespaces-tip {
+                background: #e3f2fd;
+                border-left: 3px solid #2196f3;
+                padding: 8px 12px;
+                margin: 8px;
+                border-radius: 4px;
+                font-size: 12px;
+                color: #1565c0;
+            }
+        `;
+        document.head.appendChild(style);
+        
+        // Add a tip at the top of the panel
+        setTimeout(() => {
+            const container = document.querySelector('.templates-container') || document.body;
+            const tip = document.createElement('div');
+            tip.className = 'codespaces-tip';
+            tip.innerHTML = '💡 <strong>Codespaces 提示：</strong>由於瀏覽器限制，請<strong>雙擊</strong>模板卡片來插入程式碼';
+            container.insertBefore(tip, container.firstChild);
+        }, 500);
     }
 
     function setupEventListeners() {
         // Handle template card interactions
         document.addEventListener('click', handleClick);
-        document.addEventListener('dblclick', handleDoubleClick);
         
         // Handle drag and drop
         document.addEventListener('dragstart', handleDragStart);
@@ -74,26 +167,42 @@
         }
     }
 
-    function handleDoubleClick(event) {
-        const templateCard = event.target.closest('.template-card');
-        if (!templateCard) return;
 
-        // Prevent button double-clicks
-        if (event.target.closest('.action-btn')) {
-            return;
-        }
-
-        const templateId = templateCard.dataset.templateId;
-        if (templateId) {
-            // Double click - copy template (insert functionality removed)
-            copyTemplate(templateId);
-            
-            // Visual feedback
-            templateCard.style.animation = 'templateInsert 0.3s ease';
+    function showInsertionFeedback(templateCard, message) {
+        const feedback = document.createElement('div');
+        feedback.className = 'insertion-feedback';
+        feedback.textContent = message;
+        feedback.style.cssText = `
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #4caf50;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+            pointer-events: none;
+        `;
+        
+        templateCard.style.position = 'relative';
+        templateCard.appendChild(feedback);
+        
+        // Animate in
+        setTimeout(() => feedback.style.opacity = '1', 10);
+        
+        // Remove after delay
+        setTimeout(() => {
+            feedback.style.opacity = '0';
             setTimeout(() => {
-                templateCard.style.animation = '';
-            }, 300);
-        }
+                if (feedback.parentNode) {
+                    feedback.parentNode.removeChild(feedback);
+                }
+            }, 200);
+        }, 1500);
     }
 
     function handleButtonClick(event) {
@@ -132,6 +241,16 @@
         const templateCard = event.target.closest('.template-card');
         if (!templateCard) return;
 
+        // Check if drag is supported in current environment
+        if (!supportsDrag) {
+            event.preventDefault();
+            console.log('Drag not supported - use double-click instead');
+            
+            // Show helpful message
+            showInsertionFeedback(templateCard, '💡 請雙擊插入模板');
+            return false;
+        }
+
         const templateId = templateCard.dataset.templateId;
         const templateCode = templateCard.dataset.templateCode;
         
@@ -139,28 +258,51 @@
             isDragging = true;
             draggedTemplateId = templateId;
             
-            // Set drag data
-            event.dataTransfer.setData('text/plain', templateCode);
-            event.dataTransfer.setData('application/vscode-template', JSON.stringify({
-                id: templateId,
-                code: templateCode
-            }));
-            
-            // Visual feedback
-            templateCard.classList.add('dragging');
-            
-            // Set drag image
-            const dragImage = createDragImage(templateCard);
-            event.dataTransfer.setDragImage(dragImage, 0, 0);
-            
-            // Notify extension about drag start
-            vscode.postMessage({
-                type: 'dragTemplate',
-                templateId: templateId,
-                text: templateCode
-            });
-            
-            console.log('Started dragging template:', templateId);
+            try {
+                // Set drag data with better browser compatibility
+                if (event.dataTransfer) {
+                    event.dataTransfer.effectAllowed = 'copy';
+                    
+                    // Set data in multiple formats for compatibility
+                    event.dataTransfer.setData('text/plain', templateCode);
+                    event.dataTransfer.setData('text', templateCode); // Fallback format
+                    
+                    try {
+                        event.dataTransfer.setData('application/vscode-template', JSON.stringify({
+                            id: templateId,
+                            code: templateCode
+                        }));
+                    } catch (e) {
+                        console.warn('Custom MIME type not supported, using text/plain only');
+                    }
+                    
+                    // Visual feedback
+                    templateCard.classList.add('dragging');
+                    
+                    // Set drag image with error handling
+                    try {
+                        const dragImage = createDragImage(templateCard);
+                        event.dataTransfer.setDragImage(dragImage, 10, 10);
+                    } catch (e) {
+                        console.warn('Custom drag image not supported');
+                    }
+                }
+                
+                // Notify extension about drag start
+                vscode.postMessage({
+                    type: 'dragTemplate',
+                    templateId: templateId,
+                    text: templateCode
+                });
+                
+                console.log('Started dragging template:', templateId);
+                
+            } catch (error) {
+                console.error('Drag start failed:', error);
+                event.preventDefault();
+                showInsertionFeedback(templateCard, '❌ 拖曳失敗，請使用複製');
+                return false;
+            }
         }
     }
 
@@ -263,6 +405,11 @@
     }
 
     function handleMouseEnter(event) {
+        // Check if event.target is a DOM element
+        if (!event.target || typeof event.target.closest !== 'function') {
+            return;
+        }
+        
         const previewBtn = event.target.closest('.preview-btn');
         const tooltip = event.target.closest('.template-tooltip');
         
@@ -303,6 +450,11 @@
     }
 
     function handleMouseLeave(event) {
+        // Check if event.target is a DOM element
+        if (!event.target || typeof event.target.closest !== 'function') {
+            return;
+        }
+        
         const previewBtn = event.target.closest('.preview-btn');
         const tooltip = event.target.closest('.template-tooltip');
         
@@ -527,31 +679,83 @@
         
         // Handle drag handle
         const dragHandle = tooltip.querySelector('.tooltip-drag-handle');
-        dragHandle.addEventListener('dragstart', (e) => {
-            if (templateId && templateCode) {
-                isDragging = true;
-                draggedTemplateId = templateId;
+        
+        // Modify drag handle based on environment
+        if (!supportsDrag) {
+            dragHandle.draggable = false;
+            dragHandle.textContent = '👆 點擊插入';
+            dragHandle.title = '點擊插入到編輯器';
+            dragHandle.style.cursor = 'pointer';
+            
+            // Add click handler for Codespaces
+            dragHandle.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
                 
-                // Use original template code (unescaped)
-                e.dataTransfer.setData('text/plain', templateCode);
-                e.dataTransfer.setData('application/vscode-template', JSON.stringify({
-                    id: templateId,
-                    code: templateCode
-                }));
+                console.log('Tooltip click inserting template in Codespaces:', templateId);
                 
-                // Visual feedback
-                dragHandle.style.opacity = '0.5';
-                
-                // Notify extension about drag start
+                // Send message to insert template with smart indentation
                 vscode.postMessage({
-                    type: 'dragTemplate',
-                    templateId: templateId,
-                    text: templateCode
+                    type: 'copyCodeSnippet',
+                    code: templateCode
                 });
                 
-                console.log('Started dragging from tooltip drag handle:', templateId);
-            }
-        });
+                // Visual feedback
+                dragHandle.style.background = '#4caf50';
+                dragHandle.textContent = '✅ 已插入';
+                
+                setTimeout(() => {
+                    dragHandle.style.background = '';
+                    dragHandle.textContent = '👆 點擊插入';
+                }, 1500);
+            });
+        } else {
+            // Normal drag behavior with improved compatibility
+            dragHandle.addEventListener('dragstart', (e) => {
+                if (templateId && templateCode) {
+                    isDragging = true;
+                    draggedTemplateId = templateId;
+                    
+                    try {
+                        // Set drag data with better browser compatibility
+                        e.dataTransfer.effectAllowed = 'copy';
+                        e.dataTransfer.setData('text/plain', templateCode);
+                        e.dataTransfer.setData('text', templateCode); // Fallback
+                        
+                        try {
+                            e.dataTransfer.setData('application/vscode-template', JSON.stringify({
+                                id: templateId,
+                                code: templateCode
+                            }));
+                        } catch (err) {
+                            console.warn('Custom MIME type not supported in tooltip drag');
+                        }
+                        
+                        // Visual feedback
+                        dragHandle.style.opacity = '0.5';
+                        
+                        // Notify extension about drag start
+                        vscode.postMessage({
+                            type: 'dragTemplate',
+                            templateId: templateId,
+                            text: templateCode
+                        });
+                        
+                        console.log('Started dragging from tooltip drag handle:', templateId);
+                        
+                    } catch (error) {
+                        console.error('Tooltip drag failed:', error);
+                        e.preventDefault();
+                        dragHandle.style.background = '#f44336';
+                        dragHandle.textContent = '❌ 拖曳失敗';
+                        setTimeout(() => {
+                            dragHandle.style.background = '';
+                            dragHandle.textContent = '✋ 拖曳';
+                        }, 1500);
+                    }
+                }
+            });
+        }
         
         dragHandle.addEventListener('dragend', (e) => {
             // Reset visual feedback
@@ -577,6 +781,100 @@
         
         codeArea.addEventListener('selectstart', (e) => {
             e.stopPropagation();
+        });
+
+        // Handle copy operation for selected text in code area
+        codeArea.addEventListener('copy', (e) => {
+            // Get selected text
+            const selection = window.getSelection();
+            if (selection && selection.toString().trim()) {
+                e.preventDefault();
+                
+                const selectedText = selection.toString();
+                
+                // Find the template ID - look for it in the tooltip or parent elements
+                let templateId = null;
+                
+                // Debug: log the codeArea and its context
+                console.log('[DEBUG] codeArea:', codeArea);
+                console.log('[DEBUG] codeArea parent:', codeArea.parentElement);
+                console.log('[DEBUG] codeArea closest tooltip:', codeArea.closest('.tooltip'));
+                
+                // First try to find from parent elements with data-template-id
+                const parentWithTemplateId = codeArea.closest('[data-template-id]');
+                if (parentWithTemplateId) {
+                    templateId = parentWithTemplateId.getAttribute('data-template-id');
+                    console.log('[DEBUG] Found templateId from parent:', templateId);
+                }
+                
+                // If not found, look in the tooltip for any element with data-template-id
+                if (!templateId) {
+                    const tooltipElement = codeArea.closest('.template-tooltip');
+                    console.log('[DEBUG] Found tooltip element:', tooltipElement);
+                    if (tooltipElement) {
+                        const templateElements = tooltipElement.querySelectorAll('[data-template-id]');
+                        console.log('[DEBUG] Template elements in tooltip:', templateElements);
+                        if (templateElements.length > 0) {
+                            templateId = templateElements[0].getAttribute('data-template-id');
+                            console.log('[DEBUG] Found templateId from tooltip:', templateId);
+                        }
+                    }
+                }
+                
+                console.log('[DEBUG] Final templateId:', templateId);
+                
+                // Send to extension for smart indentation processing
+                vscode.postMessage({
+                    type: 'copyCodeSnippet',
+                    code: selectedText,
+                    templateId: templateId
+                });
+                
+                console.log('Copy selected code snippet with smart indentation:', selectedText.substring(0, 50) + '...', 'from template:', templateId);
+            }
+            // If no text is selected, let the default copy behavior happen
+        });
+
+        // Handle keyboard shortcuts for copy in code area
+        codeArea.addEventListener('keydown', (e) => {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'c') {
+                const selection = window.getSelection();
+                if (selection && selection.toString().trim()) {
+                    e.preventDefault();
+                    
+                    const selectedText = selection.toString();
+                    
+                    // Find the template ID - look for it in the tooltip or parent elements
+                    let templateId = null;
+                    
+                    // First try to find from parent elements with data-template-id
+                    const parentWithTemplateId = codeArea.closest('[data-template-id]');
+                    if (parentWithTemplateId) {
+                        templateId = parentWithTemplateId.getAttribute('data-template-id');
+                    }
+                    
+                    // If not found, look in the tooltip for any element with data-template-id
+                    if (!templateId) {
+                        const tooltipElement = codeArea.closest('.template-tooltip');
+                        if (tooltipElement) {
+                            const templateElements = tooltipElement.querySelectorAll('[data-template-id]');
+                            if (templateElements.length > 0) {
+                                templateId = templateElements[0].getAttribute('data-template-id');
+                            }
+                        }
+                    }
+                    
+                    // Send to extension for smart indentation processing
+                    vscode.postMessage({
+                        type: 'copyCodeSnippet',
+                        code: selectedText,
+                        templateId: templateId
+                    });
+                    
+                    console.log('Copy selected code snippet via keyboard:', selectedText.substring(0, 50) + '...', 'from template:', templateId);
+                }
+                // If no text is selected, let the default behavior happen
+            }
         });
         
         

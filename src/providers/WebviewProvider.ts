@@ -25,6 +25,9 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
         // Initialize documentation provider
         const documentationService = new DocumentationService(this._extensionUri);
         this._documentationProvider = new DocumentationProvider(this._extensionUri, this.templateManager, documentationService);
+        
+        // Set up drag detection for smart indentation (temporarily disabled)
+        // this._setupDragDetection();
     }
 
     public resolveWebviewView(
@@ -49,6 +52,9 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
                 switch (message.type) {
                     case 'copyTemplate':
                         this._copyTemplate(message.templateId);
+                        break;
+                    case 'copyCodeSnippet':
+                        this._copyCodeSnippet(message.code, message.templateId);
                         break;
                     case 'dragTemplate':
                         this._handleDragTemplate(message.templateId, message.text);
@@ -80,7 +86,10 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
         }
 
         try {
-            const formattedCode = this.templateManager.formatTemplate(template);
+            // Get current editor indentation for smart formatting
+            const targetIndentation = this._getCurrentIndentation();
+            const formattedCode = this.templateManager.formatTemplate(template, targetIndentation);
+            
             await vscode.env.clipboard.writeText(formattedCode);
             vscode.window.showInformationMessage(`Template '${template.title}' copied to clipboard`);
             
@@ -93,9 +102,56 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
         }
     }
 
+    private async _copyCodeSnippet(code: string, templateId?: string) {
+        try {
+            // Get current editor indentation for smart formatting
+            const targetIndentation = this._getCurrentIndentation();
+            
+            let formattedCode: string;
+            
+            if (templateId) {
+                // If we know which template this came from, use template-aware formatting
+                const template = this.templateManager.getTemplateById(templateId);
+                if (template) {
+                    console.log(`[COPY SNIPPET] Using template-aware formatting for template: ${templateId}`);
+                    console.log(`[COPY SNIPPET] Selected code:\n${code}`);
+                    console.log(`[COPY SNIPPET] Full template code:\n${template.code}`);
+                    
+                    // Check if this is the full template or a snippet
+                    if (code.trim() === template.code.trim()) {
+                        // Full template - use template formatting
+                        formattedCode = this.templateManager.formatTemplate(template, targetIndentation);
+                        console.log(`[COPY SNIPPET] Full template match, using formatTemplate`);
+                    } else {
+                        // Code snippet - use template-aware snippet formatting
+                        formattedCode = this.templateManager.formatCodeSnippetWithTemplate(code, template, targetIndentation);
+                        console.log(`[COPY SNIPPET] Code snippet, using template-aware formatting`);
+                    }
+                } else {
+                    // Fallback to basic formatting
+                    formattedCode = this.templateManager.formatCodeSnippet(code, targetIndentation);
+                    console.log(`[COPY SNIPPET] Template not found, using basic formatting`);
+                }
+            } else {
+                // No template info, use basic formatting
+                formattedCode = this.templateManager.formatCodeSnippet(code, targetIndentation);
+                console.log(`[COPY SNIPPET] No template info, using basic formatting`);
+            }
+            
+            await vscode.env.clipboard.writeText(formattedCode);
+            
+            // Show subtle feedback without being annoying
+            const lines = code.split('\n').length;
+            const message = lines > 1 ? `${lines} 行文字已複製` : '文字片段已複製';
+            vscode.window.showInformationMessage(message);
+        } catch (error) {
+            vscode.window.showErrorMessage(`Failed to copy text snippet: ${error}`);
+        }
+    }
 
-    private _handleDragTemplate(templateId: string, text: string) {
-        // This will be used for drag and drop functionality
+
+    private async _handleDragTemplate(templateId: string, text: string) {
+        // This method is called during drag start - just log for now
         console.log(`Dragging template ${templateId}: ${text.substring(0, 50)}...`);
     }
 
@@ -120,6 +176,61 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
         } else {
             vscode.window.showErrorMessage('說明文檔服務未初始化');
         }
+    }
+
+    private _getCurrentIndentation(): string {
+        const editor = vscode.window.activeTextEditor;
+        if (!editor) {
+            return '';
+        }
+
+        const document = editor.document;
+        const selection = editor.selection;
+        const position = selection.active;
+
+        // Get the line where cursor is positioned
+        const currentLine = document.lineAt(position.line);
+        const lineText = currentLine.text;
+        const cursorColumn = position.character;
+
+        console.log(`DEBUG: Cursor at line ${position.line}, column ${cursorColumn}`);
+        console.log(`DEBUG: Line text: "${lineText}"`);
+
+        // Extract line indentation
+        const indentMatch = lineText.match(/^(\s*)/);
+        const lineIndentation = indentMatch?.[1] || '';
+        console.log(`DEBUG: Line indentation: "${lineIndentation}" (length: ${lineIndentation.length})`);
+
+        // Strategy 1: If cursor is at the beginning of line, use line's indentation
+        if (cursorColumn === 0) {
+            console.log(`DEBUG: Cursor at line start, using line indentation`);
+            return lineIndentation;
+        }
+
+        // Strategy 2: If cursor is within or after line indentation, use full line indentation
+        if (cursorColumn <= lineIndentation.length) {
+            console.log(`DEBUG: Cursor within indentation, using line indentation`);
+            return lineIndentation;
+        }
+
+        // Strategy 3: If cursor is after indentation in a non-empty line, use line indentation
+        if (lineText.trim().length > 0) {
+            console.log(`DEBUG: Cursor after indentation, using line indentation`);
+            return lineIndentation;
+        }
+
+        // Strategy 4: Empty line - look at context (previous line)
+        if (position.line > 0) {
+            const prevLine = document.lineAt(position.line - 1);
+            const prevIndentMatch = prevLine.text.match(/^(\s*)/);
+            const prevIndent = prevIndentMatch?.[1] || '';
+            console.log(`DEBUG: Empty line, using previous line indentation: "${prevIndent}"`);
+            return prevIndent;
+        }
+
+        // Final fallback
+        console.log(`DEBUG: Final fallback to empty indentation`);
+        return '';
     }
 
     private _getHtmlForWebview(webview: vscode.Webview): string {
@@ -594,4 +705,6 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
             return [];
         }
     }
+
+
 }

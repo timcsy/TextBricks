@@ -47,7 +47,15 @@ TextBricks organizes programming concepts into progressive categories:
 - **Unified Design**: Clean, consistent interface with golden theme for recommendations
 - **Context Awareness**: Reserved architecture for future context-based suggestions
 
-### 📖 **Documentation System** ⭐ New in v0.1.4
+### 🧠 **Smart Indentation System** ⭐ New in v0.1.5
+- **Intelligent Copy-Paste**: Automatically adjusts template indentation to match your cursor position
+- **Context-Aware Formatting**: Preserves relative indentation relationships between code lines
+- **Multi-Line Support**: Properly handles complex templates with nested indentation
+- **Tooltip Text Selection**: Smart indentation for selected text copied from template previews
+- **Seamless Integration**: Works automatically with all copy operations without additional setup
+- **GitHub Codespaces Support**: Automatic detection and drag fallbacks for web environments
+
+### 📖 **Documentation System** ⭐ v0.1.4
 - **Comprehensive Template Docs**: Rich Markdown documentation for each template with examples and explanations
 - **Multiple Doc Types**: Support for embedded Markdown, local files (.md), and external URLs
 - **Template Manager Integration**: Edit and preview documentation with modal preview window
@@ -80,10 +88,18 @@ TextBricks organizes programming concepts into progressive categories:
 4. **Select your language** using the language selector (🌐)
 5. **Browse templates** organized by learning level
 6. **Check recommendations** - Look for the "⭐ 推薦" section at the top for personalized suggestions
-7. **Click or drag** templates to use them - Usage is tracked for better recommendations
+7. **Use templates** - Click to copy or drag to insert - Usage is tracked for better recommendations
 8. **View documentation** - Hover over templates and click 📖 in tooltips to see detailed explanations
 
-### Using Documentation (New in v0.1.4)
+### Using Smart Indentation (New in v0.1.5)
+1. **Position your cursor** at the desired indentation level in your code
+2. **Copy any template** using the copy button or text selection
+3. **Paste the code** - Indentation automatically adjusts to match your cursor position
+4. **Relative indentation preserved** - All nested code maintains proper structure
+5. **Works with selections** - Select text from tooltips and copy with smart indentation
+6. **GitHub Codespaces** - Copy and paste works with smart indentation
+
+### Using Documentation (v0.1.4)
 1. **Hover over template cards** to see preview tooltip
 2. **Click the 📖 icon** in tooltips for templates with documentation
 3. **Documentation opens** in side panel next to your editor
@@ -278,7 +294,15 @@ This extension contributes the following settings:
 
 ## Release Notes
 
-### 0.1.4 ⭐ Latest
+### 0.1.5 ⭐ Latest
+- **Smart Indentation System**: Intelligent copy-paste with automatic indentation adjustment
+- **Context-Aware Formatting**: Preserves relative indentation relationships between code lines
+- **Multi-Line Template Support**: Proper handling of complex templates with nested indentation
+- **Tooltip Text Selection**: Smart indentation for selected text copied from template previews
+- **Seamless Integration**: Works automatically with all copy operations without additional setup
+- **Enhanced Copy Experience**: Template copying now adapts to cursor position and maintains code structure
+
+### 0.1.4
 - **Documentation System**: Rich Markdown documentation for templates with examples and explanations
 - **Template Manager Integration**: Edit and preview documentation with modal preview window
 - **Side Panel Display**: Documentation opens in editor side panel with syntax highlighting
