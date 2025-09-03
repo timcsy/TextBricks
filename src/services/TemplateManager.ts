@@ -66,17 +66,37 @@ export class TemplateManager {
   }
 
   formatTemplate(template: ExtendedTemplate, targetIndentation?: string): string {
-    // 當複製完整模板時，使用模板的完整縮排資訊來正確處理縮排關係
-    const fullTemplateIndentInfo = this.analyzeTemplateIndentation(template.code);
+    console.log(`[FORMAT TEMPLATE] Template ID: ${template.id}`);
+    console.log(`[FORMAT TEMPLATE] Target indentation: "${targetIndentation}" (length: ${targetIndentation?.length || 0})`);
     
-    // 找到模板中的基準縮排層級（通常是函數體內的縮排）
-    const baseIndentLevel = this.findBaseIndentLevel(fullTemplateIndentInfo);
+    if (!targetIndentation || targetIndentation.length === 0) {
+      // 沒有目標縮排，直接返回原始代碼
+      console.log(`[FORMAT TEMPLATE] No target indentation, returning original`);
+      return template.code;
+    }
     
-    console.log(`[TEMPLATE DEBUG] Full template code:\n${template.code}`);
-    console.log(`[TEMPLATE DEBUG] Full template indent info:`, fullTemplateIndentInfo);
-    console.log(`[TEMPLATE DEBUG] Base indent level:`, baseIndentLevel);
+    // 有目標縮排，需要正確處理每一行
+    const lines = template.code.split('\n');
     
-    return this.formatTemplateWithBaseIndent(template.code, fullTemplateIndentInfo, baseIndentLevel, targetIndentation);
+    const formattedLines = lines.map((line, index) => {
+      if (line.trim().length === 0) {
+        return '';
+      }
+      
+      if (index === 0) {
+        // 第一行：不加目標縮排（VS Code會自動加上）
+        return line.trim();
+      } else {
+        // 後續行：目標縮排 + 原始相對縮排
+        const match = line.match(/^(\s*)/);
+        const originalIndent = match ? match[1] : '';
+        return targetIndentation + originalIndent + line.trim();
+      }
+    });
+    
+    const result = formattedLines.join('\n');
+    console.log(`[FORMAT TEMPLATE] Formatted result:`, JSON.stringify(result));
+    return result;
   }
 
   /**
@@ -117,16 +137,9 @@ export class TemplateManager {
       
       if (originalIndent === 0) {
         // 沒有縮排的行（如函數宣告、for語句開頭、結束括號）
-        // 第一行直接放在游標位置，後續同層級行對齊第一行
-        if (index === 0) {
-          // 第一行：讓VS Code決定位置
-          console.log(`[TEMPLATE DEBUG] Line ${index}: first line, no extra indent -> "${line.trim()}"`);
-          return line.trim();
-        } else {
-          // 後續同層級行：與第一行對齊（使用目標縮排）
-          finalIndent = targetIndentation;
-          console.log(`[TEMPLATE DEBUG] Line ${index}: same level as first line -> target indent`);
-        }
+        // 這些行都應該沒有額外縮排
+        console.log(`[TEMPLATE DEBUG] Line ${index}: no original indent -> "${line.trim()}"`);
+        return line.trim();
       } else if (originalIndent === baseIndentLevel) {
         // 基準層級的行（如函數體內的語句）- 目標縮排 + 基準層級
         const indentUnit = targetIndentation.includes('\t') ? '\t' : '    ';
@@ -328,7 +341,7 @@ export class TemplateManager {
 
   formatCodeSnippet(code: string, targetIndentation?: string): string {
     // If no target indentation is provided, return as is
-    if (!targetIndentation) {
+    if (targetIndentation === undefined) {
       return code;
     }
     
@@ -376,22 +389,18 @@ export class TemplateManager {
       
       let finalIndent = '';
       if (relativeIndent > 0) {
-        // 比第一行多縮排：目標縮排 + 相對差異
+        // 比第一行多縮排：只添加相對差異，不添加目標縮排
         const indentUnit = targetIndentation.includes('\t') ? '\t' : '    ';
         const indentMultiplier = indentUnit === '\t' ? 1 : indentUnit.length;
         const extraLevels = Math.floor(relativeIndent / indentMultiplier);
-        finalIndent = targetIndentation + indentUnit.repeat(extraLevels);
+        finalIndent = indentUnit.repeat(extraLevels);
       } else if (relativeIndent < 0) {
-        // 比第一行少縮排：從目標縮排中減少
-        const reduceAmount = Math.abs(relativeIndent);
-        if (reduceAmount >= targetIndentation.length) {
-          finalIndent = '';
-        } else {
-          finalIndent = targetIndentation.substring(0, targetIndentation.length - reduceAmount);
-        }
+        // 比第一行少縮排：這種情況很少見，直接使用內容
+        console.log(`[INDENT DEBUG] Line ${index}: less indent than first line -> "${line.trim()}"`);
+        return line.trim();
       } else {
-        // 和第一行縮排相同：使用目標縮排
-        finalIndent = targetIndentation;
+        // 和第一行縮排相同：不添加額外縮排
+        finalIndent = '';
       }
       
       const result = finalIndent + line.trim();
@@ -445,41 +454,50 @@ export class TemplateManager {
   }
 
   /**
-   * 使用模板資訊格式化代碼片段
+   * 統一的代碼片段格式化方法（可選模板輔助）
    */
-  formatCodeSnippetWithTemplate(code: string, template: ExtendedTemplate, targetIndentation?: string): string {
-    if (!targetIndentation) {
+  formatCodeSnippetUnified(code: string, template?: ExtendedTemplate, targetIndentation?: string): string {
+    if (targetIndentation === undefined) {
       return code;
     }
 
-    console.log(`[SNIPPET WITH TEMPLATE] Processing snippet with template context`);
-    console.log(`[SNIPPET WITH TEMPLATE] Snippet:\n${code}`);
-    console.log(`[SNIPPET WITH TEMPLATE] Template:\n${template.code}`);
+    console.log(`[SNIPPET WITH TEMPLATE] ========== PROCESSING SNIPPET ==========`);
+    console.log(`[SNIPPET WITH TEMPLATE] Snippet:\n${JSON.stringify(code)}`);
+    console.log(`[SNIPPET WITH TEMPLATE] Template:`, template ? JSON.stringify(template.code) : 'None');
+    console.log(`[SNIPPET WITH TEMPLATE] Target indentation:`, JSON.stringify(targetIndentation));
 
-    // 分析模板的縮排資訊以了解基準層級
-    const fullTemplateIndentInfo = this.analyzeTemplateIndentation(template.code);
-    const baseIndentLevel = this.findBaseIndentLevel(fullTemplateIndentInfo);
+    // 分析模板的縮排資訊以了解基準層級（如果有模板的話）
+    let fullTemplateIndentInfo: number[] = [];
+    let baseIndentLevel = 0;
     
-    console.log(`[SNIPPET WITH TEMPLATE] Template indent info:`, fullTemplateIndentInfo);
-    console.log(`[SNIPPET WITH TEMPLATE] Base indent level:`, baseIndentLevel);
+    if (template) {
+      fullTemplateIndentInfo = this.analyzeTemplateIndentation(template.code);
+      baseIndentLevel = this.findBaseIndentLevel(fullTemplateIndentInfo);
+      console.log(`[SNIPPET WITH TEMPLATE] Template indent info:`, fullTemplateIndentInfo);
+      console.log(`[SNIPPET WITH TEMPLATE] Base indent level:`, baseIndentLevel);
+    } else {
+      console.log(`[SNIPPET WITH TEMPLATE] No template provided, using basic analysis`);
+    }
 
     // 分析代碼片段的縮排
     const snippetLines = code.split('\n');
     let snippetIndentInfo = this.analyzeTemplateIndentation(code);
     
     // 修復選取文字時首行縮排丟失的問題
-    // 嘗試在模板中找到匹配的行來恢復原始縮排
-    const templateLines = template.code.split('\n');
-    for (let i = 0; i < snippetLines.length; i++) {
-      const snippetLine = snippetLines[i].trim();
-      if (snippetLine && snippetIndentInfo[i] === 0) {
-        // 如果片段行沒有縮排但內容不為空，在模板中查找匹配的行
-        for (let j = 0; j < templateLines.length; j++) {
-          if (templateLines[j].trim() === snippetLine) {
-            const originalIndent = fullTemplateIndentInfo[j];
-            console.log(`[SNIPPET WITH TEMPLATE] Restored line ${i} indentation from ${snippetIndentInfo[i]} to ${originalIndent} (matched template line ${j})`);
-            snippetIndentInfo[i] = originalIndent;
-            break;
+    // 嘗試在模板中找到匹配的行來恢復原始縮排（如果有模板的話）
+    if (template) {
+      const templateLines = template.code.split('\n');
+      for (let i = 0; i < snippetLines.length; i++) {
+        const snippetLine = snippetLines[i].trim();
+        if (snippetLine && snippetIndentInfo[i] === 0) {
+          // 如果片段行沒有縮排但內容不為空，在模板中查找匹配的行
+          for (let j = 0; j < templateLines.length; j++) {
+            if (templateLines[j].trim() === snippetLine) {
+              const originalIndent = fullTemplateIndentInfo[j];
+              console.log(`[SNIPPET WITH TEMPLATE] Restored line ${i} indentation from ${snippetIndentInfo[i]} to ${originalIndent} (matched template line ${j})`);
+              snippetIndentInfo[i] = originalIndent;
+              break;
+            }
           }
         }
       }
@@ -497,7 +515,10 @@ export class TemplateManager {
     const nonEmptyIndents = snippetIndentInfo.filter((indent, i) => snippetLines[i].trim().length > 0);
     const allLinesAtSameLevel = nonEmptyIndents.length > 1 && nonEmptyIndents.every(indent => indent === nonEmptyIndents[0]);
     
-    console.log(`[SNIPPET WITH TEMPLATE] Consistency check: all lines at same level = ${allLinesAtSameLevel}, indents = [${nonEmptyIndents.join(', ')}]`);
+    console.log(`[SNIPPET WITH TEMPLATE] ========== CONSISTENCY CHECK ==========`);
+    console.log(`[SNIPPET WITH TEMPLATE] Non-empty indents:`, nonEmptyIndents);
+    console.log(`[SNIPPET WITH TEMPLATE] All lines at same level:`, allLinesAtSameLevel);
+    console.log(`[SNIPPET WITH TEMPLATE] Final snippetIndentInfo:`, snippetIndentInfo);
 
     // 處理每一行
     const formattedLines = snippetLines.map((line, index) => {
@@ -513,12 +534,14 @@ export class TemplateManager {
       if (allLinesAtSameLevel) {
         if (index === 0) {
           // 第一行：讓VS Code決定位置
-          console.log(`[SNIPPET WITH TEMPLATE] Line ${index}: first line in consistent group -> "${line.trim()}"`);
-          return line.trim();
+          const result = line.trim();
+          console.log(`[SNIPPET WITH TEMPLATE] *** Line ${index}: FIRST LINE SAME LEVEL -> "${result}"`);
+          return result;
         } else {
-          // 後續行：與第一行對齊
-          finalIndent = targetIndentation;
-          console.log(`[SNIPPET WITH TEMPLATE] Line ${index}: consistent group member -> align with first line`);
+          // 後續行：需要手動加上目標縮排，因為VS Code只對第一行加縮排
+          const result = targetIndentation + line.trim();
+          console.log(`[SNIPPET WITH TEMPLATE] *** Line ${index}: SUBSEQUENT SAME LEVEL (with target indent) -> "${result}"`);
+          return result;
         }
       } else if (originalIndent === 0) {
         // 沒有縮排的行（如for語句、結束括號）
@@ -574,7 +597,24 @@ export class TemplateManager {
     });
     
     const finalResult = formattedLines.join('\n');
-    console.log(`[SNIPPET WITH TEMPLATE] Final result:\n${finalResult}`);
+    console.log(`[SNIPPET WITH TEMPLATE] ========== FINAL RESULT ==========`);
+    console.log(`[SNIPPET WITH TEMPLATE] Result length: ${finalResult.length}`);
+    console.log(`[SNIPPET WITH TEMPLATE] Result JSON:`, JSON.stringify(finalResult));
+    console.log(`[SNIPPET WITH TEMPLATE] Result display:\n${finalResult}`);
+    
+    // 檢查每一行的詳細信息
+    finalResult.split('\n').forEach((line, i) => {
+      console.log(`[SNIPPET WITH TEMPLATE] Line ${i}: length=${line.length}, content="${line}"`);
+      console.log(`[SNIPPET WITH TEMPLATE] Line ${i} chars:`, [...line].map(c => c.charCodeAt(0)));
+    });
+    
     return finalResult;
+  }
+
+  /**
+   * 使用模板資訊格式化代碼片段（向後兼容方法）
+   */
+  formatCodeSnippetWithTemplate(code: string, template: ExtendedTemplate, targetIndentation?: string): string {
+    return this.formatCodeSnippetUnified(code, template, targetIndentation);
   }
 }

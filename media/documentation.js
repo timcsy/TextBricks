@@ -45,8 +45,8 @@
             copyCodeBtn.addEventListener('click', handleCopyCode);
         }
 
-        // Code block action buttons
-        bindCodeBlockEventListeners();
+        // Code block action buttons - use event delegation
+        setupCodeBlockEventDelegation();
 
         // Handle keyboard shortcuts
         document.addEventListener('keydown', handleKeyboardShortcuts);
@@ -55,16 +55,29 @@
         window.addEventListener('scroll', handleScroll);
     }
 
-    function bindCodeBlockEventListeners() {
-        // Insert code buttons
-        document.querySelectorAll('.insert-code-btn').forEach(button => {
-            button.addEventListener('click', handleInsertCodeBlock);
+    function setupCodeBlockEventDelegation() {
+        // Use event delegation to handle all code block buttons
+        // This prevents duplicate event listeners when content is refreshed
+        document.addEventListener('click', function(event) {
+            const target = event.target.closest('button');
+            if (!target) return;
+            
+            if (target.classList.contains('insert-code-btn')) {
+                event.preventDefault();
+                event.stopPropagation();
+                handleInsertCodeBlock(event);
+            } else if (target.classList.contains('copy-code-btn') && target.id !== 'copy-code-btn') {
+                event.preventDefault();
+                event.stopPropagation();
+                handleCopyCodeBlock(event);
+            }
         });
+    }
 
-        // Copy code block buttons
-        document.querySelectorAll('.copy-code-btn:not(#copy-code-btn)').forEach(button => {
-            button.addEventListener('click', handleCopyCodeBlock);
-        });
+    // Legacy function kept for compatibility but not used
+    function bindCodeBlockEventListeners() {
+        // This function is no longer used - we use event delegation instead
+        console.log('Using event delegation instead of direct binding');
     }
 
     function handleRefresh() {
@@ -290,6 +303,10 @@
         switch (message.type) {
             case 'refresh-complete':
                 console.log('Documentation refresh completed');
+                // Re-initialize syntax highlighting for new content
+                initializeSyntaxHighlighting();
+                // Re-handle external links for new content
+                handleExternalLinks();
                 break;
             
             case 'copy-complete':

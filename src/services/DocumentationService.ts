@@ -156,21 +156,29 @@ export class DocumentationService {
     ): DocumentationContent {
         let processedContent = documentation;
 
-        // Auto-inject template content if there's a "模板內容" or "Template Content" section
-        const templateContentRegex = /^## (模板內容|Template Content)\s*$/m;
+        // Replace entire "模板內容" section (including the code block that follows)
+        const templateContentSectionRegex = /^## (模板內容|Template Content)\s*\n```[\w]*\n[\s\S]*?\n```/m;
         
-        if (templateContentRegex.test(documentation)) {
-            // Replace the section with actual template content
-            const templateCodeBlock = `## 模板內容\n\`\`\`${template.language}\n${template.code}\n\`\`\`\n`;
+        if (templateContentSectionRegex.test(documentation)) {
+            // Replace the entire section (title + code block) with actual template content
+            const templateCodeBlock = `## 模板內容\n\`\`\`${template.language}\n${template.code}\n\`\`\``;
             processedContent = documentation.replace(
-                /^## (模板內容|Template Content)\s*$/m, 
-                templateCodeBlock.trim()
+                templateContentSectionRegex, 
+                templateCodeBlock
             );
-        } else if (!documentation.includes('```' + template.language)) {
-            // If no template content section exists and no code block is present, 
-            // auto-append template content
-            const autoTemplateSection = `\n\n## 模板內容\n\`\`\`${template.language}\n${template.code}\n\`\`\`\n`;
-            processedContent += autoTemplateSection;
+        } else {
+            // Check if there's just a "模板內容" header without code block
+            const headerOnlyRegex = /^## (模板內容|Template Content)\s*$/m;
+            if (headerOnlyRegex.test(documentation)) {
+                // Replace just the header
+                const templateCodeBlock = `## 模板內容\n\`\`\`${template.language}\n${template.code}\n\`\`\``;
+                processedContent = documentation.replace(headerOnlyRegex, templateCodeBlock);
+            } else if (!documentation.includes('```' + template.language)) {
+                // If no template content section exists and no code block is present, 
+                // auto-append template content
+                const autoTemplateSection = `\n\n## 模板內容\n\`\`\`${template.language}\n${template.code}\n\`\`\`\n`;
+                processedContent += autoTemplateSection;
+            }
         }
 
         return {

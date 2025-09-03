@@ -127,6 +127,11 @@ export class DocumentationProvider {
 
             // Generate final HTML
             this._panel.webview.html = this._getDocumentationHtml(docResult, this._currentTemplate);
+            
+            // Send refresh complete message to webview
+            setTimeout(() => {
+                this._panel?.webview.postMessage({ type: 'refresh-complete' });
+            }, 100); // Small delay to ensure HTML is loaded
 
         } catch (error) {
             console.error('Documentation loading error:', error);
@@ -440,14 +445,11 @@ export class DocumentationProvider {
         try {
             // Use template manager's formatting if available
             let formattedCode = code;
-            if (templateId) {
-                const template = this.templateManager.getTemplateById(templateId);
-                if (template) {
-                    // Get current editor indentation for smart formatting
-                    const targetIndentation = this._getCurrentIndentation();
-                    formattedCode = this.templateManager.formatCodeSnippetWithTemplate(code, template, targetIndentation);
-                }
-            }
+            const template = templateId ? this.templateManager.getTemplateById(templateId) : undefined;
+            
+            // Get current editor indentation for smart formatting
+            const targetIndentation = this._getCurrentIndentation();
+            formattedCode = this.templateManager.formatCodeSnippetUnified(code, template, targetIndentation);
             
             await vscode.env.clipboard.writeText(formattedCode);
             
@@ -487,20 +489,49 @@ export class DocumentationProvider {
 
             // Use template manager's formatting if available
             let formattedCode = code;
-            if (templateId) {
-                const template = this.templateManager.getTemplateById(templateId);
-                if (template) {
-                    // Get current editor indentation for smart formatting
-                    const targetIndentation = this._getCurrentIndentation();
-                    formattedCode = this.templateManager.formatCodeSnippetWithTemplate(code, template, targetIndentation);
-                }
-            }
+            const template = templateId ? this.templateManager.getTemplateById(templateId) : undefined;
+            
+            // Get current editor indentation for smart formatting
+            const targetIndentation = this._getCurrentIndentation();
+            formattedCode = this.templateManager.formatCodeSnippetUnified(code, template, targetIndentation);
+            
+            // Debug: Show the exact formatted code being inserted
+            console.log(`[INSERT DEBUG] ========== INSERTION DEBUG ==========`);
+            console.log(`[INSERT DEBUG] Target indentation:`, JSON.stringify(targetIndentation));
+            console.log(`[INSERT DEBUG] Template:`, template ? template.id : 'none');
+            console.log(`[INSERT DEBUG] Formatted code:`, JSON.stringify(formattedCode));
+            console.log(`[INSERT DEBUG] Lines to insert:`);
+            formattedCode.split('\n').forEach((line, i) => {
+                console.log(`  Line ${i}: "${line}"`);
+            });
 
             // Insert at current cursor position
             const position = editor.selection.active;
+            const currentLine = editor.document.lineAt(position.line);
+            
+            console.log(`[INSERT DEBUG] ========== CURSOR & INSERTION ==========`);
+            console.log(`[INSERT DEBUG] Cursor position: line ${position.line}, column ${position.character}`);
+            console.log(`[INSERT DEBUG] Current line text: "${currentLine.text}"`);
+            console.log(`[INSERT DEBUG] Current line length: ${currentLine.text.length}`);
+            console.log(`[INSERT DEBUG] Current line leading spaces: "${currentLine.text.match(/^(\s*)/)?.[1] || ''}"`);
+            
             await editor.edit(editBuilder => {
                 editBuilder.insert(position, formattedCode);
             });
+            
+            // Debug: Check the result after insertion
+            setTimeout(() => {
+                const newPosition = editor.selection.active;
+                const newLine = editor.document.lineAt(position.line);
+                const nextLine = position.line + 1 < editor.document.lineCount ? 
+                    editor.document.lineAt(position.line + 1) : null;
+                
+                console.log(`[INSERT DEBUG] ========== POST-INSERTION ==========`);
+                console.log(`[INSERT DEBUG] First inserted line: "${newLine.text}"`);
+                if (nextLine) {
+                    console.log(`[INSERT DEBUG] Second inserted line: "${nextLine.text}"`);
+                }
+            }, 100);
 
             // Show subtle feedback
             const lines = code.split('\n').length;
@@ -524,6 +555,11 @@ export class DocumentationProvider {
         const currentLine = document.lineAt(position.line);
         const lineText = currentLine.text;
         const match = lineText.match(/^(\s*)/);
+        
+        // If we're at the beginning of an empty line, no target indentation needed
+        if (position.character === 0 && lineText.trim() === '') {
+            return '';
+        }
         
         if (match && match[1]) {
             return match[1];

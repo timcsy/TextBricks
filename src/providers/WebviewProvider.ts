@@ -174,33 +174,17 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
             
             let formattedCode: string;
             
-            if (templateId) {
-                // If we know which template this came from, use template-aware formatting
-                const template = this.templateManager.getTemplateById(templateId);
-                if (template) {
-                    console.log(`[COPY SNIPPET] Using template-aware formatting for template: ${templateId}`);
-                    console.log(`[COPY SNIPPET] Selected code:\n${code}`);
-                    console.log(`[COPY SNIPPET] Full template code:\n${template.code}`);
-                    
-                    // Check if this is the full template or a snippet
-                    if (code.trim() === template.code.trim()) {
-                        // Full template - use template formatting
-                        formattedCode = this.templateManager.formatTemplate(template, targetIndentation);
-                        console.log(`[COPY SNIPPET] Full template match, using formatTemplate`);
-                    } else {
-                        // Code snippet - use template-aware snippet formatting
-                        formattedCode = this.templateManager.formatCodeSnippetWithTemplate(code, template, targetIndentation);
-                        console.log(`[COPY SNIPPET] Code snippet, using template-aware formatting`);
-                    }
-                } else {
-                    // Fallback to basic formatting
-                    formattedCode = this.templateManager.formatCodeSnippet(code, targetIndentation);
-                    console.log(`[COPY SNIPPET] Template not found, using basic formatting`);
-                }
+            // Use unified formatting method
+            const template = templateId ? this.templateManager.getTemplateById(templateId) : undefined;
+            
+            if (template && code.trim() === template.code.trim()) {
+                // Full template - use template formatting
+                formattedCode = this.templateManager.formatTemplate(template, targetIndentation);
+                console.log(`[COPY SNIPPET] Full template match, using formatTemplate`);
             } else {
-                // No template info, use basic formatting
-                formattedCode = this.templateManager.formatCodeSnippet(code, targetIndentation);
-                console.log(`[COPY SNIPPET] No template info, using basic formatting`);
+                // Code snippet - use unified snippet formatting
+                formattedCode = this.templateManager.formatCodeSnippetUnified(code, template, targetIndentation);
+                console.log(`[COPY SNIPPET] Code snippet, using unified formatting, template: ${template ? template.id : 'none'}`);
             }
             
             await vscode.env.clipboard.writeText(formattedCode);
@@ -233,26 +217,12 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
             
             let formattedCode: string;
             
-            if (templateId) {
-                // If we know which template this came from, use template-aware formatting
-                const template = this.templateManager.getTemplateById(templateId);
-                if (template) {
-                    console.log(`[INSERT SNIPPET] Using template-aware formatting for template: ${templateId}`);
-                    console.log(`[INSERT SNIPPET] Selected code:\n${code}`);
-                    
-                    // Use template-aware snippet formatting
-                    formattedCode = this.templateManager.formatCodeSnippetWithTemplate(code, template, targetIndentation);
-                    console.log(`[INSERT SNIPPET] Code snippet, using template-aware formatting`);
-                } else {
-                    // Fallback to basic formatting
-                    formattedCode = this.templateManager.formatCodeSnippet(code, targetIndentation);
-                    console.log(`[INSERT SNIPPET] Template not found, using basic formatting`);
-                }
-            } else {
-                // Basic formatting without template context
-                formattedCode = this.templateManager.formatCodeSnippet(code, targetIndentation);
-                console.log(`[INSERT SNIPPET] Code snippet, using basic formatting`);
-            }
+            // Use unified formatting method
+            const template = templateId ? this.templateManager.getTemplateById(templateId) : undefined;
+            formattedCode = this.templateManager.formatCodeSnippetUnified(code, template, targetIndentation);
+            
+            console.log(`[INSERT SNIPPET] Using unified formatting, template: ${template ? template.id : 'none'}`);
+            console.log(`[INSERT SNIPPET] Selected code:\n${code}`);
             
             console.log(`[INSERT SNIPPET] Final formatted code:\n${formattedCode}`);
             
