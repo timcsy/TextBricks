@@ -305,7 +305,18 @@ This extension contributes the following settings:
 
 ## Release Notes
 
-### 0.1.5 ⭐ Latest
+### 0.1.7 ⭐ Latest
+- **GitHub Codespaces Optimization**: Improved experience for GitHub Codespaces environment
+- **Drag Functionality Refinement**: Enhanced drag behavior with environment-aware features
+- **Code Quality Improvements**: Streamlined codebase and removed unnecessary features
+- **Performance Optimization**: Cleaner event handling and reduced resource usage
+
+### 0.1.6
+- **Interactive Code Blocks**: Documentation code blocks with insert and copy buttons
+- **Smart Selection Support**: Select specific portions of code in documentation to insert/copy only that part
+- **Enhanced User Experience**: Improved tooltip interactions and visual feedback
+
+### 0.1.5
 - **Smart Indentation System**: Intelligent copy-paste with automatic indentation adjustment
 - **Context-Aware Formatting**: Preserves relative indentation relationships between code lines
 - **Multi-Line Template Support**: Proper handling of complex templates with nested indentation

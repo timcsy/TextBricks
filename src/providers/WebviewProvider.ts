@@ -26,8 +26,6 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
         const documentationService = new DocumentationService(this._extensionUri);
         this._documentationProvider = new DocumentationProvider(this._extensionUri, this.templateManager, documentationService);
         
-        // Set up drag detection for smart indentation (temporarily disabled)
-        // this._setupDragDetection();
     }
 
     public resolveWebviewView(
