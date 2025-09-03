@@ -49,12 +49,15 @@ TextBricks organizes programming concepts into progressive categories:
 - **Unified Design**: Clean, consistent interface with golden theme for recommendations
 - **Context Awareness**: Reserved architecture for future context-based suggestions
 
-### 🧠 **Smart Indentation System** ⭐ New in v0.1.5
-- **Intelligent Copy-Paste**: Automatically adjusts template indentation to match your cursor position
+### 🧠 **Smart Indentation System** ⭐ Enhanced in v0.1.7
+- **Unified Code Insertion**: Single intelligent system handles all code insertion (tooltips, documentation, templates)
+- **Same-Level Detection**: Automatically recognizes when code lines are at the same indentation level
+- **Smart Cursor Analysis**: Empty line detection - no extra indentation when inserting at line start (column 0)
 - **Context-Aware Formatting**: Preserves relative indentation relationships between code lines
+- **Template-Assisted Recovery**: Recovers lost indentation information using original template context
 - **Multi-Line Support**: Properly handles complex templates with nested indentation
-- **Tooltip Text Selection**: Smart indentation for selected text copied from template previews
-- **Seamless Integration**: Works automatically with all copy operations without additional setup
+- **Consistent Behavior**: Tooltip and documentation insertions now behave identically
+- **Comprehensive Testing**: Full test coverage ensures reliable indentation in all scenarios
 - **GitHub Codespaces Support**: Automatic detection and drag fallbacks for web environments
 
 ### 📖 **Documentation System** ⭐ v0.1.4
@@ -102,13 +105,15 @@ TextBricks organizes programming concepts into progressive categories:
 7. **Use templates** - Click to copy or drag to insert - Usage is tracked for better recommendations
 8. **View documentation** - Hover over templates and click 📖 in tooltips to see detailed explanations
 
-### Using Smart Indentation (New in v0.1.5)
-1. **Position your cursor** at the desired indentation level in your code
-2. **Copy any template** using the copy button or text selection
-3. **Paste the code** - Indentation automatically adjusts to match your cursor position
-4. **Relative indentation preserved** - All nested code maintains proper structure
-5. **Works with selections** - Select text from tooltips and copy with smart indentation
-6. **GitHub Codespaces** - Copy and paste works with smart indentation
+### Using Smart Indentation (Enhanced in v0.1.7)
+1. **Position your cursor** anywhere in your code - empty lines, indented positions, or line start
+2. **Insert code** from tooltips, documentation, or templates - all use the same intelligent system
+3. **Automatic adjustment** - Indentation automatically adjusts to match your cursor position and context
+4. **Same-level handling** - Code with identical indentation levels maintains consistency
+5. **Empty line optimization** - Inserting at the start of empty lines (column 0) avoids unnecessary indentation
+6. **Relative structure preserved** - All nested code maintains proper hierarchical structure
+7. **Template context recovery** - Lost indentation information is automatically restored from original templates
+8. **Consistent experience** - Tooltip insertions and documentation insertions behave identically
 
 ### Using Documentation (v0.1.4)
 1. **Hover over template cards** to see preview tooltip
@@ -306,10 +311,15 @@ This extension contributes the following settings:
 ## Release Notes
 
 ### 0.1.7 ⭐ Latest
+- **Unified Indentation System**: Complete rewrite of indentation logic with single `formatCodeSnippetUnified` method
+- **Same-Level Detection**: Intelligent recognition of code lines at identical indentation levels
+- **Smart Cursor Analysis**: Empty line detection prevents unnecessary indentation at line start (column 0)
+- **Consistent Insertion Behavior**: Tooltip and documentation insertions now use identical logic
+- **Template-Assisted Recovery**: Recovers lost indentation information from original template context
+- **Comprehensive Test Coverage**: Full test suite covering all indentation scenarios and edge cases
+- **Bug Fixes**: Fixed inconsistent indentation between tooltip and documentation insertions
 - **GitHub Codespaces Optimization**: Improved experience for GitHub Codespaces environment
-- **Drag Functionality Refinement**: Enhanced drag behavior with environment-aware features
-- **Code Quality Improvements**: Streamlined codebase and removed unnecessary features
-- **Performance Optimization**: Cleaner event handling and reduced resource usage
+- **Code Quality Improvements**: Streamlined codebase with unified architecture
 
 ### 0.1.6
 - **Interactive Code Blocks**: Documentation code blocks with insert and copy buttons
@@ -358,6 +368,40 @@ This extension contributes the following settings:
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Development & Testing
+
+### Architecture Overview
+- **Unified Indentation**: `TemplateManager.formatCodeSnippetUnified()` handles all code insertion scenarios
+- **Provider Consistency**: `WebviewProvider` and `DocumentationProvider` use identical formatting logic
+- **Smart Analysis**: Automatic same-level detection and template-assisted indentation recovery
+- **Comprehensive Testing**: Full test coverage in `src/services/__tests__/TemplateManager.test.ts` and `src/providers/__tests__/DocumentationProvider.test.ts`
+
+### Key Technical Improvements (v0.1.7)
+- **Single Source of Truth**: Unified `formatCodeSnippetUnified` method eliminates code duplication
+- **Smart Detection Logic**: `allLinesAtSameLevel` detection prevents incorrect extra indentation
+- **Context-Aware Processing**: Empty line analysis (`position.character === 0`) for optimal cursor handling  
+- **Template Matching**: Automatic indentation recovery using original template context when selection loses formatting
+- **Backward Compatibility**: Existing `formatCodeSnippetWithTemplate` method maintained for compatibility
+
+### Running Tests
+```bash
+# Run all tests
+npm test
+
+# Run indentation-specific tests
+npm test -- --testPathPattern="TemplateManager" --testNamePattern="formatCodeSnippetUnified"
+
+# Run with coverage
+npm test -- --coverage
+```
+
+### Test Coverage Areas
+- **Same-Level Logic**: Multi-line code with identical indentation levels
+- **Empty Line Handling**: Cursor at column 0 on empty lines
+- **Template Recovery**: Lost indentation restoration from original templates
+- **Edge Cases**: Empty strings, single lines, mixed indentation
+- **Provider Consistency**: Both tooltip and documentation insertion paths
 
 ## Support
 
