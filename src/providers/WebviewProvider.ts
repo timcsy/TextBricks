@@ -53,8 +53,14 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
                     case 'copyTemplate':
                         this._copyTemplate(message.templateId);
                         break;
+                    case 'insertTemplate':
+                        this._insertTemplate(message.templateId);
+                        break;
                     case 'copyCodeSnippet':
                         this._copyCodeSnippet(message.code, message.templateId);
+                        break;
+                    case 'insertCodeSnippet':
+                        this._insertCodeSnippet(message.code, message.templateId);
                         break;
                     case 'dragTemplate':
                         this._handleDragTemplate(message.templateId, message.text);
@@ -99,6 +105,67 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
             }
         } catch (error) {
             vscode.window.showErrorMessage(`Failed to copy template: ${error}`);
+        }
+    }
+
+    private async _insertTemplate(templateId: string) {
+        const template = this.templateManager.getTemplateById(templateId);
+        if (!template) {
+            vscode.window.showErrorMessage(`Template with id '${templateId}' not found`);
+            return;
+        }
+
+        try {
+            const editor = vscode.window.activeTextEditor;
+            if (!editor) {
+                // Try to copy to clipboard as fallback
+                await vscode.env.clipboard.writeText(template.code);
+                const action = await vscode.window.showWarningMessage(
+                    '沒有打開的編輯器，模板已複製到剪貼簿',
+                    '開啟新檔案'
+                );
+                
+                if (action === '開啟新檔案') {
+                    const newDoc = await vscode.workspace.openTextDocument();
+                    const newEditor = await vscode.window.showTextDocument(newDoc);
+                    
+                    // Get formatting for new document
+                    const targetIndentation = this._getCurrentIndentationForEditor(newEditor);
+                    const formattedCode = this.templateManager.formatTemplate(template, targetIndentation);
+                    
+                    // Insert the template into the new document
+                    await newEditor.edit(editBuilder => {
+                        editBuilder.insert(new vscode.Position(0, 0), formattedCode);
+                    });
+                    
+                    vscode.window.showInformationMessage(`模板 '${template.title}' 已插入到新檔案`);
+                    
+                    // 記錄模板使用統計
+                    if (this.managementService) {
+                        await this.managementService.recordTemplateUsage(templateId);
+                    }
+                }
+                return;
+            }
+
+            // Get current editor indentation for smart formatting
+            const targetIndentation = this._getCurrentIndentation();
+            const formattedCode = this.templateManager.formatTemplate(template, targetIndentation);
+
+            // Insert at current cursor position
+            const position = editor.selection.active;
+            await editor.edit(editBuilder => {
+                editBuilder.insert(position, formattedCode);
+            });
+
+            vscode.window.showInformationMessage(`Template '${template.title}' inserted`);
+            
+            // 記錄模板使用統計
+            if (this.managementService) {
+                await this.managementService.recordTemplateUsage(templateId);
+            }
+        } catch (error) {
+            vscode.window.showErrorMessage(`Failed to insert template: ${error}`);
         }
     }
 
@@ -149,6 +216,62 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
         }
     }
 
+    private async _insertCodeSnippet(code: string, templateId?: string) {
+        console.log(`[DEBUG] _insertCodeSnippet called with code: "${code.substring(0, 100)}...", templateId: ${templateId}`);
+        
+        try {
+            const editor = vscode.window.activeTextEditor;
+            if (!editor) {
+                console.log(`[DEBUG] No active editor found`);
+                vscode.window.showErrorMessage('No active editor found');
+                return;
+            }
+
+            console.log(`[DEBUG] Active editor found: ${editor.document.fileName}`);
+
+            // Get current editor indentation for smart formatting
+            const targetIndentation = this._getCurrentIndentation();
+            console.log(`[DEBUG] Target indentation: "${targetIndentation}" (length: ${targetIndentation.length})`);
+            
+            let formattedCode: string;
+            
+            if (templateId) {
+                // If we know which template this came from, use template-aware formatting
+                const template = this.templateManager.getTemplateById(templateId);
+                if (template) {
+                    console.log(`[INSERT SNIPPET] Using template-aware formatting for template: ${templateId}`);
+                    console.log(`[INSERT SNIPPET] Selected code:\n${code}`);
+                    
+                    // Use template-aware snippet formatting
+                    formattedCode = this.templateManager.formatCodeSnippetWithTemplate(code, template, targetIndentation);
+                    console.log(`[INSERT SNIPPET] Code snippet, using template-aware formatting`);
+                } else {
+                    // Fallback to basic formatting
+                    formattedCode = this.templateManager.formatCodeSnippet(code, targetIndentation);
+                    console.log(`[INSERT SNIPPET] Template not found, using basic formatting`);
+                }
+            } else {
+                // Basic formatting without template context
+                formattedCode = this.templateManager.formatCodeSnippet(code, targetIndentation);
+                console.log(`[INSERT SNIPPET] Code snippet, using basic formatting`);
+            }
+            
+            console.log(`[INSERT SNIPPET] Final formatted code:\n${formattedCode}`);
+            
+            // Insert at current cursor position
+            const position = editor.selection.active;
+            await editor.edit(editBuilder => {
+                editBuilder.insert(position, formattedCode);
+            });
+
+            // Show subtle feedback without being annoying
+            const lines = code.split('\n').length;
+            const message = lines > 1 ? `${lines} 行程式碼已插入` : '程式碼片段已插入';
+            vscode.window.showInformationMessage(message);
+        } catch (error) {
+            vscode.window.showErrorMessage(`Failed to insert text snippet: ${error}`);
+        }
+    }
 
     private async _handleDragTemplate(templateId: string, text: string) {
         // This method is called during drag start - just log for now
@@ -231,6 +354,24 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
         // Final fallback
         console.log(`DEBUG: Final fallback to empty indentation`);
         return '';
+    }
+
+    private _getCurrentIndentationForEditor(editor: vscode.TextEditor): string {
+        if (!editor) {
+            return '';
+        }
+
+        const document = editor.document;
+        const selection = editor.selection;
+        const position = selection.active;
+
+        // Get the line where cursor is positioned
+        const currentLine = document.lineAt(position.line);
+        const lineText = currentLine.text;
+        
+        // Extract line indentation
+        const indentMatch = lineText.match(/^(\s*)/);
+        return indentMatch?.[1] || '';
     }
 
     private _getHtmlForWebview(webview: vscode.Webview): string {
@@ -353,8 +494,8 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
                         <button class="action-btn preview-btn" title="預覽程式碼">
                             <span class="icon">👁️</span>
                         </button>
-                        <button class="action-btn copy-btn" title="複製到剪貼簿">
-                            <span class="icon">📋</span>
+                        <button class="action-btn insert-btn" title="插入到游標位置">
+                            <span class="icon">➕</span>
                         </button>
                     </div>
                 </div>
@@ -413,8 +554,8 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
                         <button class="action-btn preview-btn" title="預覽程式碼">
                             <span class="icon">👁️</span>
                         </button>
-                        <button class="action-btn copy-btn" title="複製到剪貼簿">
-                            <span class="icon">📋</span>
+                        <button class="action-btn insert-btn" title="插入到游標位置">
+                            <span class="icon">➕</span>
                         </button>
                     </div>
                 </div>

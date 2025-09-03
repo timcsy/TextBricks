@@ -22,10 +22,12 @@ TextBricks organizes programming concepts into progressive categories:
 - **Advanced Applications** - Object-oriented programming, file operations, and complex patterns
 
 ### 🚀 **Easy Code Insertion**
-- **Click to Copy**: Click any template card to copy code to clipboard
+- **Click to Insert**: Click any template card to insert code directly into your editor
 - **Drag to Insert**: Drag template cards directly into your editor
-- **Interactive Preview**: Hover eye button to see detailed code preview
-- **Tooltip Dragging**: Drag code directly from preview tooltips
+- **Smart Copy**: Access copy functionality from preview tooltips
+- **Interactive Preview**: Hover eye button to see detailed code preview with both copy and insert options
+- **Smart Selection**: When text is selected, only the selected portion is copied or inserted
+- **Auto-Fallback**: If no active editor is found, code is copied to clipboard with option to create new file
 
 ### 🎨 **Clean Interface**
 - Integrated sidebar panel in VS Code
@@ -63,6 +65,15 @@ TextBricks organizes programming concepts into progressive categories:
 - **Side Panel Display**: Documentation opens in editor side panel with syntax highlighting
 - **Clean UI Integration**: Documentation buttons integrated into hover tooltips (📖 icon)
 - **Standard Format**: Consistent documentation structure with overview, examples, and key concepts
+- **Interactive Code Blocks**: Documentation code blocks with insert and copy buttons ⭐ v0.1.6
+- **Smart Selection Support**: Select specific portions of code in documentation to insert/copy only that part ⭐ v0.1.6
+
+### 🔧 **Enhanced User Experience** ⭐ New in v0.1.6
+- **Improved Insert Functionality**: Primary action changed from copy to insert for better workflow
+- **Smart Editor Detection**: Intelligent handling when no active editor is available
+- **Auto-Fallback System**: Automatic clipboard copy with option to create new file when no editor is found
+- **Documentation Code Actions**: Interactive insert and copy buttons in all documentation code blocks
+- **Clean Button Styling**: Improved visual design for all action buttons across the interface
 
 ## Installation
 

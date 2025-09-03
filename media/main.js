@@ -214,9 +214,9 @@
         const templateCard = button.closest('.template-card');
         const templateId = templateCard.dataset.templateId;
         
-        if (button.classList.contains('copy-btn')) {
-            copyTemplate(templateId);
-            // Visual feedback for copy button
+        if (button.classList.contains('insert-btn')) {
+            insertTemplate(templateId);
+            // Visual feedback for insert button
             const icon = button.querySelector('.icon');
             const originalText = icon.textContent;
             icon.textContent = '✅';
@@ -347,6 +347,25 @@
         });
         
         console.log('Copy template:', templateId);
+    }
+
+    function insertTemplate(templateId) {
+        vscode.postMessage({
+            type: 'insertTemplate',
+            templateId: templateId
+        });
+        
+        console.log('Insert template:', templateId);
+    }
+
+    function insertCodeSnippet(code, templateId) {
+        vscode.postMessage({
+            type: 'insertCodeSnippet',
+            code: code,
+            templateId: templateId
+        });
+        
+        console.log('Insert code snippet with template context:', code.substring(0, 50) + '...', 'from template:', templateId);
     }
 
     function showDocumentation(templateId) {
@@ -522,6 +541,7 @@
                     <div class="tooltip-title">${escapeHtml(title)}</div>
                     <div class="tooltip-actions">
                         ${hasDocumentation ? `<button class="tooltip-action-btn doc-btn" data-template-id="${templateId}" title="查看說明文檔">📖 說明</button>` : ''}
+                        <button class="tooltip-action-btn insert-all-btn" data-template-id="${templateId}">➕ 插入</button>
                         <button class="tooltip-action-btn copy-all-btn" data-template-id="${templateId}">📋 複製</button>
                         <div class="tooltip-drag-handle" draggable="true" data-template-id="${templateId}" title="拖曳到編輯器">✋ 拖曳</div>
                     </div>
@@ -642,6 +662,57 @@
             forceHideTooltip();
         });
         
+        // Handle insert button
+        const insertBtn = tooltip.querySelector('.insert-all-btn');
+        
+        // Store selected text before any click events might clear it
+        let storedSelection = null;
+        
+        // Capture selection on mousedown (before click clears it)
+        insertBtn.addEventListener('mousedown', (e) => {
+            const selection = window.getSelection();
+            const selectedText = selection.toString().trim();
+            storedSelection = selectedText;
+            console.log(`[DEBUG] Mousedown - stored selection: "${selectedText}"`);
+        });
+        
+        insertBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const templateId = e.target.dataset.templateId;
+            
+            // Use stored selection or check current selection
+            const selection = window.getSelection();
+            const currentSelectedText = selection.toString().trim();
+            const selectedText = storedSelection || currentSelectedText;
+            
+            console.log(`[DEBUG] Insert button clicked for template: ${templateId}`);
+            console.log(`[DEBUG] Stored selection: "${storedSelection}"`);
+            console.log(`[DEBUG] Current selection: "${currentSelectedText}"`);
+            console.log(`[DEBUG] Final selected text: "${selectedText}"`);
+            console.log(`[DEBUG] Selected text length:`, selectedText.length);
+            
+            if (selectedText && selectedText.length > 0) {
+                // Insert selected text
+                insertCodeSnippet(selectedText, templateId);
+                console.log('[DEBUG] Inserting selected code snippet:', selectedText.substring(0, 50) + '...');
+            } else {
+                // Insert entire template
+                insertTemplate(templateId);
+                console.log('[DEBUG] Inserting entire template:', templateId);
+            }
+            
+            // Clear stored selection
+            storedSelection = null;
+            
+            // Visual feedback
+            insertBtn.textContent = '✅ 已插入';
+            insertBtn.classList.add('success');
+            setTimeout(() => {
+                insertBtn.textContent = '➕ 插入';
+                insertBtn.classList.remove('success');
+            }, 2000);
+        });
+
         // Handle copy button
         const copyBtn = tooltip.querySelector('.copy-all-btn');
         copyBtn.addEventListener('click', (e) => {

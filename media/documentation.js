@@ -45,11 +45,26 @@
             copyCodeBtn.addEventListener('click', handleCopyCode);
         }
 
+        // Code block action buttons
+        bindCodeBlockEventListeners();
+
         // Handle keyboard shortcuts
         document.addEventListener('keydown', handleKeyboardShortcuts);
 
         // Handle scroll to top functionality
         window.addEventListener('scroll', handleScroll);
+    }
+
+    function bindCodeBlockEventListeners() {
+        // Insert code buttons
+        document.querySelectorAll('.insert-code-btn').forEach(button => {
+            button.addEventListener('click', handleInsertCodeBlock);
+        });
+
+        // Copy code block buttons
+        document.querySelectorAll('.copy-code-btn:not(#copy-code-btn)').forEach(button => {
+            button.addEventListener('click', handleCopyCodeBlock);
+        });
     }
 
     function handleRefresh() {
@@ -92,6 +107,102 @@
                     copyCodeBtn.innerHTML = originalText;
                     copyCodeBtn.disabled = false;
                 }
+            }, 2000);
+        }
+    }
+
+    function handleCopyCodeBlock(event) {
+        const button = event.target.closest('.copy-code-btn');
+        const codeId = button.dataset.codeId;
+        const codeBlock = document.getElementById('code-' + codeId);
+        const container = button.closest('.code-block-container');
+        const templateId = container?.dataset.templateId;
+        
+        if (codeBlock) {
+            // Check if there's selected text in the code block
+            const selection = window.getSelection();
+            const selectedText = selection.toString().trim();
+            
+            let codeToSend = '';
+            if (selectedText && selection.rangeCount > 0) {
+                // Check if selection is within this code block
+                const range = selection.getRangeAt(0);
+                if (codeBlock.contains(range.commonAncestorContainer) || 
+                    range.commonAncestorContainer === codeBlock) {
+                    codeToSend = selectedText;
+                    console.log('[DEBUG] Copying selected code from block:', selectedText.substring(0, 50) + '...');
+                } else {
+                    codeToSend = codeBlock.textContent || '';
+                    console.log('[DEBUG] Selection not in code block, copying entire block');
+                }
+            } else {
+                codeToSend = codeBlock.textContent || '';
+                console.log('[DEBUG] No selection, copying entire code block');
+            }
+            
+            // Send message to VS Code
+            vscode.postMessage({
+                type: 'copyCodeBlock',
+                code: codeToSend,
+                templateId: templateId
+            });
+            
+            // Show visual feedback
+            const originalText = button.innerHTML;
+            button.innerHTML = '✅ 已複製';
+            button.disabled = true;
+            
+            setTimeout(() => {
+                button.innerHTML = originalText;
+                button.disabled = false;
+            }, 2000);
+        }
+    }
+
+    function handleInsertCodeBlock(event) {
+        const button = event.target.closest('.insert-code-btn');
+        const codeId = button.dataset.codeId;
+        const codeBlock = document.getElementById('code-' + codeId);
+        const container = button.closest('.code-block-container');
+        const templateId = container?.dataset.templateId;
+        
+        if (codeBlock) {
+            // Check if there's selected text in the code block
+            const selection = window.getSelection();
+            const selectedText = selection.toString().trim();
+            
+            let codeToSend = '';
+            if (selectedText && selection.rangeCount > 0) {
+                // Check if selection is within this code block
+                const range = selection.getRangeAt(0);
+                if (codeBlock.contains(range.commonAncestorContainer) || 
+                    range.commonAncestorContainer === codeBlock) {
+                    codeToSend = selectedText;
+                    console.log('[DEBUG] Inserting selected code from block:', selectedText.substring(0, 50) + '...');
+                } else {
+                    codeToSend = codeBlock.textContent || '';
+                    console.log('[DEBUG] Selection not in code block, inserting entire block');
+                }
+            } else {
+                codeToSend = codeBlock.textContent || '';
+                console.log('[DEBUG] No selection, inserting entire code block');
+            }
+            
+            // Send message to VS Code
+            vscode.postMessage({
+                type: 'insertCodeBlock',
+                code: codeToSend,
+                templateId: templateId
+            });
+            
+            // Show visual feedback
+            const originalText = button.innerHTML;
+            button.innerHTML = '✅ 已插入';
+            button.disabled = true;
+            
+            setTimeout(() => {
+                button.innerHTML = originalText;
+                button.disabled = false;
             }, 2000);
         }
     }
@@ -255,65 +366,7 @@
         }, 3000);
     }
 
-    // Utility functions for enhanced functionality
-    function addCopyButtonsToCodeBlocks() {
-        // Add copy buttons to all code blocks
-        document.querySelectorAll('pre code').forEach((codeBlock, index) => {
-            const pre = codeBlock.parentElement;
-            if (pre.querySelector('.copy-code-btn')) return; // Already has button
-
-            const copyButton = document.createElement('button');
-            copyButton.className = 'copy-code-btn';
-            copyButton.innerHTML = '<span class="icon">📋</span>';
-            copyButton.title = '複製程式碼';
-            
-            Object.assign(copyButton.style, {
-                position: 'absolute',
-                top: '8px',
-                right: '8px',
-                background: 'var(--vscode-button-background)',
-                color: 'var(--vscode-button-foreground)',
-                border: '1px solid var(--vscode-button-border)',
-                borderRadius: '4px',
-                padding: '4px 8px',
-                cursor: 'pointer',
-                fontSize: '12px',
-                opacity: '0.7',
-                transition: 'opacity 0.2s ease'
-            });
-
-            copyButton.addEventListener('click', () => {
-                const code = codeBlock.textContent;
-                navigator.clipboard.writeText(code).then(() => {
-                    copyButton.innerHTML = '<span class="icon">✅</span>';
-                    setTimeout(() => {
-                        copyButton.innerHTML = '<span class="icon">📋</span>';
-                    }, 2000);
-                    showNotification('程式碼已複製到剪貼簿', 'success');
-                }).catch(err => {
-                    console.error('Failed to copy code:', err);
-                    showNotification('複製失敗', 'error');
-                });
-            });
-
-            copyButton.addEventListener('mouseenter', () => {
-                copyButton.style.opacity = '1';
-            });
-
-            copyButton.addEventListener('mouseleave', () => {
-                copyButton.style.opacity = '0.7';
-            });
-
-            // Make sure the pre element is positioned relatively
-            pre.style.position = 'relative';
-            pre.appendChild(copyButton);
-        });
-    }
-
-    // Initialize additional features when everything is loaded
-    window.addEventListener('load', () => {
-        addCopyButtonsToCodeBlocks();
-    });
+    // Removed automatic copy button generation since we now use header buttons
 
     // Export for debugging
     window.documentationPanel = {

@@ -442,9 +442,77 @@ body {
     outline-offset: 2px;
 }
 
+/* Code Block Container */
+.code-block-container {
+    margin: 16px 0;
+    border: 1px solid var(--doc-border-color);
+    border-radius: 6px;
+    background-color: var(--vscode-textCodeBlock-background);
+    overflow: hidden;
+}
+
+.code-block-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    background-color: var(--vscode-editorWidget-background);
+    border-bottom: 1px solid var(--doc-border-color);
+}
+
+.language-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--doc-secondary-color);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.code-actions {
+    display: flex;
+    gap: 6px;
+}
+
+.code-action-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 8px;
+    background-color: var(--vscode-button-secondaryBackground);
+    color: var(--vscode-button-secondaryForeground);
+    border: 1px solid var(--vscode-button-border);
+    border-radius: 3px;
+    font-size: 11px;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.code-action-btn:hover {
+    background-color: var(--vscode-button-secondaryHoverBackground);
+}
+
+.code-action-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.code-block-container pre {
+    margin: 0;
+    border: none;
+    border-radius: 0;
+    background-color: var(--vscode-textCodeBlock-background);
+}
+
+.code-block-container pre code {
+    padding: 16px;
+    display: block;
+}
+
 /* Print Styles */
 @media print {
-    .header-actions {
+    .header-actions,
+    .code-actions {
         display: none;
     }
     
@@ -453,7 +521,8 @@ body {
         padding: 0;
     }
     
-    .documentation-content pre {
+    .documentation-content pre,
+    .code-block-container {
         page-break-inside: avoid;
     }
 }

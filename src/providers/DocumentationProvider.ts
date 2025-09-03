@@ -89,6 +89,16 @@ export class DocumentationProvider {
                     vscode.window.showInformationMessage('程式碼已複製到剪貼簿');
                 }
                 break;
+            case 'copyCodeBlock':
+                if (message.code) {
+                    await this._copyCodeSnippet(message.code, message.templateId);
+                }
+                break;
+            case 'insertCodeBlock':
+                if (message.code) {
+                    await this._insertCodeSnippet(message.code, message.templateId);
+                }
+                break;
             case 'openExternal':
                 if (message.url) {
                     vscode.env.openExternal(vscode.Uri.parse(message.url));
@@ -238,7 +248,7 @@ export class DocumentationProvider {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Content-Security-Policy" content="default-src 'none'; 
         style-src ${this._panel!.webview.cspSource} 'unsafe-inline' https://cdnjs.cloudflare.com; 
-        script-src 'nonce-${nonce}' https://cdnjs.cloudflare.com; 
+        script-src 'nonce-${nonce}' https://cdnjs.cloudflare.com 'unsafe-inline'; 
         img-src ${this._panel!.webview.cspSource} data: https:;">
     
     <title>${template.title} - 說明文檔</title>
@@ -305,7 +315,18 @@ export class DocumentationProvider {
         // Code blocks
         html = html.replace(/```(\w+)?\n([\s\S]*?)```/g, (match, lang, code) => {
             const language = lang || '';
-            return `<pre><code class="language-${language}">${this._escapeHtml(code.trim())}</code></pre>`;
+            const trimmedCode = code.trim();
+            const codeId = Math.random().toString(36).substr(2, 9); // Generate unique ID
+            return `<div class="code-block-container" data-template-id="${this._currentTemplate?.id || ''}">
+                <div class="code-block-header">
+                    <span class="language-label">${language.toUpperCase() || 'CODE'}</span>
+                    <div class="code-actions">
+                        <button class="code-action-btn insert-code-btn" data-code-id="${codeId}" title="插入程式碼">➕ 插入</button>
+                        <button class="code-action-btn copy-code-btn" data-code-id="${codeId}" title="複製程式碼">📋 複製</button>
+                    </div>
+                </div>
+                <pre id="code-${codeId}"><code class="language-${language}">${this._escapeHtml(trimmedCode)}</code></pre>
+            </div>`;
         });
 
         // Inline code
@@ -413,5 +434,108 @@ export class DocumentationProvider {
             text += possible.charAt(Math.floor(Math.random() * possible.length));
         }
         return text;
+    }
+
+    private async _copyCodeSnippet(code: string, templateId?: string) {
+        try {
+            // Use template manager's formatting if available
+            let formattedCode = code;
+            if (templateId) {
+                const template = this.templateManager.getTemplateById(templateId);
+                if (template) {
+                    // Get current editor indentation for smart formatting
+                    const targetIndentation = this._getCurrentIndentation();
+                    formattedCode = this.templateManager.formatCodeSnippetWithTemplate(code, template, targetIndentation);
+                }
+            }
+            
+            await vscode.env.clipboard.writeText(formattedCode);
+            
+            // Show subtle feedback
+            const lines = code.split('\n').length;
+            const message = lines > 1 ? `${lines} 行程式碼已複製` : '程式碼片段已複製';
+            vscode.window.showInformationMessage(message);
+        } catch (error) {
+            vscode.window.showErrorMessage(`複製程式碼失敗: ${error}`);
+        }
+    }
+
+    private async _insertCodeSnippet(code: string, templateId?: string) {
+        try {
+            const editor = vscode.window.activeTextEditor;
+            if (!editor) {
+                // Try to copy to clipboard as fallback
+                await vscode.env.clipboard.writeText(code);
+                const action = await vscode.window.showWarningMessage(
+                    '沒有打開的編輯器，程式碼已複製到剪貼簿',
+                    '開啟新檔案'
+                );
+                
+                if (action === '開啟新檔案') {
+                    const newDoc = await vscode.workspace.openTextDocument();
+                    const newEditor = await vscode.window.showTextDocument(newDoc);
+                    
+                    // Insert the code into the new document
+                    await newEditor.edit(editBuilder => {
+                        editBuilder.insert(new vscode.Position(0, 0), code);
+                    });
+                    
+                    vscode.window.showInformationMessage('程式碼已插入到新檔案');
+                }
+                return;
+            }
+
+            // Use template manager's formatting if available
+            let formattedCode = code;
+            if (templateId) {
+                const template = this.templateManager.getTemplateById(templateId);
+                if (template) {
+                    // Get current editor indentation for smart formatting
+                    const targetIndentation = this._getCurrentIndentation();
+                    formattedCode = this.templateManager.formatCodeSnippetWithTemplate(code, template, targetIndentation);
+                }
+            }
+
+            // Insert at current cursor position
+            const position = editor.selection.active;
+            await editor.edit(editBuilder => {
+                editBuilder.insert(position, formattedCode);
+            });
+
+            // Show subtle feedback
+            const lines = code.split('\n').length;
+            const message = lines > 1 ? `${lines} 行程式碼已插入` : '程式碼片段已插入';
+            vscode.window.showInformationMessage(message);
+        } catch (error) {
+            vscode.window.showErrorMessage(`插入程式碼失敗: ${error}`);
+        }
+    }
+
+    private _getCurrentIndentation(): string {
+        const editor = vscode.window.activeTextEditor;
+        if (!editor) {
+            return '    '; // Default 4 spaces
+        }
+
+        const document = editor.document;
+        const position = editor.selection.active;
+        
+        // Try to get indentation from current line
+        const currentLine = document.lineAt(position.line);
+        const lineText = currentLine.text;
+        const match = lineText.match(/^(\s*)/);
+        
+        if (match && match[1]) {
+            return match[1];
+        }
+        
+        // Fallback to editor configuration
+        const options = editor.options;
+        if (options.insertSpaces) {
+            const tabSize = Number(options.tabSize) || 4;
+            return ' '.repeat(tabSize);
+        } else {
+            return '\t';
+        }
     }
 }
