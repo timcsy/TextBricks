@@ -1,8 +1,8 @@
 import * as vscode from 'vscode';
-import { DocumentationService } from '@textbricks/core';
-import { TextBricksEngine } from '@textbricks/core';
-import { CodeOperationService } from '@textbricks/core';
-import { Template, DocumentationType } from '@textbricks/shared';
+import { DocumentationService } from '../core/DocumentationService';
+import { TextBricksEngine } from '../core/TextBricksEngine';
+import { CodeOperationService } from '../core/CodeOperationService';
+import { Template, DocumentationType } from '../models/Template';
 
 export class DocumentationProvider {
     public static readonly viewType = 'textbricks-documentation';

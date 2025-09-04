@@ -236,10 +236,10 @@ export class DocumentationProvider {
 
     private _getDocumentationHtml(docResult: any, template: Template): string {
         const styleUri = this._panel!.webview.asWebviewUri(
-            vscode.Uri.joinPath(this._extensionUri, 'media', 'documentation.css')
+            vscode.Uri.joinPath(this._extensionUri, 'assets', 'css', 'documentation.css')
         );
         const scriptUri = this._panel!.webview.asWebviewUri(
-            vscode.Uri.joinPath(this._extensionUri, 'media', 'documentation.js')
+            vscode.Uri.joinPath(this._extensionUri, 'assets', 'js', 'documentation.js')
         );
 
         // Import highlight.js for code syntax highlighting

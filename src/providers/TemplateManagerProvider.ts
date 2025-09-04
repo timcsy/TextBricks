@@ -432,10 +432,10 @@ export class TemplateManagerProvider {
 
     private _getHtmlForWebview(webview: vscode.Webview): string {
         const styleUri = webview.asWebviewUri(
-            vscode.Uri.joinPath(this._extensionUri, 'media', 'template-manager.css')
+            vscode.Uri.joinPath(this._extensionUri, 'assets', 'css', 'template-manager.css')
         );
         const scriptUri = webview.asWebviewUri(
-            vscode.Uri.joinPath(this._extensionUri, 'media', 'template-manager.js')
+            vscode.Uri.joinPath(this._extensionUri, 'assets', 'js', 'template-manager.js')
         );
 
         const nonce = this._getNonce();

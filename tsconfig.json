@@ -19,6 +19,7 @@
     ".vscode-test",
     "out",
     "**/*.test.ts",
-    "packages"
+    "packages",
+    "src_backup_*"
   ]
 }
