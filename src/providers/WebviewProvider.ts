@@ -3,6 +3,7 @@ import * as path from 'path';
 import { TemplateEngine } from '../core/TemplateEngine';
 import { DocumentationProvider } from './DocumentationProvider';
 import { DocumentationService } from '../services/DocumentationService';
+import { CodeOperationService } from '../services/CodeOperationService';
 import { Template, TemplateCategory, Language, ProgrammingContext } from '../models/Template';
 
 export class WebviewProvider implements vscode.WebviewViewProvider {
@@ -16,6 +17,7 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
         private readonly _extensionUri: vscode.Uri,
         private readonly templateEngine: TemplateEngine,
         private readonly _context: vscode.ExtensionContext,
+        private readonly codeOperationService: CodeOperationService,
         private readonly managementService?: TemplateEngine
     ) {
         // Load saved language preference or default to 'c'
@@ -23,7 +25,7 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
         
         // Initialize documentation provider
         const documentationService = new DocumentationService(this._extensionUri);
-        this._documentationProvider = new DocumentationProvider(this._extensionUri, this.templateEngine, documentationService);
+        this._documentationProvider = new DocumentationProvider(this._extensionUri, this.templateEngine, documentationService, this.codeOperationService);
         
     }
 
@@ -48,16 +50,16 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
             message => {
                 switch (message.type) {
                     case 'copyTemplate':
-                        this._copyTemplate(message.templateId);
+                        this.codeOperationService.copyTemplate(message.templateId);
                         break;
                     case 'insertTemplate':
-                        this._insertTemplate(message.templateId);
+                        this.codeOperationService.insertTemplate(message.templateId);
                         break;
                     case 'copyCodeSnippet':
-                        this._copyCodeSnippet(message.code, message.templateId);
+                        this.codeOperationService.copyCodeSnippet(message.code, message.templateId);
                         break;
                     case 'insertCodeSnippet':
-                        this._insertCodeSnippet(message.code, message.templateId);
+                        this.codeOperationService.insertCodeSnippet(message.code, message.templateId);
                         break;
                     case 'dragTemplate':
                         this._handleDragTemplate(message.templateId, message.text);
@@ -81,140 +83,9 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
         }
     }
 
-    private async _copyTemplate(templateId: string) {
-        const template = this.templateEngine.getTemplateById(templateId);
-        if (!template) {
-            vscode.window.showErrorMessage(`Template with id '${templateId}' not found`);
-            return;
-        }
 
-        try {
-            // 使用與插入功能完全相同的格式化邏輯
-            const targetIndentation = this._getCurrentIndentation();
-            const formattedCode = this.templateEngine.formatTemplate(template, targetIndentation);
-            
-            await vscode.env.clipboard.writeText(formattedCode);
-            vscode.window.showInformationMessage(`Template '${template.title}' copied to clipboard`);
-            
-            // 記錄模板使用統計
-            if (this.managementService) {
-                await this.managementService.recordTemplateUsage(templateId);
-            }
-        } catch (error) {
-            vscode.window.showErrorMessage(`Failed to copy template: ${error}`);
-        }
-    }
 
-    private async _insertTemplate(templateId: string) {
-        const template = this.templateEngine.getTemplateById(templateId);
-        if (!template) {
-            vscode.window.showErrorMessage(`Template with id '${templateId}' not found`);
-            return;
-        }
 
-        try {
-            const editor = vscode.window.activeTextEditor;
-            if (!editor) {
-                // Try to copy to clipboard as fallback
-                await vscode.env.clipboard.writeText(template.code);
-                const action = await vscode.window.showWarningMessage(
-                    '沒有打開的編輯器，模板已複製到剪貼簿',
-                    '開啟新檔案'
-                );
-                
-                if (action === '開啟新檔案') {
-                    const newDoc = await vscode.workspace.openTextDocument();
-                    const newEditor = await vscode.window.showTextDocument(newDoc);
-                    
-                    // Get formatting for new document
-                    const targetIndentation = this._getCurrentIndentationForEditor(newEditor);
-                    const formattedCode = this.templateEngine.formatTemplate(template, targetIndentation);
-                    
-                    // Insert the template into the new document
-                    await newEditor.edit(editBuilder => {
-                        editBuilder.insert(new vscode.Position(0, 0), formattedCode);
-                    });
-                    
-                    vscode.window.showInformationMessage(`模板 '${template.title}' 已插入到新檔案`);
-                    
-                    // 記錄模板使用統計
-                    if (this.managementService) {
-                        await this.managementService.recordTemplateUsage(templateId);
-                    }
-                }
-                return;
-            }
-
-            // Get current editor indentation for smart formatting
-            const targetIndentation = this._getCurrentIndentation();
-            const formattedCode = this.templateEngine.formatTemplate(template, targetIndentation);
-
-            // Insert at current cursor position
-            const position = editor.selection.active;
-            await editor.edit(editBuilder => {
-                editBuilder.insert(position, formattedCode);
-            });
-
-            vscode.window.showInformationMessage(`Template '${template.title}' inserted`);
-            
-            // 記錄模板使用統計
-            if (this.managementService) {
-                await this.managementService.recordTemplateUsage(templateId);
-            }
-        } catch (error) {
-            vscode.window.showErrorMessage(`Failed to insert template: ${error}`);
-        }
-    }
-
-    private async _copyCodeSnippet(code: string, templateId?: string) {
-        try {
-            // 使用統一的格式化方法，確保與插入功能完全一致
-            const formattedCode = this._formatCodeForOperation(code, templateId, 'COPY_SNIPPET');
-            
-            await vscode.env.clipboard.writeText(formattedCode);
-            
-            // Show subtle feedback without being annoying
-            const lines = code.split('\n').length;
-            const message = lines > 1 ? `${lines} 行文字已複製` : '文字片段已複製';
-            vscode.window.showInformationMessage(message);
-        } catch (error) {
-            vscode.window.showErrorMessage(`Failed to copy text snippet: ${error}`);
-        }
-    }
-
-    private async _insertCodeSnippet(code: string, templateId?: string) {
-        console.log(`[DEBUG] _insertCodeSnippet called with code: "${code.substring(0, 100)}...", templateId: ${templateId}`);
-        
-        try {
-            const editor = vscode.window.activeTextEditor;
-            if (!editor) {
-                console.log(`[DEBUG] No active editor found`);
-                vscode.window.showErrorMessage('No active editor found');
-                return;
-            }
-
-            console.log(`[DEBUG] Active editor found: ${editor.document.fileName}`);
-
-            // 使用統一的格式化方法，確保與複製功能完全一致
-            const formattedCode = this._formatCodeForOperation(code, templateId, 'INSERT_SNIPPET');
-            
-            console.log(`[INSERT SNIPPET] Selected code:\n${code}`);
-            console.log(`[INSERT SNIPPET] Final formatted code:\n${formattedCode}`);
-            
-            // Insert at current cursor position
-            const position = editor.selection.active;
-            await editor.edit(editBuilder => {
-                editBuilder.insert(position, formattedCode);
-            });
-
-            // Show subtle feedback without being annoying
-            const lines = code.split('\n').length;
-            const message = lines > 1 ? `${lines} 行程式碼已插入` : '程式碼片段已插入';
-            vscode.window.showInformationMessage(message);
-        } catch (error) {
-            vscode.window.showErrorMessage(`Failed to insert text snippet: ${error}`);
-        }
-    }
 
     private async _handleDragTemplate(templateId: string, text: string) {
         // This method is called during drag start - just log for now
@@ -244,98 +115,8 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
         }
     }
 
-    private _getCurrentIndentation(): string {
-        const editor = vscode.window.activeTextEditor;
-        if (!editor) {
-            return '';
-        }
 
-        const document = editor.document;
-        const selection = editor.selection;
-        const position = selection.active;
 
-        // Get the line where cursor is positioned
-        const currentLine = document.lineAt(position.line);
-        const lineText = currentLine.text;
-        const cursorColumn = position.character;
-
-        console.log(`DEBUG: Cursor at line ${position.line}, column ${cursorColumn}`);
-        console.log(`DEBUG: Line text: "${lineText}"`);
-
-        // Extract line indentation
-        const indentMatch = lineText.match(/^(\s*)/);
-        const lineIndentation = indentMatch?.[1] || '';
-        console.log(`DEBUG: Line indentation: "${lineIndentation}" (length: ${lineIndentation.length})`);
-
-        // Strategy 1: If cursor is at the beginning of line, use line's indentation
-        if (cursorColumn === 0) {
-            console.log(`DEBUG: Cursor at line start, using line indentation`);
-            return lineIndentation;
-        }
-
-        // Strategy 2: If cursor is within or after line indentation, use full line indentation
-        if (cursorColumn <= lineIndentation.length) {
-            console.log(`DEBUG: Cursor within indentation, using line indentation`);
-            return lineIndentation;
-        }
-
-        // Strategy 3: If cursor is after indentation in a non-empty line, use line indentation
-        if (lineText.trim().length > 0) {
-            console.log(`DEBUG: Cursor after indentation, using line indentation`);
-            return lineIndentation;
-        }
-
-        // Strategy 4: Empty line - look at context (previous line)
-        if (position.line > 0) {
-            const prevLine = document.lineAt(position.line - 1);
-            const prevIndentMatch = prevLine.text.match(/^(\s*)/);
-            const prevIndent = prevIndentMatch?.[1] || '';
-            console.log(`DEBUG: Empty line, using previous line indentation: "${prevIndent}"`);
-            return prevIndent;
-        }
-
-        // Final fallback
-        console.log(`DEBUG: Final fallback to empty indentation`);
-        return '';
-    }
-
-    /**
-     * 統一的程式碼格式化方法，確保複製和插入的結果完全一致
-     */
-    private _formatCodeForOperation(code: string, templateId?: string, operation: string = 'OPERATION'): string {
-        console.log(`[${operation}] Template ID:`, templateId);
-        
-        // Use template manager's formatting if available
-        const template = templateId ? this.templateEngine.getTemplateById(templateId) : undefined;
-        console.log(`[${operation}] Found template:`, template ? template.id : 'none');
-        
-        // Get current editor indentation for smart formatting
-        const targetIndentation = this._getCurrentIndentation();
-        console.log(`[${operation}] Target indentation:`, JSON.stringify(targetIndentation));
-        
-        const formattedCode = this.templateEngine.formatCodeSnippet(code, template, targetIndentation);
-        console.log(`[${operation}] Formatted code:`, JSON.stringify(formattedCode.substring(0, 100) + '...'));
-        
-        return formattedCode;
-    }
-
-    private _getCurrentIndentationForEditor(editor: vscode.TextEditor): string {
-        if (!editor) {
-            return '';
-        }
-
-        const document = editor.document;
-        const selection = editor.selection;
-        const position = selection.active;
-
-        // Get the line where cursor is positioned
-        const currentLine = document.lineAt(position.line);
-        const lineText = currentLine.text;
-        
-        // Extract line indentation
-        const indentMatch = lineText.match(/^(\s*)/);
-        return indentMatch?.[1] || '';
-    }
 
     private _getHtmlForWebview(webview: vscode.Webview): string {
         const categories = this.templateEngine.getCategories();

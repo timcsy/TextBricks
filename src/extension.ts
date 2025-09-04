@@ -4,20 +4,22 @@ import { TemplateManagerProvider } from './providers/TemplateManagerProvider';
 import { DocumentationProvider } from './providers/DocumentationProvider';
 import { TemplateEngine } from './core/TemplateEngine';
 import { DocumentationService } from './services/DocumentationService';
+import { CodeOperationService } from './services/CodeOperationService';
 import { CommandRegistry } from './commands';
 
 export function activate(context: vscode.ExtensionContext) {
     // Initialize core services
     const templateEngine = new TemplateEngine(context);
     const documentationService = new DocumentationService(context.extensionUri);
+    const codeOperationService = new CodeOperationService(templateEngine);
     
     // Load templates on activation
     templateEngine.loadTemplates();
     
     // Initialize providers
-    const webviewProvider = new WebviewProvider(context.extensionUri, templateEngine, context, templateEngine);
+    const webviewProvider = new WebviewProvider(context.extensionUri, templateEngine, context, codeOperationService, templateEngine);
     const templateManagerProvider = new TemplateManagerProvider(context.extensionUri, templateEngine);
-    const documentationProvider = new DocumentationProvider(context.extensionUri, templateEngine, documentationService);
+    const documentationProvider = new DocumentationProvider(context.extensionUri, templateEngine, documentationService, codeOperationService);
 
     // Register webview view
     context.subscriptions.push(
