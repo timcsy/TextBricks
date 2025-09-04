@@ -37,7 +37,7 @@
     "structured-templates",
     "efficiency"
   ],
-  "main": "./out/extension.js",
+  "main": "./dist/plugins/vscode/current/out/extension.js",
   "activationEvents": [
     "onStartupFinished"
   ],
