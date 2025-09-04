@@ -2,17 +2,20 @@
   "name": "textbricks",
   "displayName": "TextBricks - Multi-Language Development Assistant",
   "description": "A VSCode extension providing structured templates for multiple languages to develop efficiently",
-  "version": "0.1.7",
+  "version": "0.2.0",
   "publisher": "timcsy",
+  "workspaces": [
+    "packages/*"
+  ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/timcsy/TextBricks-VSCode.git"
+    "url": "https://github.com/timcsy/textbricks-extensions.git"
   },
   "bugs": {
-    "url": "https://github.com/timcsy/TextBricks-VSCode/issues"
+    "url": "https://github.com/timcsy/textbricks-extensions/issues"
   },
-  "homepage": "https://github.com/timcsy/TextBricks-VSCode#readme",
-  "icon": "icons/TextBricks.ico",
+  "homepage": "https://github.com/timcsy/textbricks-extensions#readme",
+  "icon": "assets/icons/TextBricks.ico",
   "engines": {
     "vscode": "^1.74.0"
   },
@@ -44,7 +47,7 @@
         {
           "id": "textbricks-container",
           "title": "TextBricks",
-          "icon": "icons/TextBricks.svg"
+          "icon": "assets/icons/TextBricks.svg"
         }
       ]
     },
@@ -131,12 +134,18 @@
     }
   },
   "scripts": {
-    "vscode:prepublish": "npm run compile",
-    "compile": "tsc -p ./ && npm run copy-data",
-    "copy-data": "mkdir -p out/data out/media out/icons && cp src/data/templates.json out/data/ && cp -r media/* out/media/ && cp -r icons/* out/icons/",
-    "watch": "tsc -watch -p ./",
-    "pretest": "npm run compile && npm run lint",
-    "lint": "eslint src --ext ts",
+    "vscode:prepublish": "npm run build:vscode && npm run copy-data:vscode",
+    "compile": "tsc -p ./",
+    "build:vscode": "npm run compile",
+    "copy-data:vscode": "mkdir -p dist/plugins/vscode/current/out/data dist/plugins/vscode/current/out/assets && cp -r src/data/* dist/plugins/vscode/current/out/data/ 2>/dev/null || true && cp -r assets/* dist/plugins/vscode/current/out/assets/",
+    "package:vscode": "vsce package --out dist/plugins/vscode/current/",
+    "archive:vscode": "[ -f dist/plugins/vscode/current/*.vsix ] && mv dist/plugins/vscode/current/*.vsix dist/plugins/vscode/archive/ || echo 'No VSIX to archive'",
+    "build": "npx tsc -b",
+    "clean": "npx tsc -b --clean",
+    "clean:dist": "rm -rf dist/temp/* dist/packages/*/",
+    "watch": "npx tsc -b --watch",
+    "pretest": "npm run build && npm run lint",
+    "lint": "eslint packages/*/src --ext ts",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage"

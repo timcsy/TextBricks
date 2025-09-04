@@ -1,0 +1,16 @@
+{
+  "extends": "../tsconfig.base.json",
+  "compilerOptions": {
+    "composite": true,
+    "rootDir": "./src",
+    "tsBuildInfoFile": "./dist/.tsbuildinfo",
+    "types": ["node", "vscode"]
+  },
+  "include": [
+    "src/**/*"
+  ],
+  "references": [
+    { "path": "../core" },
+    { "path": "../shared" }
+  ]
+}

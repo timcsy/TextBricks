@@ -1,7 +1,18 @@
-# Compiled output
-/out/
-/out/**/*.js
-/out/**/*.js.map
+# Compiled output (legacy)
+# /out/ - moved to dist/plugins/vscode/current/out/
+
+# Unified build output - ignore all generated files
+dist/
+
+# If you want to track final releases, uncomment these lines:
+# !dist/plugins/*/current/*.vsix
+# !dist/plugins/.gitkeep
+
+# Alternative: track only current releases, ignore archives
+# dist/plugins/*/archive/
+# dist/plugins/*/current/out/
+# dist/packages/
+# dist/temp/
 
 # Node modules
 node_modules/
@@ -11,7 +22,7 @@ node_modules/
 
 # VS Code settings
 .vscode/
-*.vsix
+# *.vsix - now managed in dist/ structure
 
 # OS generated files
 .DS_Store

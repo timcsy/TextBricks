@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { TemplateCommands } from './TemplateCommands';
 import { ImportExportCommands } from './ImportExportCommands';
-import { TemplateEngine } from '../core/TemplateEngine';
+import { TextBricksEngine } from '../core/TextBricksEngine';
 import { WebviewProvider } from '../providers/WebviewProvider';
 import { TemplateManagerProvider } from '../providers/TemplateManagerProvider';
 import { DocumentationProvider } from '../providers/DocumentationProvider';
@@ -15,7 +15,7 @@ export class CommandRegistry {
 
     constructor(
         private context: vscode.ExtensionContext,
-        private templateEngine: TemplateEngine,
+        private templateEngine: TextBricksEngine,
         private webviewProvider: WebviewProvider,
         private templateManagerProvider: TemplateManagerProvider,
         private documentationProvider: DocumentationProvider

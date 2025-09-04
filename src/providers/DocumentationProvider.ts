@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
-import { DocumentationService } from '../services/DocumentationService';
-import { TemplateEngine } from '../core/TemplateEngine';
-import { CodeOperationService } from '../services/CodeOperationService';
+import { DocumentationService } from '../core/DocumentationService';
+import { TextBricksEngine } from '../core/TextBricksEngine';
+import { CodeOperationService } from '../core/CodeOperationService';
 import { Template, DocumentationType } from '../models/Template';
 
 export class DocumentationProvider {
@@ -13,7 +13,7 @@ export class DocumentationProvider {
 
     constructor(
         private readonly _extensionUri: vscode.Uri,
-        private readonly templateEngine: TemplateEngine,
+        private readonly templateEngine: TextBricksEngine,
         private readonly documentationService: DocumentationService,
         private readonly codeOperationService: CodeOperationService
     ) {}

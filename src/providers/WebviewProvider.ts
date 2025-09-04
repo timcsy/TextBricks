@@ -1,9 +1,9 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
-import { TemplateEngine } from '../core/TemplateEngine';
+import { TextBricksEngine } from '../core/TextBricksEngine';
 import { DocumentationProvider } from './DocumentationProvider';
-import { DocumentationService } from '../services/DocumentationService';
-import { CodeOperationService } from '../services/CodeOperationService';
+import { DocumentationService } from '../core/DocumentationService';
+import { CodeOperationService } from '../core/CodeOperationService';
 import { Template, TemplateCategory, Language, ProgrammingContext } from '../models/Template';
 
 export class WebviewProvider implements vscode.WebviewViewProvider {
@@ -15,17 +15,17 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
 
     constructor(
         private readonly _extensionUri: vscode.Uri,
-        private readonly templateEngine: TemplateEngine,
+        private readonly templateEngine: TextBricksEngine,
         private readonly _context: vscode.ExtensionContext,
         private readonly codeOperationService: CodeOperationService,
-        private readonly managementService?: TemplateEngine
+        private readonly documentationService: DocumentationService,
+        private readonly managementService?: TextBricksEngine
     ) {
         // Load saved language preference or default to 'c'
         this._selectedLanguage = this._context.globalState.get('textbricks.selectedLanguage', 'c');
         
         // Initialize documentation provider
-        const documentationService = new DocumentationService(this._extensionUri);
-        this._documentationProvider = new DocumentationProvider(this._extensionUri, this.templateEngine, documentationService, this.codeOperationService);
+        this._documentationProvider = new DocumentationProvider(this._extensionUri, this.templateEngine, this.documentationService, this.codeOperationService);
         
     }
 
@@ -123,8 +123,8 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
         const languages = this.templateEngine.getLanguages();
         
         // Get CSS and JS URIs
-        const styleUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'media', 'style.css'));
-        const scriptUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'media', 'main.js'));
+        const styleUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'assets', 'css', 'style.css'));
+        const scriptUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'assets', 'js', 'main.js'));
 
         const nonce = this.getNonce();
 
@@ -141,7 +141,7 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
     <div class="header">
         <div class="header-top">
             <div class="title-section">
-                <h2><span class="logo"><img src="${webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'icons', 'TextBricks.svg'))}" alt="TextBricks"></span>TextBricks</h2>
+                <h2><span class="logo"><img src="${webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'assets', 'icons', 'TextBricks.svg'))}" alt="TextBricks"></span>TextBricks</h2>
                 <p class="subtitle">點擊複製 • 拖曳插入</p>
             </div>
             <div class="language-selector">
@@ -171,22 +171,17 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
     }
 
     private _generateRecommendedTemplatesHtml(): string {
-        console.log('[DEBUG] _generateRecommendedTemplatesHtml called');
         
         if (!this.managementService) {
-            console.log('[DEBUG] No managementService available');
             return ''; // 如果沒有 managementService，不顯示推薦區域
         }
 
         // 獲取推薦模板
         const recommendedTemplates = this.managementService.getRecommendedTemplates(6);
 
-        console.log('[DEBUG] Recommended templates count:', recommendedTemplates.length);
-        console.log('[DEBUG] Recommended data:', recommendedTemplates);
 
         // 如果沒有推薦模板，不顯示區域
         if (recommendedTemplates.length === 0) {
-            console.log('[DEBUG] No templates to show - returning empty string');
             return '';
         }
 
@@ -560,7 +555,7 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
 
         try {
             const context = await this.collectProgrammingContext();
-            return await this.managementService.getContextualRecommendations(context, limit);
+            return this.managementService.getContextualRecommendations();
         } catch (error) {
             console.warn('Failed to get context-aware recommendations:', error);
             return this.managementService.getRecommendedTemplates(limit);
@@ -578,13 +573,7 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
             const position = activeEditor.selection.active;
             const surroundingCode = this.getSurroundingCode(activeEditor, position);
             
-            return await this.managementService.getPositionAwareRecommendations(
-                activeEditor.document.fileName,
-                position.line,
-                position.character,
-                surroundingCode,
-                limit
-            );
+            return this.managementService.getPositionAwareRecommendations();
         } catch (error) {
             console.warn('Failed to get position-based recommendations:', error);
             return [];

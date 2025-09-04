@@ -1,0 +1,29 @@
+{
+  "name": "@textbricks/shared",
+  "version": "0.1.8",
+  "description": "Shared utilities and types for TextBricks",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc -b",
+    "clean": "rm -rf dist",
+    "test": "jest",
+    "lint": "eslint src --ext ts"
+  },
+  "keywords": [
+    "textbricks",
+    "shared",
+    "utilities",
+    "types"
+  ],
+  "author": "timcsy",
+  "license": "MIT",
+  "dependencies": {},
+  "devDependencies": {
+    "typescript": "^4.9.4",
+    "@types/node": "16.x",
+    "@types/jest": "^29.5.0",
+    "jest": "^29.5.0",
+    "ts-jest": "^29.1.0"
+  }
+}

@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { TemplateEngine } from '../core/TemplateEngine';
+import { TextBricksEngine } from '../core/TextBricksEngine';
 import { WebviewProvider } from '../providers/WebviewProvider';
 import { TemplateManagerProvider } from '../providers/TemplateManagerProvider';
 
@@ -8,7 +8,7 @@ import { TemplateManagerProvider } from '../providers/TemplateManagerProvider';
  */
 export class TemplateCommands {
     constructor(
-        private templateEngine: TemplateEngine,
+        private templateEngine: TextBricksEngine,
         private webviewProvider: WebviewProvider,
         private templateManagerProvider: TemplateManagerProvider
     ) {}

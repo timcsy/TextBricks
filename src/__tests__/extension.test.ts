@@ -2,7 +2,8 @@ import * as vscode from 'vscode';
 import { activate, deactivate } from '../extension';
 
 // Mock the services
-jest.mock('../core/TemplateEngine');
+jest.mock('../core/TextBricksEngine');
+jest.mock('../adapters/vscode/VSCodePlatform');
 
 describe('Extension', () => {
   let mockContext: vscode.ExtensionContext;

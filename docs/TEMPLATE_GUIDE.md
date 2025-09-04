@@ -348,7 +348,7 @@ A: 使用 Template Manager 的匯出功能：
 
 歡迎為 TextBricks 貢獻高品質模板！
 
-- **GitHub Issues**: [回報問題](https://github.com/timcsy/TextBricks-VSCode/issues)
+- **GitHub Issues**: [回報問題](https://github.com/timcsy/textbricks-extensions/issues)
 - **Pull Requests**: 提交新模板或改進
 - **Discord**: 加入社群討論最佳實踐
 

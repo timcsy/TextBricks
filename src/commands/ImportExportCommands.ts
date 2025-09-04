@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { TemplateEngine } from '../core/TemplateEngine';
+import { TextBricksEngine } from '../core/TextBricksEngine';
 import { WebviewProvider } from '../providers/WebviewProvider';
 
 /**
@@ -7,7 +7,7 @@ import { WebviewProvider } from '../providers/WebviewProvider';
  */
 export class ImportExportCommands {
     constructor(
-        private templateEngine: TemplateEngine,
+        private templateEngine: TextBricksEngine,
         private webviewProvider: WebviewProvider
     ) {}
 

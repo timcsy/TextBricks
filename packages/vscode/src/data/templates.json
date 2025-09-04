@@ -1,0 +1,354 @@
+{
+  "languages": [
+    {
+      "id": "c",
+      "name": "c",
+      "displayName": "C",
+      "extension": ".c",
+      "icon": "file-text"
+    },
+    {
+      "id": "python",
+      "name": "python",
+      "displayName": "Python",
+      "extension": ".py",
+      "icon": "file-text"
+    },
+    {
+      "id": "javascript",
+      "name": "javascript",
+      "displayName": "JavaScript",
+      "extension": ".js",
+      "icon": "file-text"
+    }
+  ],
+  "categories": [
+    {
+      "id": "level1",
+      "name": "基礎語法",
+      "description": "程式語言基本語法和概念",
+      "level": 1
+    },
+    {
+      "id": "level2",
+      "name": "控制結構",
+      "description": "條件判斷和迴圈結構",
+      "level": 2
+    },
+    {
+      "id": "level3",
+      "name": "函數與陣列",
+      "description": "函數定義和陣列操作",
+      "level": 3
+    },
+    {
+      "id": "level4",
+      "name": "進階概念",
+      "description": "進階程式設計概念和專業技巧",
+      "level": 4
+    }
+  ],
+  "templates": [
+    {
+      "id": "hello-world",
+      "title": "Hello World",
+      "description": "經典的第一個程式",
+      "code": "#include <stdio.h>\n\nint main() {\n    printf(\"Hello, World!\\n\");\n    return 0;\n}",
+      "language": "c",
+      "categoryId": "level1",
+      "metadata": {
+        "usage": 8,
+        "popularity": 85,
+        "lastUsedAt": "2025-01-15T10:30:00.000Z"
+      },
+      "documentation": "# Hello World\n\n## 功能簡介\n這是每個程式語言學習者的第一個程式，用於展示最基本的程式輸出功能。透過這個簡單的程式，你可以確認開發環境已正確設置，並了解 C 語言程式的基本結構。\n\n## 模板內容\n```c\n#include <stdio.h>\n\nint main() {\n    printf(\"Hello, World!\\n\");\n    return 0;\n}\n```\n\n## 範例輸入\n```\n(此程式不需要輸入)\n```\n\n## 範例輸出\n```\nHello, World!\n```\n\n## 重點說明\n- `#include <stdio.h>` - 包含標準輸入輸出庫，提供 printf 函數\n- `int main()` - 主函數，程式的入口點\n- `printf()` - 輸出函數，用於顯示文字到螢幕\n- `\\n` - 換行字符，讓輸出後游標移到下一行\n- `return 0` - 回傳值，表示程式正常結束\n\n## 相關模板\n- 變數宣告 - 學習如何宣告和使用變數\n- 輸入輸出 - 學習更複雜的輸入輸出操作"
+    },
+    {
+      "id": "variable-declaration",
+      "title": "變數宣告",
+      "description": "基本變數宣告和初始化",
+      "code": "int number = 42;\nchar character = 'A';\nfloat decimal = 3.14f;\ndouble precision = 2.71828;",
+      "language": "c",
+      "categoryId": "level1"
+    },
+    {
+      "id": "input-output",
+      "title": "輸入輸出",
+      "description": "基本輸入輸出操作",
+      "code": "#include <stdio.h>\n\nint main() {\n    int number;\n    printf(\"請輸入一個數字: \");\n    scanf(\"%d\", &number);\n    printf(\"您輸入的數字是: %d\\n\", number);\n    return 0;\n}",
+      "language": "c",
+      "categoryId": "level1"
+    },
+    {
+      "id": "if-else",
+      "title": "If-Else 條件判斷",
+      "description": "基本條件判斷結構",
+      "code": "if (condition) {\n    // 條件為真時執行\n} else if (another_condition) {\n    // 另一個條件為真時執行\n} else {\n    // 所有條件都為假時執行\n}",
+      "language": "c",
+      "categoryId": "level2"
+    },
+    {
+      "id": "for-loop",
+      "title": "For 迴圈",
+      "description": "基本for迴圈結構",
+      "code": "for (int i = 0; i < 10; i++) {\n    printf(\"第 %d 次迴圈\\n\", i + 1);\n}",
+      "language": "c",
+      "categoryId": "level2",
+      "metadata": {
+        "usage": 12,
+        "popularity": 90,
+        "lastUsedAt": "2025-01-15T09:15:00.000Z"
+      },
+      "documentation": "# For 迴圈\n\n## 功能簡介\nFor 迴圈是程式設計中最常用的迴圈結構，用於重複執行一段程式碼指定的次數。它特別適合用於已知迴圈次數的情況，如陣列遍歷、計數操作等。\n\n## 模板內容\n```c\nfor (int i = 0; i < 10; i++) {\n    printf(\"第 %d 次迴圈\\n\", i + 1);\n}\n```\n\n## 範例輸入\n```\n(此程式不需要輸入)\n```\n\n## 範例輸出\n```\n第 1 次迴圈\n第 2 次迴圈\n第 3 次迴圈\n...\n第 10 次迴圈\n```\n\n## 重點說明\n- `for (初始化; 條件; 更新)` - for 迴圈的三個部分\n- `int i = 0` - 迴圈變數初始化，通常從 0 開始\n- `i < 10` - 迴圈繼續條件，當條件為假時停止\n- `i++` - 每次迴圈後的更新操作，等同於 i = i + 1\n- `%d` - printf 中的格式化符號，用於輸出整數\n- 迴圈變數 i 的作用域僅在迴圈內\n\n## 相關模板\n- While 迴圈 - 學習另一種迴圈結構\n- 一維陣列 - 使用 for 迴圈遍歷陣列\n- 二維陣列 - 使用巢狀 for 迴圈"
+    },
+    {
+      "id": "while-loop",
+      "title": "While 迴圈",
+      "description": "基本while迴圈結構",
+      "code": "int count = 0;\nwhile (count < 10) {\n    printf(\"計數: %d\\n\", count);\n    count++;\n}",
+      "language": "c",
+      "categoryId": "level2"
+    },
+    {
+      "id": "function-definition",
+      "title": "函數定義",
+      "description": "基本函數定義和呼叫",
+      "code": "// 函數定義\nint add(int a, int b) {\n    return a + b;\n}\n\nint main() {\n    int result = add(5, 3);\n    printf(\"結果: %d\\n\", result);\n    return 0;\n}",
+      "language": "c",
+      "categoryId": "level3"
+    },
+    {
+      "id": "array-1d",
+      "title": "一維陣列",
+      "description": "一維陣列宣告和使用",
+      "code": "int numbers[5] = {1, 2, 3, 4, 5};\n\nfor (int i = 0; i < 5; i++) {\n    printf(\"numbers[%d] = %d\\n\", i, numbers[i]);\n}",
+      "language": "c",
+      "categoryId": "level3"
+    },
+    {
+      "id": "array-2d",
+      "title": "二維陣列",
+      "description": "二維陣列宣告和使用",
+      "code": "int matrix[3][3] = {\n    {1, 2, 3},\n    {4, 5, 6},\n    {7, 8, 9}\n};\n\nfor (int i = 0; i < 3; i++) {\n    for (int j = 0; j < 3; j++) {\n        printf(\"%d \", matrix[i][j]);\n    }\n    printf(\"\\n\");\n}",
+      "language": "c",
+      "categoryId": "level3"
+    },
+    {
+      "id": "pointer-basic",
+      "title": "基礎指標",
+      "description": "指標的宣告和基本使用",
+      "code": "int number = 42;\nint *ptr = &number;\n\nprintf(\"變數值: %d\\n\", number);\nprintf(\"變數位址: %p\\n\", &number);\nprintf(\"指標值: %p\\n\", ptr);\nprintf(\"指標指向的值: %d\\n\", *ptr);",
+      "language": "c",
+      "categoryId": "level4"
+    },
+    {
+      "id": "struct-basic",
+      "title": "基本結構體",
+      "description": "結構體定義和使用",
+      "code": "struct Student {\n    char name[50];\n    int age;\n    float grade;\n};\n\nstruct Student student1;\nstrcpy(student1.name, \"小明\");\nstudent1.age = 18;\nstudent1.grade = 85.5;\n\nprintf(\"姓名: %s\\n\", student1.name);\nprintf(\"年齡: %d\\n\", student1.age);\nprintf(\"成績: %.1f\\n\", student1.grade);",
+      "language": "c",
+      "categoryId": "level4"
+    },
+    {
+      "id": "file-io",
+      "title": "檔案輸入輸出",
+      "description": "基本檔案讀寫操作",
+      "code": "#include <stdio.h>\n\nint main() {\n    FILE *file;\n    \n    // 寫入檔案\n    file = fopen(\"output.txt\", \"w\");\n    if (file != NULL) {\n        fprintf(file, \"Hello, File!\\n\");\n        fclose(file);\n    }\n    \n    // 讀取檔案\n    file = fopen(\"output.txt\", \"r\");\n    if (file != NULL) {\n        char buffer[100];\n        fgets(buffer, 100, file);\n        printf(\"從檔案讀取: %s\", buffer);\n        fclose(file);\n    }\n    \n    return 0;\n}",
+      "language": "c",
+      "categoryId": "level4"
+    },
+    {
+      "id": "python-hello-world",
+      "title": "Hello World",
+      "description": "Python的第一個程式",
+      "code": "print(\"Hello, World!\")",
+      "language": "python",
+      "categoryId": "level1",
+      "metadata": {
+        "usage": 15,
+        "popularity": 95,
+        "lastUsedAt": "2025-01-15T11:45:00.000Z"
+      },
+      "documentation": "# Python Hello World\n\n## 功能簡介\nPython 的 Hello World 程式展示了 Python 語言的簡潔性。相較於其他程式語言，Python 只需要一行程式碼就能完成 Hello World 的輸出，這正體現了 Python「簡潔易讀」的設計哲學。\n\n## 模板內容\n```python\nprint(\"Hello, World!\")\n```\n\n## 範例輸入\n```\n(此程式不需要輸入)\n```\n\n## 範例輸出\n```\nHello, World!\n```\n\n## 重點說明\n- `print()` - Python 內建的輸出函數，會自動在結尾加上換行\n- 不需要 import 任何模組，print 是內建函數\n- 不需要宣告 main 函數，Python 會從上到下執行程式碼\n- 使用雙引號或單引號都可以表示字串\n- Python 語法簡潔，沒有分號結尾的要求\n\n## 相關模板\n- 變數宣告 - 學習 Python 變數的動態特性\n- 輸入輸出 - 學習 input() 函數和格式化輸出"
+    },
+    {
+      "id": "python-variables",
+      "title": "變數宣告",
+      "description": "Python基本變數宣告和賦值",
+      "code": "# 整數\nnumber = 42\n\n# 字串\nname = \"Python\"\n\n# 浮點數\npi = 3.14159\n\n# 布林值\nis_learning = True\n\nprint(f\"數字: {number}\")\nprint(f\"名稱: {name}\")\nprint(f\"圓周率: {pi}\")\nprint(f\"正在學習: {is_learning}\")",
+      "language": "python",
+      "categoryId": "level1"
+    },
+    {
+      "id": "python-input-output",
+      "title": "輸入輸出",
+      "description": "Python基本輸入輸出操作",
+      "code": "# 輸入\nname = input(\"請輸入您的姓名: \")\nage = int(input(\"請輸入您的年齡: \"))\n\n# 輸出\nprint(f\"您好，{name}！\")\nprint(f\"您今年 {age} 歲\")\n\n# 格式化輸出\nprint(\"姓名: {}, 年齡: {}\".format(name, age))",
+      "language": "python",
+      "categoryId": "level1"
+    },
+    {
+      "id": "python-if-else",
+      "title": "條件判斷",
+      "description": "Python的if-elif-else條件判斷",
+      "code": "score = 85\n\nif score >= 90:\n    grade = \"A\"\nelif score >= 80:\n    grade = \"B\"\nelif score >= 70:\n    grade = \"C\"\nelse:\n    grade = \"D\"\n\nprint(f\"分數: {score}, 等級: {grade}\")",
+      "language": "python",
+      "categoryId": "level2"
+    },
+    {
+      "id": "python-for-loop",
+      "title": "For 迴圈",
+      "description": "Python的for迴圈結構",
+      "code": "# 基本for迴圈\nfor i in range(5):\n    print(f\"第 {i + 1} 次迴圈\")\n\n# 遍歷列表\nfruits = [\"蘋果\", \"香蕉\", \"橘子\"]\nfor fruit in fruits:\n    print(f\"我喜歡 {fruit}\")\n\n# 使用enumerate\nfor index, fruit in enumerate(fruits):\n    print(f\"{index + 1}. {fruit}\")",
+      "language": "python",
+      "categoryId": "level2",
+      "metadata": {
+        "usage": 7,
+        "popularity": 70,
+        "lastUsedAt": "2025-01-15T08:30:00.000Z"
+      }
+    },
+    {
+      "id": "python-while-loop",
+      "title": "While 迴圈",
+      "description": "Python的while迴圈結構",
+      "code": "count = 0\nwhile count < 5:\n    print(f\"計數: {count}\")\n    count += 1\n\n# while True 迴圈與 break\nwhile True:\n    user_input = input(\"輸入 'quit' 結束程式: \")\n    if user_input.lower() == 'quit':\n        break\n    print(f\"您輸入了: {user_input}\")",
+      "language": "python",
+      "categoryId": "level2"
+    },
+    {
+      "id": "python-function",
+      "title": "函數定義",
+      "description": "Python函數定義和呼叫",
+      "code": "# 基本函數\ndef greet(name):\n    return f\"您好，{name}！\"\n\n# 有預設參數的函數\ndef add(a, b=0):\n    return a + b\n\n# 多個參數的函數\ndef calculate(x, y, operation=\"add\"):\n    if operation == \"add\":\n        return x + y\n    elif operation == \"subtract\":\n        return x - y\n    elif operation == \"multiply\":\n        return x * y\n    else:\n        return \"未知操作\"\n\n# 使用函數\nprint(greet(\"小明\"))\nprint(add(5, 3))\nprint(calculate(10, 3, \"multiply\"))",
+      "language": "python",
+      "categoryId": "level3"
+    },
+    {
+      "id": "python-list",
+      "title": "列表操作",
+      "description": "Python列表的基本操作",
+      "code": "# 建立列表\nnumbers = [1, 2, 3, 4, 5]\nfruits = [\"蘋果\", \"香蕉\", \"橘子\"]\n\n# 新增元素\nfruits.append(\"葡萄\")\nfruits.insert(1, \"草莓\")\n\n# 移除元素\nfruits.remove(\"香蕉\")\nlast_fruit = fruits.pop()\n\n# 列表操作\nprint(f\"水果列表: {fruits}\")\nprint(f\"列表長度: {len(fruits)}\")\nprint(f\"第一個水果: {fruits[0]}\")\nprint(f\"最後取出的水果: {last_fruit}\")\n\n# 列表切片\nprint(f\"前兩個水果: {fruits[:2]}\")",
+      "language": "python",
+      "categoryId": "level3"
+    },
+    {
+      "id": "python-dictionary",
+      "title": "字典操作",
+      "description": "Python字典的基本操作",
+      "code": "# 建立字典\nstudent = {\n    \"name\": \"小明\",\n    \"age\": 18,\n    \"grade\": 85.5,\n    \"subjects\": [\"數學\", \"物理\", \"化學\"]\n}\n\n# 存取字典\nprint(f\"姓名: {student['name']}\")\nprint(f\"年齡: {student.get('age', '未知')}\")\n\n# 修改字典\nstudent[\"grade\"] = 90.0\nstudent[\"school\"] = \"台灣大學\"\n\n# 遍歷字典\nfor key, value in student.items():\n    print(f\"{key}: {value}\")\n\n# 字典方法\nprint(f\"所有鍵: {list(student.keys())}\")\nprint(f\"所有值: {list(student.values())}\")",
+      "language": "python",
+      "categoryId": "level4"
+    },
+    {
+      "id": "python-class",
+      "title": "類別定義",
+      "description": "Python類別和物件導向程式設計",
+      "code": "class Student:\n    def __init__(self, name, age):\n        self.name = name\n        self.age = age\n        self.grades = []\n    \n    def add_grade(self, grade):\n        self.grades.append(grade)\n    \n    def get_average(self):\n        if not self.grades:\n            return 0\n        return sum(self.grades) / len(self.grades)\n    \n    def introduce(self):\n        return f\"我是 {self.name}，今年 {self.age} 歲\"\n\n# 使用類別\nstudent1 = Student(\"小明\", 18)\nstudent1.add_grade(85)\nstudent1.add_grade(92)\nstudent1.add_grade(78)\n\nprint(student1.introduce())\nprint(f\"平均成績: {student1.get_average():.1f}\")",
+      "language": "python",
+      "categoryId": "level4"
+    },
+    {
+      "id": "python-file-io",
+      "title": "檔案處理",
+      "description": "Python檔案讀寫操作",
+      "code": "# 寫入檔案\nwith open(\"output.txt\", \"w\", encoding=\"utf-8\") as file:\n    file.write(\"Hello, Python!\\n\")\n    file.write(\"這是第二行\\n\")\n    \n    # 寫入多行\n    lines = [\"第三行\", \"第四行\", \"第五行\"]\n    for line in lines:\n        file.write(line + \"\\n\")\n\n# 讀取檔案\ntry:\n    with open(\"output.txt\", \"r\", encoding=\"utf-8\") as file:\n        # 讀取所有內容\n        content = file.read()\n        print(\"檔案內容:\")\n        print(content)\n        \n    # 逐行讀取\n    with open(\"output.txt\", \"r\", encoding=\"utf-8\") as file:\n        print(\"\\n逐行讀取:\")\n        for line_num, line in enumerate(file, 1):\n            print(f\"第 {line_num} 行: {line.strip()}\")\n            \nexcept FileNotFoundError:\n    print(\"檔案不存在！\")",
+      "language": "python",
+      "categoryId": "level4"
+    },
+    {
+      "id": "js-hello-world",
+      "title": "Hello World",
+      "description": "JavaScript的第一個程式",
+      "code": "console.log(\"Hello, World!\");",
+      "language": "javascript",
+      "categoryId": "level1",
+      "metadata": {
+        "usage": 5,
+        "popularity": 60,
+        "lastUsedAt": "2025-01-14T16:20:00.000Z"
+      },
+      "documentation": "# JavaScript Hello World\n\n## 功能簡介\nJavaScript 的 Hello World 程式使用 console.log() 函數將訊息輸出到開發者控制台。這是學習 JavaScript 的起點，無論是在瀏覽器環境還是 Node.js 環境都能執行。\n\n## 模板內容\n```javascript\nconsole.log(\"Hello, World!\");\n```\n\n## 範例輸入\n```\n(此程式不需要輸入)\n```\n\n## 範例輸出\n```\nHello, World!\n```\n\n## 重點說明\n- `console.log()` - JavaScript 內建的控制台輸出函數\n- 在瀏覽器中，輸出會顯示在開發者工具的 Console 頁籤\n- 在 Node.js 中，輸出會顯示在終端/命令列\n- JavaScript 語句建議以分號結尾（雖然不是強制性的）\n- 字串可以使用單引號、雙引號或反引號（模板字串）\n- console 是全域物件，不需要匯入\n\n## 相關模板\n- 變數宣告 - 學習 let、const、var 的使用\n- 輸入輸出 - 學習瀏覽器的 prompt() 和 alert()"
+    },
+    {
+      "id": "js-variables",
+      "title": "變數宣告",
+      "description": "JavaScript基本變數宣告",
+      "code": "// 使用 let 宣告變數\nlet number = 42;\nlet name = \"JavaScript\";\nlet pi = 3.14159;\nlet isLearning = true;\n\n// 使用 const 宣告常數\nconst MAX_VALUE = 100;\n\n// 輸出變數\nconsole.log(`數字: ${number}`);\nconsole.log(`名稱: ${name}`);\nconsole.log(`圓周率: ${pi}`);\nconsole.log(`正在學習: ${isLearning}`);\nconsole.log(`最大值: ${MAX_VALUE}`);",
+      "language": "javascript",
+      "categoryId": "level1"
+    },
+    {
+      "id": "js-input-output",
+      "title": "輸入輸出",
+      "description": "JavaScript基本輸入輸出（瀏覽器環境）",
+      "code": "// 瀏覽器環境的輸入輸出\nlet name = prompt(\"請輸入您的姓名:\");\nlet age = parseInt(prompt(\"請輸入您的年齡:\"));\n\n// 輸出到控制台\nconsole.log(`您好，${name}！`);\nconsole.log(`您今年 ${age} 歲`);\n\n// 顯示警告框\nalert(`歡迎 ${name}，您今年 ${age} 歲！`);\n\n// 輸出到網頁（假設有 HTML 元素）\n// document.getElementById('output').innerHTML = `姓名: ${name}, 年齡: ${age}`;",
+      "language": "javascript",
+      "categoryId": "level1"
+    },
+    {
+      "id": "js-if-else",
+      "title": "條件判斷",
+      "description": "JavaScript的if-else條件判斷",
+      "code": "let score = 85;\nlet grade;\n\nif (score >= 90) {\n    grade = \"A\";\n} else if (score >= 80) {\n    grade = \"B\";\n} else if (score >= 70) {\n    grade = \"C\";\n} else {\n    grade = \"D\";\n}\n\nconsole.log(`分數: ${score}, 等級: ${grade}`);\n\n// 三元運算子\nlet status = (score >= 60) ? \"及格\" : \"不及格\";\nconsole.log(`狀態: ${status}`);",
+      "language": "javascript",
+      "categoryId": "level2"
+    },
+    {
+      "id": "js-for-loop",
+      "title": "For 迴圈",
+      "description": "JavaScript的for迴圈結構",
+      "code": "// 基本for迴圈\nfor (let i = 0; i < 5; i++) {\n    console.log(`第 ${i + 1} 次迴圈`);\n}\n\n// 遍歷陣列\nlet fruits = [\"蘋果\", \"香蕉\", \"橘子\"];\nfor (let i = 0; i < fruits.length; i++) {\n    console.log(`我喜歡 ${fruits[i]}`);\n}\n\n// for...of 迴圈\nfor (let fruit of fruits) {\n    console.log(`水果: ${fruit}`);\n}\n\n// for...in 迴圈（用於物件）\nlet student = {name: \"小明\", age: 18};\nfor (let key in student) {\n    console.log(`${key}: ${student[key]}`);\n}",
+      "language": "javascript",
+      "categoryId": "level2"
+    },
+    {
+      "id": "js-while-loop",
+      "title": "While 迴圈",
+      "description": "JavaScript的while迴圈結構",
+      "code": "// while 迴圈\nlet count = 0;\nwhile (count < 5) {\n    console.log(`計數: ${count}`);\n    count++;\n}\n\n// do...while 迴圈\nlet input;\ndo {\n    input = prompt(\"請輸入一個數字 (輸入 0 結束):\");\n    console.log(`您輸入了: ${input}`);\n} while (input !== \"0\");\n\nconsole.log(\"程式結束\");",
+      "language": "javascript",
+      "categoryId": "level2"
+    },
+    {
+      "id": "js-function",
+      "title": "函數定義",
+      "description": "JavaScript函數定義和呼叫",
+      "code": "// 函數宣告\nfunction greet(name) {\n    return `您好，${name}！`;\n}\n\n// 函數表達式\nconst add = function(a, b) {\n    return a + b;\n};\n\n// 箭頭函數\nconst multiply = (x, y) => x * y;\n\n// 預設參數\nfunction introduce(name, age = 18) {\n    return `我是 ${name}，今年 ${age} 歲`;\n}\n\n// 使用函數\nconsole.log(greet(\"小明\"));\nconsole.log(add(5, 3));\nconsole.log(multiply(4, 6));\nconsole.log(introduce(\"小華\"));\nconsole.log(introduce(\"小美\", 20));",
+      "language": "javascript",
+      "categoryId": "level3"
+    },
+    {
+      "id": "js-array",
+      "title": "陣列操作",
+      "description": "JavaScript陣列的基本操作",
+      "code": "// 建立陣列\nlet numbers = [1, 2, 3, 4, 5];\nlet fruits = [\"蘋果\", \"香蕉\", \"橘子\"];\n\n// 新增元素\nfruits.push(\"葡萄\");           // 在末尾新增\nfruits.unshift(\"草莓\");        // 在開頭新增\n\n// 移除元素\nlet lastFruit = fruits.pop();     // 移除末尾元素\nlet firstFruit = fruits.shift();  // 移除開頭元素\n\n// 陣列方法\nconsole.log(`水果陣列: ${fruits}`);\nconsole.log(`陣列長度: ${fruits.length}`);\nconsole.log(`第一個水果: ${fruits[0]}`);\n\n// 高階函數\nlet doubledNumbers = numbers.map(n => n * 2);\nlet evenNumbers = numbers.filter(n => n % 2 === 0);\nlet sum = numbers.reduce((total, n) => total + n, 0);\n\nconsole.log(`雙倍數字: ${doubledNumbers}`);\nconsole.log(`偶數: ${evenNumbers}`);\nconsole.log(`總和: ${sum}`);",
+      "language": "javascript",
+      "categoryId": "level3"
+    },
+    {
+      "id": "js-object",
+      "title": "物件操作",
+      "description": "JavaScript物件的基本操作",
+      "code": "// 建立物件\nlet student = {\n    name: \"小明\",\n    age: 18,\n    grade: 85.5,\n    subjects: [\"數學\", \"物理\", \"化學\"],\n    \n    // 物件方法\n    introduce: function() {\n        return `我是 ${this.name}，今年 ${this.age} 歲`;\n    },\n    \n    // ES6 簡寫方法\n    study() {\n        console.log(`${this.name} 正在學習`);\n    }\n};\n\n// 存取物件屬性\nconsole.log(`姓名: ${student.name}`);\nconsole.log(`年齡: ${student[\"age\"]}`);\n\n// 修改物件\nstudent.grade = 90.0;\nstudent.school = \"台灣大學\";\n\n// 呼叫方法\nconsole.log(student.introduce());\nstudent.study();\n\n// 物件解構\nconst {name, age, grade} = student;\nconsole.log(`解構後: ${name}, ${age}, ${grade}`);\n\n// 遍歷物件\nfor (let key in student) {\n    if (typeof student[key] !== 'function') {\n        console.log(`${key}: ${student[key]}`);\n    }\n}",
+      "language": "javascript",
+      "categoryId": "level4"
+    },
+    {
+      "id": "js-class",
+      "title": "類別定義",
+      "description": "JavaScript ES6類別和物件導向程式設計",
+      "code": "class Student {\n    constructor(name, age) {\n        this.name = name;\n        this.age = age;\n        this.grades = [];\n    }\n    \n    addGrade(grade) {\n        this.grades.push(grade);\n    }\n    \n    getAverage() {\n        if (this.grades.length === 0) return 0;\n        const sum = this.grades.reduce((total, grade) => total + grade, 0);\n        return sum / this.grades.length;\n    }\n    \n    introduce() {\n        return `我是 ${this.name}，今年 ${this.age} 歲`;\n    }\n    \n    // 靜態方法\n    static compareStudents(student1, student2) {\n        return student1.getAverage() - student2.getAverage();\n    }\n}\n\n// 使用類別\nconst student1 = new Student(\"小明\", 18);\nstudent1.addGrade(85);\nstudent1.addGrade(92);\nstudent1.addGrade(78);\n\nconsole.log(student1.introduce());\nconsole.log(`平均成績: ${student1.getAverage().toFixed(1)}`);\n\n// 繼承\nclass HighSchoolStudent extends Student {\n    constructor(name, age, year) {\n        super(name, age);\n        this.year = year;\n    }\n    \n    introduce() {\n        return `${super.introduce()}，我是高中${this.year}年級學生`;\n    }\n}\n\nconst hsStudent = new HighSchoolStudent(\"小華\", 17, 2);\nconsole.log(hsStudent.introduce());",
+      "language": "javascript",
+      "categoryId": "level4"
+    },
+    {
+      "id": "js-async",
+      "title": "非同步程式設計",
+      "description": "JavaScript Promise 和 async/await",
+      "code": "// Promise 範例\nfunction fetchData(delay) {\n    return new Promise((resolve, reject) => {\n        setTimeout(() => {\n            if (delay < 3000) {\n                resolve(`資料載入成功！延遲 ${delay}ms`);\n            } else {\n                reject('載入超時！');\n            }\n        }, delay);\n    });\n}\n\n// 使用 Promise\nfetchData(1000)\n    .then(result => {\n        console.log(result);\n        return fetchData(2000);\n    })\n    .then(result => {\n        console.log(result);\n    })\n    .catch(error => {\n        console.error(`錯誤: ${error}`);\n    });\n\n// 使用 async/await\nasync function loadAllData() {\n    try {\n        console.log('開始載入資料...');\n        \n        const result1 = await fetchData(500);\n        console.log(result1);\n        \n        const result2 = await fetchData(1000);\n        console.log(result2);\n        \n        console.log('所有資料載入完成！');\n    } catch (error) {\n        console.error(`載入失敗: ${error}`);\n    }\n}\n\n// 呼叫非同步函數\nloadAllData();",
+      "language": "javascript",
+      "categoryId": "level4"
+    }
+  ]
+}

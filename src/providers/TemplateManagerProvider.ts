@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { TemplateEngine } from '../core/TemplateEngine';
+import { TextBricksEngine } from '../core/TextBricksEngine';
 import { ExtendedTemplate, TemplateCategory, Language } from '../models/Template';
 
 export class TemplateManagerProvider {
@@ -10,7 +10,7 @@ export class TemplateManagerProvider {
 
     constructor(
         private readonly _extensionUri: vscode.Uri,
-        private readonly templateEngine: TemplateEngine
+        private readonly templateEngine: TextBricksEngine
     ) {}
 
     public createOrShow() {

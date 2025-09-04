@@ -1,6 +1,8 @@
-import * as vscode from 'vscode';
-import * as fs from 'fs';
-import * as path from 'path';
+/**
+ * TextBricks 核心引擎 - 平台無關
+ * 整合所有核心業務邏輯，不依賴任何特定平台 API
+ */
+
 import { 
     Template, 
     TemplateCategory, 
@@ -9,6 +11,7 @@ import {
     TemplateImportData 
 } from '../models/Template';
 import { FormattingEngine } from './FormattingEngine';
+import { IPlatform } from '../interfaces/IPlatform';
 
 interface TemplateData {
     languages: Language[];
@@ -16,35 +19,39 @@ interface TemplateData {
     templates: ExtendedTemplate[];
 }
 
-/**
- * 統一的模板引擎 - 合併原本的 TemplateManager 和 TemplateManagementService
- * 負責模板的載入、查詢、CRUD 操作和匯入匯出
- */
-export class TemplateEngine {
+export class TextBricksEngine {
     private languages: Language[] = [];
     private categories: TemplateCategory[] = [];
     private templates: ExtendedTemplate[] = [];
-    private context: vscode.ExtensionContext;
     private formattingEngine: FormattingEngine;
+    private platform: IPlatform;
 
-    constructor(context: vscode.ExtensionContext) {
-        this.context = context;
+    constructor(platform: IPlatform) {
+        this.platform = platform;
         this.formattingEngine = new FormattingEngine();
+    }
+
+    // === 初始化 ===
+
+    async initialize(): Promise<void> {
+        try {
+            await this.loadTemplates();
+        } catch (error) {
+            this.platform.logError(error as Error, 'Initialize TextBricksEngine');
+            throw error;
+        }
     }
 
     // === 資料載入與儲存 ===
 
-    loadTemplates(): void {
+    async loadTemplates(): Promise<void> {
         try {
-            const dataPath = path.join(__dirname, '../data/templates.json');
-            const rawData = fs.readFileSync(dataPath, 'utf8');
-            const data: TemplateData = JSON.parse(rawData);
-            
+            const data = await this.loadTemplateData();
             this.languages = data.languages || [];
             this.categories = data.categories;
             this.templates = data.templates;
         } catch (error) {
-            console.error('Failed to load templates:', error);
+            this.platform.logError(error as Error, 'Loading templates');
             this.languages = [];
             this.categories = [];
             this.templates = [];
@@ -53,9 +60,8 @@ export class TemplateEngine {
 
     private async saveTemplateData(data: TemplateData): Promise<void> {
         try {
-            const dataPath = path.join(__dirname, '../data/templates.json');
             const jsonData = JSON.stringify(data, null, 2);
-            fs.writeFileSync(dataPath, jsonData, 'utf8');
+            await this.platform.storage.set('templates.json', jsonData);
         } catch (error) {
             throw new Error(`Failed to save template data: ${error}`);
         }
@@ -63,11 +69,58 @@ export class TemplateEngine {
 
     private async loadTemplateData(): Promise<TemplateData> {
         try {
-            const dataPath = path.join(__dirname, '../data/templates.json');
-            const rawData = fs.readFileSync(dataPath, 'utf8');
-            return JSON.parse(rawData);
+            // 首先嘗試從 storage 載入（用戶資料）
+            const storageData = await this.platform.storage.get<string>('templates.json');
+            if (storageData) {
+                return JSON.parse(storageData);
+            }
+            
+            // 如果 storage 沒有，從檔案系統載入預設資料
+            const rawData = await this.loadFromFileSystem();
+            if (rawData) {
+                const data = JSON.parse(rawData);
+                // 將預設資料儲存到 storage 供後續使用
+                await this.platform.storage.set('templates.json', rawData);
+                return data;
+            }
+
+            // 返回默認結構
+            return {
+                languages: [],
+                categories: [],
+                templates: []
+            };
         } catch (error) {
             throw new Error(`Failed to load template data: ${error}`);
+        }
+    }
+
+    private async loadFromFileSystem(): Promise<string | null> {
+        try {
+            // 透過平台 API 載入檔案
+            const info = this.platform.getInfo();
+            if (info.name === 'Visual Studio Code') {
+                // VS Code 特定載入邏輯
+                const path = require('path');
+                const fs = require('fs').promises;
+                const extensionPath = (this.platform as any).context.extensionPath;
+                const templatesPath = path.join(extensionPath, 'out', 'data', 'templates.json');
+                
+                try {
+                    return await fs.readFile(templatesPath, 'utf8');
+                } catch {
+                    // 如果 out 目錄不存在，嘗試從 src 目錄載入
+                    const srcPath = path.join(extensionPath, 'src', 'data', 'templates.json');
+                    try {
+                        return await fs.readFile(srcPath, 'utf8');
+                    } catch {
+                        return null;
+                    }
+                }
+            }
+            return null;
+        } catch {
+            return null;
         }
     }
 
@@ -126,7 +179,7 @@ export class TemplateEngine {
         const data = await this.loadTemplateData();
         data.templates.push(newTemplate);
         await this.saveTemplateData(data);
-        this.loadTemplates();
+        await this.loadTemplates();
 
         return newTemplate;
     }
@@ -153,7 +206,7 @@ export class TemplateEngine {
         if (index !== -1) {
             data.templates[index] = updatedTemplate;
             await this.saveTemplateData(data);
-            this.loadTemplates();
+            await this.loadTemplates();
         }
 
         return updatedTemplate;
@@ -168,9 +221,23 @@ export class TemplateEngine {
         const data = await this.loadTemplateData();
         data.templates = data.templates.filter(t => t.id !== templateId);
         await this.saveTemplateData(data);
-        this.loadTemplates();
+        await this.loadTemplates();
 
         return true;
+    }
+
+    // 補充相容性方法
+    getContextualRecommendations(): any[] {
+        return [];
+    }
+
+    getPositionAwareRecommendations(): any[] {
+        return [];
+    }
+
+    // context property for compatibility
+    get context(): any {
+        return null;
     }
 
     // === 分類 CRUD 操作 ===
@@ -184,7 +251,7 @@ export class TemplateEngine {
         const data = await this.loadTemplateData();
         data.categories.push(newCategory);
         await this.saveTemplateData(data);
-        this.loadTemplates();
+        await this.loadTemplates();
 
         return newCategory;
     }
@@ -201,7 +268,7 @@ export class TemplateEngine {
         if (index !== -1) {
             data.categories[index] = updatedCategory;
             await this.saveTemplateData(data);
-            this.loadTemplates();
+            await this.loadTemplates();
         }
 
         return updatedCategory;
@@ -216,7 +283,7 @@ export class TemplateEngine {
         const data = await this.loadTemplateData();
         data.categories = data.categories.filter(c => c.id !== categoryId);
         await this.saveTemplateData(data);
-        this.loadTemplates();
+        await this.loadTemplates();
 
         return true;
     }
@@ -230,7 +297,7 @@ export class TemplateEngine {
         }
         data.languages.push(language);
         await this.saveTemplateData(data);
-        this.loadTemplates();
+        await this.loadTemplates();
 
         return language;
     }
@@ -250,7 +317,7 @@ export class TemplateEngine {
         if (index !== -1) {
             data.languages[index] = updatedLanguage;
             await this.saveTemplateData(data);
-            this.loadTemplates();
+            await this.loadTemplates();
         }
 
         return updatedLanguage;
@@ -264,6 +331,44 @@ export class TemplateEngine {
 
     formatCodeSnippet(code: string, template?: ExtendedTemplate, targetIndentation?: string): string {
         return this.formattingEngine.formatCodeSnippet(code, template, targetIndentation);
+    }
+
+    // === 模板操作 ===
+
+    async insertTemplate(templateId: string): Promise<void> {
+        const template = this.getTemplateById(templateId);
+        if (!template) {
+            throw new Error(`Template not found: ${templateId}`);
+        }
+
+        if (!this.platform.editor.isEditorActive()) {
+            await this.platform.ui.showWarningMessage('沒有打開的編輯器');
+            return;
+        }
+
+        const targetIndentation = await this.platform.editor.calculateTargetIndentation();
+        const formattedCode = this.formatTemplate(template, targetIndentation);
+        
+        await this.platform.editor.insertText(formattedCode);
+        await this.recordTemplateUsage(templateId);
+        
+        await this.platform.ui.showInformationMessage(`模板 '${template.title}' 已插入`);
+    }
+
+    async copyTemplate(templateId: string): Promise<void> {
+        const template = this.getTemplateById(templateId);
+        if (!template) {
+            throw new Error(`Template not found: ${templateId}`);
+        }
+
+        const targetIndentation = this.platform.editor.isEditorActive() ? 
+            await this.platform.editor.calculateTargetIndentation() : '';
+        const formattedCode = this.formatTemplate(template, targetIndentation);
+        
+        await this.platform.clipboard.writeText(formattedCode);
+        await this.recordTemplateUsage(templateId);
+        
+        await this.platform.ui.showInformationMessage(`模板 '${template.title}' 已複製`);
     }
 
     // === 匯入匯出 ===
@@ -399,29 +504,13 @@ export class TemplateEngine {
             .slice(0, limit);
     }
 
-    // 暫時保留的方法，用於向後兼容
-    async getContextualRecommendations(context: any, limit: number = 6): Promise<any[]> {
-        // 回退到基本推薦
-        return this.getRecommendedTemplates(limit);
-    }
+    // === 向後兼容 ===
 
-    async getPositionAwareRecommendations(
-        filePath: string,
-        line: number,
-        column: number,
-        surroundingCode: string,
-        limit: number = 3
-    ): Promise<any[]> {
-        // 回退到基本推薦
-        return this.getRecommendedTemplates(limit);
-    }
-
-    // 為了向後兼容保留的方法
     getTemplate(templateId: string): ExtendedTemplate | null {
         return this.getTemplateById(templateId) || null;
     }
 
-    getTemplateManager(): TemplateEngine {
+    getTemplateManager(): TextBricksEngine {
         return this;
     }
 

@@ -1,0 +1,48 @@
+{
+  "name": "@textbricks/vscode",
+  "displayName": "TextBricks - Multi-Language Development Assistant",
+  "description": "A VSCode extension providing structured templates for multiple languages to develop efficiently",
+  "version": "0.1.8",
+  "publisher": "timcsy",
+  "engines": {
+    "vscode": "^1.74.0"
+  },
+  "categories": [
+    "Snippets",
+    "Education"
+  ],
+  "keywords": [
+    "programming",
+    "multi-language",
+    "extensible",
+    "c",
+    "python",
+    "javascript",
+    "productivity",
+    "development",
+    "templates",
+    "code-snippets",
+    "structured-templates",
+    "efficiency"
+  ],
+  "main": "./dist/extension.js",
+  "scripts": {
+    "build": "tsc -b && npm run copy-data",
+    "copy-data": "mkdir -p dist/data dist/assets/css dist/assets/js dist/assets/icons && cp -r src/data/* dist/data/ 2>/dev/null || true && cp -r ../../assets/css/* dist/assets/css/ && cp -r ../../assets/js/* dist/assets/js/ && cp -r ../../assets/icons/* dist/assets/icons/",
+    "clean": "rm -rf dist",
+    "test": "jest",
+    "lint": "eslint src --ext ts",
+    "package": "vsce package",
+    "publish": "vsce publish"
+  },
+  "dependencies": {
+    "@textbricks/core": "^0.1.8",
+    "@textbricks/shared": "^0.1.8"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.74.0",
+    "@types/node": "16.x",
+    "typescript": "^4.9.4",
+    "vsce": "^2.15.0"
+  }
+}

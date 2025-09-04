@@ -1,416 +1,173 @@
 # TextBricks
 
-A VSCode extension providing structured programming templates for multiple languages (C, Python, JavaScript) to help beginners learn programming efficiently.
+A multi-editor extension providing structured programming templates for multiple languages (C, Python, JavaScript) to help beginners learn programming efficiently.
 
-<!-- TextBricks Logo -->
+> **🎉 Version 0.2.0** - Major architecture overhaul with multi-platform foundation! Now supports multiple editors with extensible design for VS Code, Vim, and more!
 
-## Features
+## ✨ Features
 
 ### 🌐 **Multi-Language Support**
-TextBricks supports multiple programming languages:
 - **C** - Traditional system programming language
-- **Python** - Modern, beginner-friendly language
+- **Python** - Modern, beginner-friendly language  
 - **JavaScript** - Web development and scripting
-- Easily switch between languages with the integrated language selector
+- Easy language switching with integrated selector
 
 ### 🎯 **Structured Learning Path**
-TextBricks organizes programming concepts into progressive categories:
-
-- **Basic Syntax** - Hello World, Variables, Input/Output fundamentals
-- **Control Structures** - Conditional logic, loops, and program flow  
-- **Functions & Data** - Function definition, data structures, and modular programming
-- **Advanced Applications** - Object-oriented programming, file operations, and complex patterns
+Templates organized into progressive categories:
+- **Basic Syntax** - Hello World, Variables, Input/Output
+- **Control Structures** - Conditionals, loops, program flow
+- **Functions & Data** - Function definition, data structures
+- **Advanced Applications** - OOP, file operations, complex patterns
 
 ### 🚀 **Easy Code Insertion**
-- **Click to Insert**: Click any template card to insert code directly into your editor
-- **Drag to Insert**: Drag template cards directly into your editor
-- **Smart Copy**: Access copy functionality from preview tooltips
-- **Interactive Preview**: Hover eye button to see detailed code preview with both copy and insert options
-- **Smart Selection**: When text is selected, only the selected portion is copied or inserted
-- **Auto-Fallback**: If no active editor is found, code is copied to clipboard with option to create new file
+- **Click to Insert** - Click template cards to insert code directly into your editor
+- **Drag to Insert** - Drag templates into your active editor window
+- **Smart Indentation** - Automatic indentation matching your editor's context
+- **Interactive Preview** - Hover to see code preview with copy/insert options
+- **Multi-Editor Support** - Works seamlessly across different code editors
 
-### 🎨 **Clean Interface**
-- Integrated sidebar panel in VS Code
-- Collapsible category sections
-- Template cards with clear descriptions
-- Compact language selector in header
-- Language tags and visual feedback
+### 📖 **Documentation System**
+- **Rich Documentation** - Detailed explanations for complex templates
+- **Interactive Code Blocks** - Insert specific code portions from documentation
+- **Smart Selection** - Select and insert only the parts you need
 
-### 🛠️ **Advanced Template Management**
-- **Template Manager**: Comprehensive CRUD operations for templates, categories, and languages
-- **Import/Export**: Backup and share template collections
-- **JSON Batch Import**: Quickly add multiple templates using JSON format
-- **Template Validation**: Built-in validation for template data integrity
+### 🔧 **Multi-Editor Support**
+- **VS Code** - Full-featured extension with rich UI (✅ Available)
+- **Vim/NeoVim** - Command-line integration (🔄 Coming Soon)
+- **Sublime Text** - Plugin support (🔄 Planned)
+- **Other Editors** - Extensible architecture for future support
 
-### ⭐ **Smart Recommendation System**
-- **Intelligent Recommendations**: AI-powered template suggestions based on your usage patterns
-- **Usage Tracking**: Automatic tracking of template usage frequency and timing
-- **Visual Indicators**: Recommended templates marked with golden star icons (⭐)
-- **Unified Design**: Clean, consistent interface with golden theme for recommendations
-- **Context Awareness**: Reserved architecture for future context-based suggestions
+### 🧠 **Intelligent Features**
+- **Template Recommendations** - Context-aware suggestions based on usage
+- **Smart Copy** - Automatic fallback to clipboard when editor unavailable
+- **Template Management** - Create, edit, import/export templates
 
-### 🧠 **Smart Indentation System** ⭐ Enhanced in v0.1.7
-- **Unified Code Insertion**: Single intelligent system handles all code insertion (tooltips, documentation, templates)
-- **Same-Level Detection**: Automatically recognizes when code lines are at the same indentation level
-- **Smart Cursor Analysis**: Empty line detection - no extra indentation when inserting at line start (column 0)
-- **Context-Aware Formatting**: Preserves relative indentation relationships between code lines
-- **Template-Assisted Recovery**: Recovers lost indentation information using original template context
-- **Multi-Line Support**: Properly handles complex templates with nested indentation
-- **Consistent Behavior**: Tooltip and documentation insertions now behave identically
-- **Comprehensive Testing**: Full test coverage ensures reliable indentation in all scenarios
-- **GitHub Codespaces Support**: Automatic detection and drag fallbacks for web environments
+## 🚀 Quick Start
 
-### 📖 **Documentation System** ⭐ v0.1.4
-- **Comprehensive Template Docs**: Rich Markdown documentation for each template with examples and explanations
-- **Multiple Doc Types**: Support for embedded Markdown, local files (.md), and external URLs
-- **Template Manager Integration**: Edit and preview documentation with modal preview window
-- **Intelligent Content Detection**: Automatically distinguish between file paths and Markdown content
-- **Side Panel Display**: Documentation opens in editor side panel with syntax highlighting
-- **Clean UI Integration**: Documentation buttons integrated into hover tooltips (📖 icon)
-- **Standard Format**: Consistent documentation structure with overview, examples, and key concepts
-- **Interactive Code Blocks**: Documentation code blocks with insert and copy buttons ⭐ v0.1.6
-- **Smart Selection Support**: Select specific portions of code in documentation to insert/copy only that part ⭐ v0.1.6
+### Installation
 
-### 🔧 **Enhanced User Experience** ⭐ New in v0.1.6
-- **Improved Insert Functionality**: Primary action changed from copy to insert for better workflow
-- **Smart Editor Detection**: Intelligent handling when no active editor is available
-- **Auto-Fallback System**: Automatic clipboard copy with option to create new file when no editor is found
-- **Documentation Code Actions**: Interactive insert and copy buttons in all documentation code blocks
-- **Clean Button Styling**: Improved visual design for all action buttons across the interface
+#### VS Code (Current)
+1. Install from [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=timcsy.textbricks)
+2. Reload VS Code
+3. Find TextBricks in the Activity Bar
 
-## Installation
+#### Other Editors (Coming Soon)
+- **Vim/NeoVim**: Plugin installation via package managers
+- **Sublime Text**: Package Control integration
+- **Manual Installation**: Download from [GitHub Releases](https://github.com/timcsy/textbricks-extensions/releases)
 
-### From VS Code Marketplace
-1. Open VS Code
-2. Go to Extensions (Ctrl+Shift+X)
-3. Search for "TextBricks"
-4. Click Install
+### Basic Usage (VS Code)
+1. **Open a code file** (`.c`, `.py`, `.js`, etc.)
+2. **Open TextBricks panel** from the activity bar
+3. **Select your language** using the language selector (🌐)
+4. **Browse templates** by category
+5. **Click templates** to insert or **drag** to editor
+6. **Check recommendations** (⭐ section) for personalized suggestions
 
-### Manual Installation
-1. Clone this repository
-2. Run `npm install` to install dependencies
-3. Run `npm run compile` to build the extension
-4. Press F5 to launch Extension Development Host
-5. Open a C file to see TextBricks panel in sidebar
+### Usage in Other Editors
+Support for additional editors is under development with the same core functionality adapted to each editor's interface.
 
-## Usage
+### Smart Indentation
+- **Auto-adjusts** to your cursor position
+- **Preserves structure** of nested code
+- **Handles empty lines** intelligently
+- **Consistent behavior** across all insertion methods
 
-### Getting Started
-1. **Install the extension** and restart VS Code
-2. **Open a code file** (`.c`, `.py`, `.js`, etc.)
-3. **Find TextBricks panel** in the activity bar sidebar
-4. **Select your language** using the language selector (🌐)
-5. **Browse templates** organized by learning level
-6. **Check recommendations** - Look for the "⭐ 推薦" section at the top for personalized suggestions
-7. **Use templates** - Click to copy or drag to insert - Usage is tracked for better recommendations
-8. **View documentation** - Hover over templates and click 📖 in tooltips to see detailed explanations
+### Documentation
+- **Hover templates** to see preview tooltips
+- **Click 📖 icon** for detailed documentation
+- **Interactive blocks** - click to insert specific code portions
+- **Full Markdown support** with syntax highlighting
 
-### Using Smart Indentation (Enhanced in v0.1.7)
-1. **Position your cursor** anywhere in your code - empty lines, indented positions, or line start
-2. **Insert code** from tooltips, documentation, or templates - all use the same intelligent system
-3. **Automatic adjustment** - Indentation automatically adjusts to match your cursor position and context
-4. **Same-level handling** - Code with identical indentation levels maintains consistency
-5. **Empty line optimization** - Inserting at the start of empty lines (column 0) avoids unnecessary indentation
-6. **Relative structure preserved** - All nested code maintains proper hierarchical structure
-7. **Template context recovery** - Lost indentation information is automatically restored from original templates
-8. **Consistent experience** - Tooltip insertions and documentation insertions behave identically
+## 📋 Commands
 
-### Using Documentation (v0.1.4)
-1. **Hover over template cards** to see preview tooltip
-2. **Click the 📖 icon** in tooltips for templates with documentation
-3. **Documentation opens** in side panel next to your editor
-4. **Full Markdown support** with syntax highlighting and formatting
-5. **Template Manager** allows editing and previewing documentation with modal preview
+- `TextBricks: Open Template Manager` - Launch template management interface
+- `TextBricks: Create Template` - Quick template creation
+- `TextBricks: Import Templates` - Import from JSON files  
+- `TextBricks: Export Templates` - Export to JSON format
+- `TextBricks: Refresh Templates` - Reload template data
 
-### Available Commands
-- **TextBricks: Open Template Manager** - Launch the comprehensive template management interface
-- **TextBricks: Create Template** - Quick template creation from command palette
-- **TextBricks: Import Templates** - Import template collections from JSON files
-- **TextBricks: Export Templates** - Export your templates to JSON format
-- **TextBricks: Refresh Templates** - Reload template data
+## 📚 Template Examples
 
-### Template Examples
-
-#### 📚 Basic Syntax Examples
-
-**C - Hello World**
+### C - Hello World
 ```c
 #include <stdio.h>
 
 int main() {
-    printf("Hello, World!\n");
+    printf("Hello, World!\\n");
     return 0;
 }
 ```
 
-**Python - Hello World**
-```python
-print("Hello, World!")
-```
-
-**JavaScript - Hello World**
-```javascript
-console.log("Hello, World!");
-```
-
-#### 🔧 Control Structure Examples  
-
-**C - For Loop**
-```c
-for (int i = 0; i < 10; i++) {
-    printf("第 %d 次迴圈\n", i + 1);
-}
-```
-
-**Python - For Loop**
+### Python - For Loop
 ```python
 for i in range(10):
-    print(f"第 {i + 1} 次迴圈")
+    print(f"Number: {i}")
 ```
 
-**JavaScript - For Loop**
+### JavaScript - Function
 ```javascript
-for (let i = 0; i < 10; i++) {
-    console.log(`第 ${i + 1} 次迴圈`);
+function greet(name) {
+    return `Hello, ${name}!`;
 }
+
+console.log(greet("World"));
 ```
 
-### Template Manager Features
+## ⚙️ Configuration
 
-The Template Manager provides a comprehensive interface for managing your template collection:
+Access settings via `File > Preferences > Settings > Extensions > TextBricks`:
 
-#### 🎛️ **CRUD Operations**
-- Create, edit, and delete templates with full validation
-- Manage template categories and difficulty levels
-- Add and configure programming languages
+- **Language Preference** - Default language selection
+- **Indentation Settings** - Customize indentation behavior  
+- **Recommendation Engine** - Enable/disable smart suggestions
+- **Documentation Display** - Control documentation panel behavior
 
-#### 📦 **Import/Export System**
-- **Standard Import**: Use VS Code's file dialog for JSON imports
-- **JSON Batch Import**: Paste JSON directly for quick bulk additions
-- **Export Filters**: Export specific templates by language or category
-- **Data Validation**: Automatic validation of imported data
+## 🛠️ Template Management
 
-#### 🔧 **JSON Format for Batch Import**
-```json
-[
-  {
-    "title": "Hello World",
-    "description": "Basic hello world program",
-    "code": "print('Hello, World!')",
-    "language": "python",
-    "categoryId": "beginner"
-  }
-]
-```
+### Creating Templates
+1. Use `TextBricks: Create Template` command
+2. Or create via Template Manager interface
+3. Support for custom categories and documentation
 
-## Development
+### Import/Export
+- **Import**: JSON files with template collections
+- **Export**: Share your templates with others
+- **Format**: Structured JSON with metadata support
 
-### Project Structure
-```
-TextBricks-VSCode/
-├── src/                           # TypeScript source code
-│   ├── extension.ts               # Main extension file
-│   ├── providers/                 # Webview and provider classes
-│   │   ├── WebviewProvider.ts     # Main template display panel
-│   │   └── TemplateManagerProvider.ts # Template management interface
-│   ├── services/                  # Business logic services
-│   │   ├── TemplateManager.ts     # Core template operations
-│   │   └── TemplateManagementService.ts # CRUD and import/export
-│   ├── models/                    # Data models and interfaces
-│   │   └── Template.ts            # Template, category, language types
-│   └── data/                      # Template data
-│       └── templates.json         # Template database
-├── media/                         # Webview assets
-│   ├── style.css                  # Main panel styling
-│   ├── template-manager.css       # Template manager styling
-│   ├── main.js                    # Main panel frontend
-│   └── template-manager.js        # Template manager frontend
-├── icons/                         # Extension icons
-├── package.json                   # Extension manifest
-└── README.md                      # This file
-```
+### Organization
+- **Categories**: Group templates by learning level
+- **Tags**: Add searchable metadata
+- **Documentation**: Rich Markdown descriptions
 
-### Building from Source
-```bash
-# Install dependencies
-npm install
+## 🐛 Troubleshooting
 
-# Compile TypeScript
-npm run compile
-
-# Run tests
-npm test
-
-# Package extension
-vsce package
-```
-
-### Architecture
-
-- **Extension Host**: Main TypeScript extension running in Node.js
-- **Webview Panels**: 
-  - **Main Panel**: Template browsing and selection interface
-  - **Management Panel**: Comprehensive template administration interface
-- **Service Layer**: 
-  - **TemplateManager**: Core template loading and organization
-  - **TemplateManagementService**: Advanced CRUD operations and data management
-- **Data Layer**: JSON-based template storage with validation
-- **Multi-Language Support**: Dynamic language switching and template filtering
-
-## Contributing
-
-We welcome contributions! Here's how you can help:
-
-### Adding New Templates
-
-#### Method 1: Using Template Manager (Recommended)
-1. Open TextBricks Template Manager via command palette
-2. Use "新增模板" button or JSON batch import
-3. Fill in template details with validation
-4. Test the template in the main panel
-
-#### Method 2: Direct JSON Editing
-1. Edit `src/data/templates.json`
-2. Add your template with proper category and metadata
-3. Ensure proper language and category IDs
-4. Test the template in the webview
-5. Submit a pull request
+### Common Issues
+- **Templates not showing**: Try `TextBricks: Refresh Templates`
+- **Indentation problems**: Check your editor tab/space settings
+- **Insert not working**: Ensure you have an active editor
+- **Language not detected**: Manually select language in panel
 
 ### Reporting Issues
-- Use GitHub Issues to report bugs
-- Include VS Code version and extension version
-- Provide steps to reproduce the issue
+- Include VS Code and extension version
+- Describe steps to reproduce
+- Check [GitHub Issues](https://github.com/timcsy/textbricks-extensions/issues)
 
-### Development Guidelines
-- Follow TypeScript and ESLint configurations
-- Write tests for new features
-- Update documentation for changes
-- Maintain compatibility with VS Code API
+## 🤝 Contributing
 
-## Requirements
+We welcome contributions! See our [GitHub repository](https://github.com/timcsy/textbricks-extensions) for:
+- Source code and multi-editor development
+- Issue reporting and bug fixes
+- Feature requests for new editors
+- Documentation improvements
+- Template contributions for all languages
 
-- **VS Code**: Version 1.60.0 or higher
-- **Node.js**: Version 16 or higher (for development)
-- **TypeScript**: Version 4.4 or higher (for development)
+## 📄 License
 
-## Extension Settings
-
-This extension contributes the following settings:
-
-- **Language Preference**: Automatically saved when switching languages
-- **Template Manager**: Access via command palette or menu
-- Currently no additional configurable settings
-- Future versions may include theme and behavior customization
-
-## Known Issues
-
-- Template Manager modal may require multiple clicks to close in some VS Code themes
-- Very long template names may be truncated in narrow sidebar widths
-- JSON batch import validation messages appear briefly for valid input
-
-## Release Notes
-
-### 0.1.7 ⭐ Latest
-- **Unified Indentation System**: Complete rewrite of indentation logic with single `formatCodeSnippetUnified` method
-- **Same-Level Detection**: Intelligent recognition of code lines at identical indentation levels
-- **Smart Cursor Analysis**: Empty line detection prevents unnecessary indentation at line start (column 0)
-- **Consistent Insertion Behavior**: Tooltip and documentation insertions now use identical logic
-- **Template-Assisted Recovery**: Recovers lost indentation information from original template context
-- **Comprehensive Test Coverage**: Full test suite covering all indentation scenarios and edge cases
-- **Bug Fixes**: Fixed inconsistent indentation between tooltip and documentation insertions
-- **GitHub Codespaces Optimization**: Improved experience for GitHub Codespaces environment
-- **Code Quality Improvements**: Streamlined codebase with unified architecture
-
-### 0.1.6
-- **Interactive Code Blocks**: Documentation code blocks with insert and copy buttons
-- **Smart Selection Support**: Select specific portions of code in documentation to insert/copy only that part
-- **Enhanced User Experience**: Improved tooltip interactions and visual feedback
-
-### 0.1.5
-- **Smart Indentation System**: Intelligent copy-paste with automatic indentation adjustment
-- **Context-Aware Formatting**: Preserves relative indentation relationships between code lines
-- **Multi-Line Template Support**: Proper handling of complex templates with nested indentation
-- **Tooltip Text Selection**: Smart indentation for selected text copied from template previews
-- **Seamless Integration**: Works automatically with all copy operations without additional setup
-- **Enhanced Copy Experience**: Template copying now adapts to cursor position and maintains code structure
-
-### 0.1.4
-- **Documentation System**: Rich Markdown documentation for templates with examples and explanations
-- **Template Manager Integration**: Edit and preview documentation with modal preview window
-- **Side Panel Display**: Documentation opens in editor side panel with syntax highlighting
-- **Smart Content Detection**: Automatically distinguish between file paths, URLs, and Markdown content
-- **UI Integration**: Documentation buttons in hover tooltips (📖 icon) for clean interface
-- **Standard Format**: Consistent documentation structure with overview, examples, and key concepts
-- **Multiple Doc Types**: Support for embedded Markdown, local files (.md), and external URLs
-- **Bug Fixes**: Resolved Template Manager loading issues and documentation content processing
-
-### 0.1.3
-- **Smart Recommendation System**: AI-powered template suggestions based on usage patterns
-- **Usage Tracking**: Automatic tracking of template frequency and timing
-- **Visual Indicators**: Recommended templates marked with golden star icons (⭐)
-- **Dynamic UI**: Smooth animations and visual feedback for better user experience
-- **Golden Theme**: Unified design for recommendation sections
-
-### 0.1.2
-- **Multi-Language Support**: Added Python and JavaScript templates alongside C
-- **Template Manager**: Comprehensive template management interface with CRUD operations
-- **JSON Batch Import**: Quick bulk template addition feature with validation
-- **Improved UI**: Compact header design and optimized space utilization
-- **Import/Export**: Full template collection backup and sharing capabilities
-- **Enhanced Validation**: Real-time validation for template data integrity
-- **Language Selector**: Easy switching between programming languages
-- **Extensible Architecture**: Built for future expansion and customization
-- **Updated Repository**: Correct GitHub repository links and metadata
-
-### 0.1.1
-- Initial multi-language release with template management features
-
-## License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## Development & Testing
-
-### Architecture Overview
-- **Unified Indentation**: `TemplateManager.formatCodeSnippetUnified()` handles all code insertion scenarios
-- **Provider Consistency**: `WebviewProvider` and `DocumentationProvider` use identical formatting logic
-- **Smart Analysis**: Automatic same-level detection and template-assisted indentation recovery
-- **Comprehensive Testing**: Full test coverage in `src/services/__tests__/TemplateManager.test.ts` and `src/providers/__tests__/DocumentationProvider.test.ts`
-
-### Key Technical Improvements (v0.1.7)
-- **Single Source of Truth**: Unified `formatCodeSnippetUnified` method eliminates code duplication
-- **Smart Detection Logic**: `allLinesAtSameLevel` detection prevents incorrect extra indentation
-- **Context-Aware Processing**: Empty line analysis (`position.character === 0`) for optimal cursor handling  
-- **Template Matching**: Automatic indentation recovery using original template context when selection loses formatting
-- **Backward Compatibility**: Existing `formatCodeSnippetWithTemplate` method maintained for compatibility
-
-### Running Tests
-```bash
-# Run all tests
-npm test
-
-# Run indentation-specific tests
-npm test -- --testPathPattern="TemplateManager" --testNamePattern="formatCodeSnippetUnified"
-
-# Run with coverage
-npm test -- --coverage
-```
-
-### Test Coverage Areas
-- **Same-Level Logic**: Multi-line code with identical indentation levels
-- **Empty Line Handling**: Cursor at column 0 on empty lines
-- **Template Recovery**: Lost indentation restoration from original templates
-- **Edge Cases**: Empty strings, single lines, mixed indentation
-- **Provider Consistency**: Both tooltip and documentation insertion paths
-
-## Support
-
-- **Documentation**: See [PRD.md](PRD.md) for detailed specifications
-- **Issues**: Report bugs on [GitHub Issues](https://github.com/timcsy/TextBricks-VSCode/issues)
-- **Repository**: View source code on [GitHub](https://github.com/timcsy/TextBricks-VSCode)
+This project is licensed under the MIT License.
 
 ---
 
-**Made with ❤️ for C programming learners**
+**Made with ❤️ for programming learners**
 
 Happy coding with TextBricks! 🧱✨

@@ -1,8 +1,8 @@
 import * as vscode from 'vscode';
-import { TemplateEngine } from '../core/TemplateEngine';
+import { TextBricksEngine } from '../core/TextBricksEngine';
 
 export class CommandHandler {
-    constructor(private templateEngine: TemplateEngine) {}
+    constructor(private templateEngine: TextBricksEngine) {}
 
     async copyTemplate(templateId: string): Promise<void> {
         const template = this.templateEngine.getTemplateById(templateId);
