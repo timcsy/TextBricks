@@ -313,6 +313,16 @@
         console.log('Insert code snippet with template context:', code.substring(0, 50) + '...', 'from template:', templateId);
     }
 
+    function copyCodeSnippet(code, templateId) {
+        vscode.postMessage({
+            type: 'copyCodeSnippet',
+            code: code,
+            templateId: templateId
+        });
+        
+        console.log('Copy code snippet with template context:', code.substring(0, 50) + '...', 'from template:', templateId);
+    }
+
     function showDocumentation(templateId) {
         vscode.postMessage({
             type: 'showDocumentation',
@@ -658,12 +668,44 @@
             }, 2000);
         });
 
-        // Handle copy button
+        // Handle copy button - similar logic to insert button for selected text
         const copyBtn = tooltip.querySelector('.copy-all-btn');
+        
+        // Capture selection on mousedown (before click clears it)
+        copyBtn.addEventListener('mousedown', (e) => {
+            const selection = window.getSelection();
+            const selectedText = selection.toString().trim();
+            storedSelection = selectedText;
+            console.log(`[DEBUG] Copy mousedown - stored selection: "${selectedText}"`);
+        });
+        
         copyBtn.addEventListener('click', (e) => {
             e.stopPropagation();
             const templateId = e.target.dataset.templateId;
-            copyTemplate(templateId);
+            
+            // Use stored selection or check current selection
+            const selection = window.getSelection();
+            const currentSelectedText = selection.toString().trim();
+            const selectedText = storedSelection || currentSelectedText;
+            
+            console.log(`[DEBUG] Copy button clicked for template: ${templateId}`);
+            console.log(`[DEBUG] Stored selection: "${storedSelection}"`);
+            console.log(`[DEBUG] Current selection: "${currentSelectedText}"`);
+            console.log(`[DEBUG] Final selected text: "${selectedText}"`);
+            console.log(`[DEBUG] Selected text length:`, selectedText.length);
+            
+            if (selectedText && selectedText.length > 0) {
+                // Copy selected text
+                copyCodeSnippet(selectedText, templateId);
+                console.log('[DEBUG] Copying selected code snippet:', selectedText.substring(0, 50) + '...');
+            } else {
+                // Copy entire template
+                copyTemplate(templateId);
+                console.log('[DEBUG] Copying entire template:', templateId);
+            }
+            
+            // Clear stored selection
+            storedSelection = null;
             
             // Visual feedback
             copyBtn.textContent = '✅ 已複製';

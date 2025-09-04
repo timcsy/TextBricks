@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { DocumentationService } from '../services/DocumentationService';
-import { TemplateManager } from '../services/TemplateManager';
+import { TemplateEngine } from '../core/TemplateEngine';
 import { Template, DocumentationType } from '../models/Template';
 
 export class DocumentationProvider {
@@ -12,12 +12,12 @@ export class DocumentationProvider {
 
     constructor(
         private readonly _extensionUri: vscode.Uri,
-        private readonly templateManager: TemplateManager,
+        private readonly templateEngine: TemplateEngine,
         private readonly documentationService: DocumentationService
     ) {}
 
     public async showDocumentation(templateId: string) {
-        const template = this.templateManager.getTemplateById(templateId);
+        const template = this.templateEngine.getTemplateById(templateId);
         if (!template) {
             vscode.window.showErrorMessage(`找不到模板 ID: ${templateId}`);
             return;
@@ -79,6 +79,8 @@ export class DocumentationProvider {
     }
 
     private async _handleMessage(message: any) {
+        console.log('[DOCUMENTATION] Received message:', message.type, message);
+        
         switch (message.type) {
             case 'refresh':
                 await this._updateWebview();
@@ -90,13 +92,21 @@ export class DocumentationProvider {
                 }
                 break;
             case 'copyCodeBlock':
+                console.log('[DOCUMENTATION] Handling copyCodeBlock with code:', message.code?.substring(0, 50) + '...');
                 if (message.code) {
                     await this._copyCodeSnippet(message.code, message.templateId);
+                } else {
+                    console.error('[DOCUMENTATION] No code in copyCodeBlock message');
+                    vscode.window.showErrorMessage('沒有程式碼可複製');
                 }
                 break;
             case 'insertCodeBlock':
+                console.log('[DOCUMENTATION] Handling insertCodeBlock with code:', message.code?.substring(0, 50) + '...');
                 if (message.code) {
                     await this._insertCodeSnippet(message.code, message.templateId);
+                } else {
+                    console.error('[DOCUMENTATION] No code in insertCodeBlock message');
+                    vscode.window.showErrorMessage('沒有程式碼可插入');
                 }
                 break;
             case 'openExternal':
@@ -104,6 +114,8 @@ export class DocumentationProvider {
                     vscode.env.openExternal(vscode.Uri.parse(message.url));
                 }
                 break;
+            default:
+                console.log('[DOCUMENTATION] Unknown message type:', message.type);
         }
     }
 
@@ -322,15 +334,17 @@ export class DocumentationProvider {
             const language = lang || '';
             const trimmedCode = code.trim();
             const codeId = Math.random().toString(36).substr(2, 9); // Generate unique ID
+            // Store the raw code in a data attribute to preserve formatting
+            const rawCodeEscaped = this._escapeHtml(trimmedCode);
             return `<div class="code-block-container" data-template-id="${this._currentTemplate?.id || ''}">
                 <div class="code-block-header">
                     <span class="language-label">${language.toUpperCase() || 'CODE'}</span>
                     <div class="code-actions">
-                        <button class="code-action-btn insert-code-btn" data-code-id="${codeId}" title="插入程式碼">➕ 插入</button>
-                        <button class="code-action-btn copy-code-btn" data-code-id="${codeId}" title="複製程式碼">📋 複製</button>
+                        <button class="code-action-btn insert-code-btn" data-code-id="${codeId}" data-raw-code="${this._escapeHtml(JSON.stringify(trimmedCode))}" title="插入程式碼">➕ 插入</button>
+                        <button class="code-action-btn copy-code-btn" data-code-id="${codeId}" data-raw-code="${this._escapeHtml(JSON.stringify(trimmedCode))}" title="複製程式碼">📋 複製</button>
                     </div>
                 </div>
-                <pre id="code-${codeId}"><code class="language-${language}">${this._escapeHtml(trimmedCode)}</code></pre>
+                <pre id="code-${codeId}"><code class="language-${language}">${rawCodeEscaped}</code></pre>
             </div>`;
         });
 
@@ -406,7 +420,7 @@ export class DocumentationProvider {
     }
 
     private _getCategoryName(categoryId: string): string {
-        const category = this.templateManager.getCategories().find(cat => cat.id === categoryId);
+        const category = this.templateEngine.getCategories().find(cat => cat.id === categoryId);
         return category ? category.name : categoryId;
     }
 
@@ -443,31 +457,14 @@ export class DocumentationProvider {
 
     private async _copyCodeSnippet(code: string, templateId?: string) {
         try {
-            // Use template manager's formatting if available
-            let formattedCode = code;
-            const template = templateId ? this.templateManager.getTemplateById(templateId) : undefined;
+            console.log('[COPY] Starting copy operation with code:', JSON.stringify(code.substring(0, 100) + '...'));
             
-            // Get current editor indentation for smart formatting
-            const targetIndentation = this._getCurrentIndentation();
-            formattedCode = this.templateManager.formatCodeSnippetUnified(code, template, targetIndentation);
-            
-            await vscode.env.clipboard.writeText(formattedCode);
-            
-            // Show subtle feedback
-            const lines = code.split('\n').length;
-            const message = lines > 1 ? `${lines} 行程式碼已複製` : '程式碼片段已複製';
-            vscode.window.showInformationMessage(message);
-        } catch (error) {
-            vscode.window.showErrorMessage(`複製程式碼失敗: ${error}`);
-        }
-    }
-
-    private async _insertCodeSnippet(code: string, templateId?: string) {
-        try {
             const editor = vscode.window.activeTextEditor;
             if (!editor) {
-                // Try to copy to clipboard as fallback
+                console.log('[COPY] No active editor, showing warning');
+                // When no editor, don't add any indentation - just use original code
                 await vscode.env.clipboard.writeText(code);
+                
                 const action = await vscode.window.showWarningMessage(
                     '沒有打開的編輯器，程式碼已複製到剪貼簿',
                     '開啟新檔案'
@@ -477,7 +474,7 @@ export class DocumentationProvider {
                     const newDoc = await vscode.workspace.openTextDocument();
                     const newEditor = await vscode.window.showTextDocument(newDoc);
                     
-                    // Insert the code into the new document
+                    // Insert the original code into the new document (no extra indentation)
                     await newEditor.edit(editBuilder => {
                         editBuilder.insert(new vscode.Position(0, 0), code);
                     });
@@ -486,20 +483,56 @@ export class DocumentationProvider {
                 }
                 return;
             }
+            
+            // 使用統一的格式化方法，確保與插入功能完全一致
+            const formattedCode = this._formatCodeForOperation(code, templateId, 'COPY');
+            
+            await vscode.env.clipboard.writeText(formattedCode);
+            console.log('[COPY] Code copied to clipboard successfully');
+            
+            // Show subtle feedback
+            const lines = code.split('\n').length;
+            const message = lines > 1 ? `${lines} 行程式碼已複製` : '程式碼片段已複製';
+            vscode.window.showInformationMessage(message);
+        } catch (error) {
+            console.error('[COPY] Copy failed:', error);
+            vscode.window.showErrorMessage(`複製程式碼失敗: ${error}`);
+        }
+    }
 
-            // Use template manager's formatting if available
-            let formattedCode = code;
-            const template = templateId ? this.templateManager.getTemplateById(templateId) : undefined;
+    private async _insertCodeSnippet(code: string, templateId?: string) {
+        try {
+            console.log('[INSERT] Starting insert operation with code:', JSON.stringify(code.substring(0, 100) + '...'));
+            console.log('[INSERT] Template ID:', templateId);
             
-            // Get current editor indentation for smart formatting
-            const targetIndentation = this._getCurrentIndentation();
-            formattedCode = this.templateManager.formatCodeSnippetUnified(code, template, targetIndentation);
+            const editor = vscode.window.activeTextEditor;
+            if (!editor) {
+                console.log('[INSERT] No active editor, falling back to clipboard');
+                // Use formatted code for clipboard fallback
+                const formattedCode = this._formatCodeForOperation(code, templateId, 'INSERT_FALLBACK');
+                await vscode.env.clipboard.writeText(formattedCode);
+                const action = await vscode.window.showWarningMessage(
+                    '沒有打開的編輯器，程式碼已複製到剪貼簿',
+                    '開啟新檔案'
+                );
+                
+                if (action === '開啟新檔案') {
+                    const newDoc = await vscode.workspace.openTextDocument();
+                    const newEditor = await vscode.window.showTextDocument(newDoc);
+                    
+                    // Insert the formatted code into the new document
+                    await newEditor.edit(editBuilder => {
+                        editBuilder.insert(new vscode.Position(0, 0), formattedCode);
+                    });
+                    
+                    vscode.window.showInformationMessage('程式碼已插入到新檔案');
+                }
+                return;
+            }
+
+            // 使用統一的格式化方法，確保與複製功能完全一致
+            const formattedCode = this._formatCodeForOperation(code, templateId, 'INSERT');
             
-            // Debug: Show the exact formatted code being inserted
-            console.log(`[INSERT DEBUG] ========== INSERTION DEBUG ==========`);
-            console.log(`[INSERT DEBUG] Target indentation:`, JSON.stringify(targetIndentation));
-            console.log(`[INSERT DEBUG] Template:`, template ? template.id : 'none');
-            console.log(`[INSERT DEBUG] Formatted code:`, JSON.stringify(formattedCode));
             console.log(`[INSERT DEBUG] Lines to insert:`);
             formattedCode.split('\n').forEach((line, i) => {
                 console.log(`  Line ${i}: "${line}"`);
@@ -539,6 +572,36 @@ export class DocumentationProvider {
             vscode.window.showInformationMessage(message);
         } catch (error) {
             vscode.window.showErrorMessage(`插入程式碼失敗: ${error}`);
+        }
+    }
+
+    /**
+     * 統一的程式碼格式化方法，確保複製和插入的結果完全一致
+     */
+    private _formatCodeForOperation(code: string, templateId?: string, operation: string = 'OPERATION'): string {
+        console.log(`[${operation}] Template ID:`, templateId);
+        
+        // Use template manager's formatting if available
+        const template = templateId ? this.templateEngine.getTemplateById(templateId) : undefined;
+        console.log(`[${operation}] Found template:`, template ? template.id : 'none');
+        
+        // Get current editor indentation for smart formatting
+        const targetIndentation = this._getCurrentIndentation();
+        console.log(`[${operation}] Target indentation:`, JSON.stringify(targetIndentation));
+        
+        // Check if this code matches the full template code
+        if (template && code.trim() === template.code.trim()) {
+            // This is a full template, use formatTemplate for consistency with tooltip
+            console.log(`[${operation}] Full template detected, using formatTemplate`);
+            const formattedCode = this.templateEngine.formatTemplate(template, targetIndentation);
+            console.log(`[${operation}] Formatted code:`, JSON.stringify(formattedCode.substring(0, 100) + '...'));
+            return formattedCode;
+        } else {
+            // This is a code snippet, use formatCodeSnippet
+            console.log(`[${operation}] Code snippet detected, using formatCodeSnippet`);
+            const formattedCode = this.templateEngine.formatCodeSnippet(code, template, targetIndentation);
+            console.log(`[${operation}] Formatted code:`, JSON.stringify(formattedCode.substring(0, 100) + '...'));
+            return formattedCode;
         }
     }
 

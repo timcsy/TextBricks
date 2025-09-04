@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import { activate, deactivate } from '../extension';
 
 // Mock the services
-jest.mock('../services/TemplateManager');
+jest.mock('../core/TemplateEngine');
 
 describe('Extension', () => {
   let mockContext: vscode.ExtensionContext;

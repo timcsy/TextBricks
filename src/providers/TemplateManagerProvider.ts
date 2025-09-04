@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { TemplateManagementService } from '../services/TemplateManagementService';
+import { TemplateEngine } from '../core/TemplateEngine';
 import { ExtendedTemplate, TemplateCategory, Language } from '../models/Template';
 
 export class TemplateManagerProvider {
@@ -10,7 +10,7 @@ export class TemplateManagerProvider {
 
     constructor(
         private readonly _extensionUri: vscode.Uri,
-        private readonly managementService: TemplateManagementService
+        private readonly templateEngine: TemplateEngine
     ) {}
 
     public createOrShow() {
@@ -134,7 +134,7 @@ export class TemplateManagerProvider {
             try {
                 // 使用公開的getter方法來獲取數據
                 console.log('Getting template manager...');
-                const templateManager = this.managementService.getTemplateManager();
+                const templateManager = this.templateEngine.getTemplateManager();
                 console.log('Template manager:', templateManager);
                 
                 console.log('Getting templates...');
@@ -172,13 +172,13 @@ export class TemplateManagerProvider {
     }
 
     private async _createTemplate(templateData: Omit<ExtendedTemplate, 'id'>) {
-        const newTemplate = await this.managementService.createTemplate(templateData);
+        const newTemplate = await this.templateEngine.createTemplate(templateData);
         vscode.window.showInformationMessage(`模板 "${newTemplate.title}" 已創建成功`);
         await this._sendData();
     }
 
     private async _updateTemplate(templateId: string, updates: Partial<ExtendedTemplate>) {
-        const updated = await this.managementService.updateTemplate(templateId, updates);
+        const updated = await this.templateEngine.updateTemplate(templateId, updates);
         if (updated) {
             vscode.window.showInformationMessage(`模板 "${updated.title}" 已更新成功`);
             await this._sendData();
@@ -188,7 +188,7 @@ export class TemplateManagerProvider {
     }
 
     private async _deleteTemplate(templateId: string) {
-        const template = this.managementService.getTemplate(templateId);
+        const template = this.templateEngine.getTemplate(templateId);
         if (!template) {
             vscode.window.showErrorMessage('找不到指定的模板');
             return;
@@ -201,20 +201,20 @@ export class TemplateManagerProvider {
         );
 
         if (confirmed === '確定') {
-            await this.managementService.deleteTemplate(templateId);
+            await this.templateEngine.deleteTemplate(templateId);
             vscode.window.showInformationMessage(`模板 "${template.title}" 已刪除`);
             await this._sendData();
         }
     }
 
     private async _createCategory(categoryData: Omit<TemplateCategory, 'id'>) {
-        const newCategory = await this.managementService.createCategory(categoryData);
+        const newCategory = await this.templateEngine.createCategory(categoryData);
         vscode.window.showInformationMessage(`分類 "${newCategory.name}" 已創建成功`);
         await this._sendData();
     }
 
     private async _updateCategory(categoryId: string, updates: Partial<TemplateCategory>) {
-        const updated = await this.managementService.updateCategory(categoryId, updates);
+        const updated = await this.templateEngine.updateCategory(categoryId, updates);
         if (updated) {
             vscode.window.showInformationMessage(`分類 "${updated.name}" 已更新成功`);
             await this._sendData();
@@ -225,7 +225,7 @@ export class TemplateManagerProvider {
 
     private async _deleteCategory(categoryId: string) {
         try {
-            await this.managementService.deleteCategory(categoryId);
+            await this.templateEngine.deleteCategory(categoryId);
             vscode.window.showInformationMessage('分類已刪除');
             await this._sendData();
         } catch (error) {
@@ -234,13 +234,13 @@ export class TemplateManagerProvider {
     }
 
     private async _createLanguage(languageData: Language) {
-        const newLanguage = await this.managementService.createLanguage(languageData);
+        const newLanguage = await this.templateEngine.createLanguage(languageData);
         vscode.window.showInformationMessage(`語言 "${newLanguage.displayName}" 已創建成功`);
         await this._sendData();
     }
 
     private async _updateLanguage(languageId: string, updates: Partial<Language>) {
-        const updated = await this.managementService.updateLanguage(languageId, updates);
+        const updated = await this.templateEngine.updateLanguage(languageId, updates);
         if (updated) {
             vscode.window.showInformationMessage(`語言 "${updated.displayName}" 已更新成功`);
             await this._sendData();
@@ -260,7 +260,7 @@ export class TemplateManagerProvider {
 
         if (saveUri) {
             try {
-                const exportData = await this.managementService.exportTemplates(filters);
+                const exportData = await this.templateEngine.exportTemplates(filters);
                 const content = JSON.stringify(exportData, null, 2);
                 
                 await vscode.workspace.fs.writeFile(saveUri, Buffer.from(content, 'utf8'));
@@ -296,7 +296,7 @@ export class TemplateManagerProvider {
                 const importData = JSON.parse(content.toString());
 
                 const options = await this._getImportOptions();
-                const result = await this.managementService.importTemplates(importData, options);
+                const result = await this.templateEngine.importTemplates(importData, options);
 
                 let message = `匯入完成: ${result.imported} 個模板已匯入`;
                 if (result.skipped > 0) {
@@ -350,7 +350,7 @@ export class TemplateManagerProvider {
                     }
 
                     // Check if language and category exist
-                    const templateManager = this.managementService.getTemplateManager();
+                    const templateManager = this.templateEngine.getTemplateManager();
                     const languageExists = templateManager.getLanguageById(template.language);
                     const categoryExists = templateManager.getCategories().find(c => c.id === template.categoryId);
 
@@ -363,7 +363,7 @@ export class TemplateManagerProvider {
                     }
 
                     // Create the template
-                    await this.managementService.createTemplate({
+                    await this.templateEngine.createTemplate({
                         title: template.title,
                         description: template.description,
                         code: template.code,

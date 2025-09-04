@@ -1,12 +1,12 @@
 import * as vscode from 'vscode';
-import { TemplateManager } from '../services/TemplateManager';
+import { TemplateEngine } from '../core/TemplateEngine';
 import { Template, TemplateCategory } from '../models/Template';
 
 export class TemplateProvider implements vscode.TreeDataProvider<TemplateTreeItem> {
     private _onDidChangeTreeData: vscode.EventEmitter<TemplateTreeItem | undefined | null | void> = new vscode.EventEmitter<TemplateTreeItem | undefined | null | void>();
     readonly onDidChangeTreeData: vscode.Event<TemplateTreeItem | undefined | null | void> = this._onDidChangeTreeData.event;
 
-    constructor(private templateManager: TemplateManager) {
+    constructor(private templateEngine: TemplateEngine) {
         // Initialize template manager if needed
     }
 
@@ -21,11 +21,11 @@ export class TemplateProvider implements vscode.TreeDataProvider<TemplateTreeIte
     getChildren(element?: TemplateTreeItem): Thenable<TemplateTreeItem[]> {
         if (!element) {
             // Return categories as root elements
-            const categories = this.templateManager.getCategories();
+            const categories = this.templateEngine.getCategories();
             return Promise.resolve(categories.map(category => new CategoryTreeItem(category)));
         } else if (element instanceof CategoryTreeItem) {
             // Return templates for this category
-            const templates = this.templateManager.getTemplatesByCategory(element.category.id);
+            const templates = this.templateEngine.getTemplatesByCategory(element.category.id);
             return Promise.resolve(templates.map(template => new TemplateTreeItemImpl(template)));
         }
         

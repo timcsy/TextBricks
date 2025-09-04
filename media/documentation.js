@@ -145,12 +145,36 @@
                     codeToSend = selectedText;
                     console.log('[DEBUG] Copying selected code from block:', selectedText.substring(0, 50) + '...');
                 } else {
-                    codeToSend = codeBlock.textContent || '';
-                    console.log('[DEBUG] Selection not in code block, copying entire block');
+                    // Use raw code from data attribute if no valid selection
+                    const rawCode = button.dataset.rawCode;
+                    if (rawCode) {
+                        try {
+                            codeToSend = JSON.parse(rawCode);
+                            console.log('[DEBUG] Selection not in code block, using raw code from data attribute');
+                        } catch (e) {
+                            codeToSend = codeBlock.textContent || '';
+                            console.log('[DEBUG] Failed to parse raw code, using textContent');
+                        }
+                    } else {
+                        codeToSend = codeBlock.textContent || '';
+                        console.log('[DEBUG] No raw code data, using textContent');
+                    }
                 }
             } else {
-                codeToSend = codeBlock.textContent || '';
-                console.log('[DEBUG] No selection, copying entire code block');
+                // Use raw code from data attribute for better formatting preservation
+                const rawCode = button.dataset.rawCode;
+                if (rawCode) {
+                    try {
+                        codeToSend = JSON.parse(rawCode);
+                        console.log('[DEBUG] No selection, using raw code from data attribute');
+                    } catch (e) {
+                        codeToSend = codeBlock.textContent || '';
+                        console.log('[DEBUG] Failed to parse raw code, using textContent as fallback');
+                    }
+                } else {
+                    codeToSend = codeBlock.textContent || '';
+                    console.log('[DEBUG] No raw code data, using textContent');
+                }
             }
             
             // Send message to VS Code
@@ -193,12 +217,36 @@
                     codeToSend = selectedText;
                     console.log('[DEBUG] Inserting selected code from block:', selectedText.substring(0, 50) + '...');
                 } else {
-                    codeToSend = codeBlock.textContent || '';
-                    console.log('[DEBUG] Selection not in code block, inserting entire block');
+                    // Use raw code from data attribute if no valid selection
+                    const rawCode = button.dataset.rawCode;
+                    if (rawCode) {
+                        try {
+                            codeToSend = JSON.parse(rawCode);
+                            console.log('[DEBUG] Selection not in code block, using raw code for insert');
+                        } catch (e) {
+                            codeToSend = codeBlock.textContent || '';
+                            console.log('[DEBUG] Failed to parse raw code for insert, using textContent');
+                        }
+                    } else {
+                        codeToSend = codeBlock.textContent || '';
+                        console.log('[DEBUG] No raw code data for insert, using textContent');
+                    }
                 }
             } else {
-                codeToSend = codeBlock.textContent || '';
-                console.log('[DEBUG] No selection, inserting entire code block');
+                // Use raw code from data attribute for better formatting preservation
+                const rawCode = button.dataset.rawCode;
+                if (rawCode) {
+                    try {
+                        codeToSend = JSON.parse(rawCode);
+                        console.log('[DEBUG] No selection, using raw code for insert');
+                    } catch (e) {
+                        codeToSend = codeBlock.textContent || '';
+                        console.log('[DEBUG] Failed to parse raw code for insert, using textContent as fallback');
+                    }
+                } else {
+                    codeToSend = codeBlock.textContent || '';
+                    console.log('[DEBUG] No raw code data for insert, using textContent');
+                }
             }
             
             // Send message to VS Code

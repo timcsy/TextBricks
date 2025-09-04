@@ -1,7 +1,6 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
-import { TemplateManager } from '../services/TemplateManager';
-import { TemplateManagementService } from '../services/TemplateManagementService';
+import { TemplateEngine } from '../core/TemplateEngine';
 import { DocumentationProvider } from './DocumentationProvider';
 import { DocumentationService } from '../services/DocumentationService';
 import { Template, TemplateCategory, Language, ProgrammingContext } from '../models/Template';
@@ -15,16 +14,16 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
 
     constructor(
         private readonly _extensionUri: vscode.Uri,
-        private readonly templateManager: TemplateManager,
+        private readonly templateEngine: TemplateEngine,
         private readonly _context: vscode.ExtensionContext,
-        private readonly managementService?: TemplateManagementService
+        private readonly managementService?: TemplateEngine
     ) {
         // Load saved language preference or default to 'c'
         this._selectedLanguage = this._context.globalState.get('textbricks.selectedLanguage', 'c');
         
         // Initialize documentation provider
         const documentationService = new DocumentationService(this._extensionUri);
-        this._documentationProvider = new DocumentationProvider(this._extensionUri, this.templateManager, documentationService);
+        this._documentationProvider = new DocumentationProvider(this._extensionUri, this.templateEngine, documentationService);
         
     }
 
@@ -83,16 +82,16 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
     }
 
     private async _copyTemplate(templateId: string) {
-        const template = this.templateManager.getTemplateById(templateId);
+        const template = this.templateEngine.getTemplateById(templateId);
         if (!template) {
             vscode.window.showErrorMessage(`Template with id '${templateId}' not found`);
             return;
         }
 
         try {
-            // Get current editor indentation for smart formatting
+            // 使用與插入功能完全相同的格式化邏輯
             const targetIndentation = this._getCurrentIndentation();
-            const formattedCode = this.templateManager.formatTemplate(template, targetIndentation);
+            const formattedCode = this.templateEngine.formatTemplate(template, targetIndentation);
             
             await vscode.env.clipboard.writeText(formattedCode);
             vscode.window.showInformationMessage(`Template '${template.title}' copied to clipboard`);
@@ -107,7 +106,7 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
     }
 
     private async _insertTemplate(templateId: string) {
-        const template = this.templateManager.getTemplateById(templateId);
+        const template = this.templateEngine.getTemplateById(templateId);
         if (!template) {
             vscode.window.showErrorMessage(`Template with id '${templateId}' not found`);
             return;
@@ -129,7 +128,7 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
                     
                     // Get formatting for new document
                     const targetIndentation = this._getCurrentIndentationForEditor(newEditor);
-                    const formattedCode = this.templateManager.formatTemplate(template, targetIndentation);
+                    const formattedCode = this.templateEngine.formatTemplate(template, targetIndentation);
                     
                     // Insert the template into the new document
                     await newEditor.edit(editBuilder => {
@@ -148,7 +147,7 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
 
             // Get current editor indentation for smart formatting
             const targetIndentation = this._getCurrentIndentation();
-            const formattedCode = this.templateManager.formatTemplate(template, targetIndentation);
+            const formattedCode = this.templateEngine.formatTemplate(template, targetIndentation);
 
             // Insert at current cursor position
             const position = editor.selection.active;
@@ -169,23 +168,8 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
 
     private async _copyCodeSnippet(code: string, templateId?: string) {
         try {
-            // Get current editor indentation for smart formatting
-            const targetIndentation = this._getCurrentIndentation();
-            
-            let formattedCode: string;
-            
-            // Use unified formatting method
-            const template = templateId ? this.templateManager.getTemplateById(templateId) : undefined;
-            
-            if (template && code.trim() === template.code.trim()) {
-                // Full template - use template formatting
-                formattedCode = this.templateManager.formatTemplate(template, targetIndentation);
-                console.log(`[COPY SNIPPET] Full template match, using formatTemplate`);
-            } else {
-                // Code snippet - use unified snippet formatting
-                formattedCode = this.templateManager.formatCodeSnippetUnified(code, template, targetIndentation);
-                console.log(`[COPY SNIPPET] Code snippet, using unified formatting, template: ${template ? template.id : 'none'}`);
-            }
+            // 使用統一的格式化方法，確保與插入功能完全一致
+            const formattedCode = this._formatCodeForOperation(code, templateId, 'COPY_SNIPPET');
             
             await vscode.env.clipboard.writeText(formattedCode);
             
@@ -211,19 +195,10 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
 
             console.log(`[DEBUG] Active editor found: ${editor.document.fileName}`);
 
-            // Get current editor indentation for smart formatting
-            const targetIndentation = this._getCurrentIndentation();
-            console.log(`[DEBUG] Target indentation: "${targetIndentation}" (length: ${targetIndentation.length})`);
+            // 使用統一的格式化方法，確保與複製功能完全一致
+            const formattedCode = this._formatCodeForOperation(code, templateId, 'INSERT_SNIPPET');
             
-            let formattedCode: string;
-            
-            // Use unified formatting method
-            const template = templateId ? this.templateManager.getTemplateById(templateId) : undefined;
-            formattedCode = this.templateManager.formatCodeSnippetUnified(code, template, targetIndentation);
-            
-            console.log(`[INSERT SNIPPET] Using unified formatting, template: ${template ? template.id : 'none'}`);
             console.log(`[INSERT SNIPPET] Selected code:\n${code}`);
-            
             console.log(`[INSERT SNIPPET] Final formatted code:\n${formattedCode}`);
             
             // Insert at current cursor position
@@ -255,7 +230,7 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
         this.refresh();
         
         // Show a message to let the user know the language has been changed
-        const language = this.templateManager.getLanguageById(languageId);
+        const language = this.templateEngine.getLanguageById(languageId);
         if (language) {
             vscode.window.showInformationMessage(`已切換至 ${language.displayName} 語言模板`);
         }
@@ -324,6 +299,26 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
         return '';
     }
 
+    /**
+     * 統一的程式碼格式化方法，確保複製和插入的結果完全一致
+     */
+    private _formatCodeForOperation(code: string, templateId?: string, operation: string = 'OPERATION'): string {
+        console.log(`[${operation}] Template ID:`, templateId);
+        
+        // Use template manager's formatting if available
+        const template = templateId ? this.templateEngine.getTemplateById(templateId) : undefined;
+        console.log(`[${operation}] Found template:`, template ? template.id : 'none');
+        
+        // Get current editor indentation for smart formatting
+        const targetIndentation = this._getCurrentIndentation();
+        console.log(`[${operation}] Target indentation:`, JSON.stringify(targetIndentation));
+        
+        const formattedCode = this.templateEngine.formatCodeSnippet(code, template, targetIndentation);
+        console.log(`[${operation}] Formatted code:`, JSON.stringify(formattedCode.substring(0, 100) + '...'));
+        
+        return formattedCode;
+    }
+
     private _getCurrentIndentationForEditor(editor: vscode.TextEditor): string {
         if (!editor) {
             return '';
@@ -343,8 +338,8 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
     }
 
     private _getHtmlForWebview(webview: vscode.Webview): string {
-        const categories = this.templateManager.getCategories();
-        const languages = this.templateManager.getLanguages();
+        const categories = this.templateEngine.getCategories();
+        const languages = this.templateEngine.getLanguages();
         
         // Get CSS and JS URIs
         const styleUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'media', 'style.css'));
@@ -478,7 +473,7 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
 
     private _generateCategoriesHtml(categories: TemplateCategory[]): string {
         return categories.map(category => {
-            const templates = this.templateManager.getTemplatesByLanguageAndCategory(this._selectedLanguage, category.id);
+            const templates = this.templateEngine.getTemplatesByLanguageAndCategory(this._selectedLanguage, category.id);
             if (templates.length === 0) {
                 return ''; // Don't show empty categories
             }

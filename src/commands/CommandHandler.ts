@@ -1,11 +1,11 @@
 import * as vscode from 'vscode';
-import { TemplateManager } from '../services/TemplateManager';
+import { TemplateEngine } from '../core/TemplateEngine';
 
 export class CommandHandler {
-    constructor(private templateManager: TemplateManager) {}
+    constructor(private templateEngine: TemplateEngine) {}
 
     async copyTemplate(templateId: string): Promise<void> {
-        const template = this.templateManager.getTemplateById(templateId);
+        const template = this.templateEngine.getTemplateById(templateId);
         
         if (!template) {
             vscode.window.showErrorMessage(`Template with id '${templateId}' not found`);
@@ -13,7 +13,7 @@ export class CommandHandler {
         }
 
         try {
-            const formattedCode = this.templateManager.formatTemplate(template);
+            const formattedCode = this.templateEngine.formatTemplate(template);
             await vscode.env.clipboard.writeText(formattedCode);
             vscode.window.showInformationMessage(`Template '${template.title}' copied to clipboard`);
         } catch (error) {
@@ -22,7 +22,7 @@ export class CommandHandler {
     }
 
     async insertTemplate(templateId: string): Promise<void> {
-        const template = this.templateManager.getTemplateById(templateId);
+        const template = this.templateEngine.getTemplateById(templateId);
         
         if (!template) {
             vscode.window.showErrorMessage(`Template with id '${templateId}' not found`);
@@ -36,7 +36,7 @@ export class CommandHandler {
         }
 
         try {
-            const formattedCode = this.templateManager.formatTemplate(template);
+            const formattedCode = this.templateEngine.formatTemplate(template);
             const position = editor.selection.active;
             
             await editor.edit(editBuilder => {
