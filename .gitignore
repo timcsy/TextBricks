@@ -4,6 +4,9 @@
 # Unified build output - ignore all generated files
 dist/
 
+# Backup directories
+src_backup_*
+
 # If you want to track final releases, uncomment these lines:
 # !dist/plugins/*/current/*.vsix
 # !dist/plugins/.gitkeep

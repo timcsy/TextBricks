@@ -10,7 +10,7 @@ import {
     PlatformConfiguration,
     IPlatformPlugin,
     PlatformAdapter 
-} from '../../interfaces/IPlatform';
+} from '@textbricks/core';
 import { VSCodeEditor } from './VSCodeEditor';
 import { VSCodeUI } from './VSCodeUI';
 import { VSCodeClipboard } from './VSCodeClipboard';

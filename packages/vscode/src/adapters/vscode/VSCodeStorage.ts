@@ -14,7 +14,7 @@ import {
     StorageQuery,
     StorageMigration,
     IStorageTransaction
-} from '../../interfaces/IStorage';
+} from '@textbricks/core';
 
 export class VSCodeStorage implements IStorage {
     private context: vscode.ExtensionContext;

@@ -1,8 +1,8 @@
 import * as vscode from 'vscode';
-import { DocumentationService } from '../core/DocumentationService';
-import { TextBricksEngine } from '../core/TextBricksEngine';
-import { CodeOperationService } from '../core/CodeOperationService';
-import { Template, DocumentationType } from '../models/Template';
+import { DocumentationService } from '@textbricks/core';
+import { TextBricksEngine } from '@textbricks/core';
+import { CodeOperationService } from '@textbricks/core';
+import { Template, DocumentationType } from '@textbricks/shared';
 
 export class DocumentationProvider {
     public static readonly viewType = 'textbricks-documentation';
@@ -335,7 +335,7 @@ export class DocumentationProvider {
         html = html.replace(/```(\w+)?\n([\s\S]*?)```/g, (match, lang, code) => {
             const language = lang || '';
             const trimmedCode = code.trim();
-            const codeId = Math.random().toString(36).substr(2, 9); // Generate unique ID
+            const codeId = Math.random().toString(36).substring(2, 11); // Generate unique ID
             // Store the raw code in a data attribute to preserve formatting
             const rawCodeEscaped = this._escapeHtml(trimmedCode);
             return `<div class="code-block-container" data-template-id="${this._currentTemplate?.id || ''}">

@@ -7,6 +7,13 @@ export { CodeOperationService } from './core/CodeOperationService';
 // Platform interfaces
 export * from './interfaces/IEditor';
 export * from './interfaces/IUI';
-export { IClipboard } from './interfaces/IClipboard';
+export * from './interfaces/IClipboard';
 export * from './interfaces/IStorage';
-export * from './interfaces/IPlatform';
+export { 
+    IPlatform, 
+    PlatformInfo, 
+    PlatformConfiguration, 
+    IPlatformPlugin, 
+    PlatformAdapter,
+    IPlatformFactory
+} from './interfaces/IPlatform';

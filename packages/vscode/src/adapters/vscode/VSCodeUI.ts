@@ -12,7 +12,7 @@ import {
     IWebviewPanel,
     ProgressOptions,
     IProgress
-} from '../../interfaces/IUI';
+} from '@textbricks/core';
 
 export class VSCodeUI implements IUI {
     

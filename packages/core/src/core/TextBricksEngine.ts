@@ -97,29 +97,58 @@ export class TextBricksEngine {
 
     private async loadFromFileSystem(): Promise<string | null> {
         try {
-            // 透過平台 API 載入檔案
+            // 檢查平台是否支援檔案系統操作
+            if (!this.platform.supports('filesystem')) {
+                return null;
+            }
+
+            // 使用平台功能檢測而非硬編碼字串比較
             const info = this.platform.getInfo();
-            if (info.name === 'Visual Studio Code') {
-                // VS Code 特定載入邏輯
-                const path = require('path');
-                const fs = require('fs').promises;
-                const extensionPath = (this.platform as any).context.extensionPath;
-                const templatesPath = path.join(extensionPath, 'out', 'data', 'templates.json');
+            const isVSCode = info.features.includes('webview') && 
+                           info.capabilities.system.filesystem && 
+                           typeof (this.platform as any).getExtensionContext === 'function';
+            
+            if (isVSCode) {
+                // 透過平台方法獲取擴展路徑，避免直接存取內部屬性
+                const extensionPath = (this.platform as any).getExtensionPath?.() || 
+                                    (this.platform as any).getExtensionContext?.()?.extensionPath;
                 
-                try {
-                    return await fs.readFile(templatesPath, 'utf8');
-                } catch {
-                    // 如果 out 目錄不存在，嘗試從 src 目錄載入
-                    const srcPath = path.join(extensionPath, 'src', 'data', 'templates.json');
+                if (!extensionPath) {
+                    this.platform.logWarning('Could not get extension path', 'TextBricksEngine');
+                    return null;
+                }
+
+                // 動態導入以避免同步載入問題
+                const { join } = await import('path');
+                const { readFile } = await import('fs/promises');
+                
+                // 按優先順序嘗試不同路徑
+                const possiblePaths = [
+                    join(extensionPath, 'dist', 'plugins', 'vscode', 'current', 'out', 'data', 'templates.json'),
+                    join(extensionPath, 'out', 'data', 'templates.json'),
+                    join(extensionPath, 'dist', 'packages', 'vscode', 'data', 'templates.json'),
+                    join(extensionPath, 'src', 'data', 'templates.json'),
+                    join(extensionPath, 'assets', 'data', 'templates.json'),
+                    join(extensionPath, 'data', 'templates.json')
+                ];
+                
+                for (const templatePath of possiblePaths) {
                     try {
-                        return await fs.readFile(srcPath, 'utf8');
-                    } catch {
-                        return null;
+                        const content = await readFile(templatePath, 'utf8');
+                        this.platform.logDebug(`Successfully loaded templates from: ${templatePath}`, 'TextBricksEngine');
+                        return content;
+                    } catch (error) {
+                        this.platform.logDebug(`Failed to load from ${templatePath}: ${error}`, 'TextBricksEngine');
+                        continue;
                     }
                 }
+                
+                this.platform.logWarning('Template file not found in any expected location', 'TextBricksEngine');
             }
+            
             return null;
-        } catch {
+        } catch (error) {
+            this.platform.logError(error as Error, 'Loading from filesystem');
             return null;
         }
     }
@@ -539,10 +568,10 @@ export class TextBricksEngine {
     }
 
     private generateTemplateId(): string {
-        return `template-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+        return `template-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
     }
 
     private generateCategoryId(): string {
-        return `category-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+        return `category-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
     }
 }

@@ -4,7 +4,7 @@
  */
 
 import * as vscode from 'vscode';
-import { IEditor, Position, Selection, IndentationInfo, EditOperation } from '../../interfaces/IEditor';
+import { IEditor, Position, Selection, IndentationInfo, EditOperation } from '@textbricks/core';
 
 export class VSCodeEditor implements IEditor {
     

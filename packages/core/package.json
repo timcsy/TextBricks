@@ -1,6 +1,6 @@
 {
   "name": "@textbricks/core",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "Platform-agnostic core logic for TextBricks",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -19,7 +19,7 @@
   "author": "timcsy",
   "license": "MIT",
   "dependencies": {
-    "@textbricks/shared": "^0.2.1"
+    "@textbricks/shared": "^0.2.2"
   },
   "devDependencies": {
     "typescript": "^4.9.4",

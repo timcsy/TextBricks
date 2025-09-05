@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
-import { TextBricksEngine } from '../core/TextBricksEngine';
-import { ExtendedTemplate, TemplateCategory, Language } from '../models/Template';
+import { TextBricksEngine } from '@textbricks/core';
+import { ExtendedTemplate, TemplateCategory, Language } from '@textbricks/shared';
 
 export class TemplateManagerProvider {
     public static readonly viewType = 'textbricks-template-manager';

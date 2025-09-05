@@ -5,6 +5,24 @@ All notable changes to the TextBricks extension will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.2] - 2025-09-05
+
+### 🔧 Fixed
+- **Template Loading**: Removed hardcoded `info.name === 'Visual Studio Code'` detection that caused failures across different VS Code environments
+- **Dynamic Imports**: Replaced synchronous require() with dynamic imports for better compatibility
+- **Template Path Resolution**: Added multiple fallback paths for VSIX package template loading
+- **Deprecated APIs**: Fixed deprecated `substr()` calls, replaced with `substring()`
+
+### 🏗️ Architecture Improvements  
+- **Capability-Based Detection**: Replaced brittle string comparisons with platform capability detection
+- **VSIX Path Structure**: Enhanced template loading to support packaged extension paths
+- **Robust Fallbacks**: Multiple template location attempts for different deployment scenarios
+
+### 🛠️ Build & Release
+- **VSIX Output Structure**: Configured generation to `dist/plugins/vscode/` with versioning support
+- **Version Management**: Added `current` → `v0.2.2` symbolic links for release management
+- **Cleanup**: Removed unnecessary `jest.config.js` after monorepo migration
+
 ## [0.2.1] - 2025-09-05
 
 ### 🔧 Fixed

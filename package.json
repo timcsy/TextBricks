@@ -2,7 +2,7 @@
   "name": "textbricks",
   "displayName": "TextBricks - Multi-Language Development Assistant",
   "description": "A VSCode extension providing structured templates for multiple languages to develop efficiently",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "publisher": "timcsy",
   "workspaces": [
     "packages/*"
@@ -37,7 +37,7 @@
     "structured-templates",
     "efficiency"
   ],
-  "main": "./dist/plugins/vscode/current/out/extension.js",
+  "main": "./packages/vscode/dist/extension.js",
   "activationEvents": [
     "onStartupFinished"
   ],
@@ -135,15 +135,18 @@
   },
   "scripts": {
     "vscode:prepublish": "npm run build:vscode && npm run copy-data:vscode",
-    "compile": "tsc -p ./",
-    "build:vscode": "npm run compile",
-    "copy-data:vscode": "mkdir -p dist/plugins/vscode/current/out/data dist/plugins/vscode/current/out/assets && cp -r src/data/* dist/plugins/vscode/current/out/data/ 2>/dev/null || true && cp -r assets/* dist/plugins/vscode/current/out/assets/",
+    "compile": "npm run build --workspaces",
+    "build:vscode": "npm run build --workspace=@textbricks/vscode",
+    "copy-data:vscode": "mkdir -p packages/vscode/dist/data packages/vscode/dist/assets && cp -r packages/vscode/src/data/* packages/vscode/dist/data/ 2>/dev/null || true && cp -r assets/* packages/vscode/dist/assets/",
     "package:vscode": "vsce package --out dist/plugins/vscode/current/",
-    "archive:vscode": "[ -f dist/plugins/vscode/current/*.vsix ] && mv dist/plugins/vscode/current/*.vsix dist/plugins/vscode/archive/ || echo 'No VSIX to archive'",
-    "build": "npx tsc -b",
-    "clean": "npx tsc -b --clean",
+    "package:vscode:versioned": "vsce package --out dist/plugins/vscode/v0.2.2/",
+    "package:release": "npm run archive:vscode && npm run package:vscode && npm run link:current",
+    "archive:vscode": "[ -f dist/plugins/vscode/current/*.vsix ] && mkdir -p dist/plugins/vscode/archive && mv dist/plugins/vscode/current/*.vsix dist/plugins/vscode/archive/ 2>/dev/null || true",
+    "link:current": "mkdir -p dist/plugins/vscode && cd dist/plugins/vscode && rm -rf current && ln -sf v0.2.2 current",
+    "build": "npm run build --workspaces",
+    "clean": "npm run clean --workspaces && rm -rf dist",
     "clean:dist": "rm -rf dist/temp/* dist/packages/*/",
-    "watch": "npx tsc -b --watch",
+    "watch": "npm run build --workspaces --watch",
     "pretest": "npm run build && npm run lint",
     "lint": "eslint packages/*/src --ext ts",
     "test": "jest",

@@ -11,7 +11,7 @@ import {
     ClipboardWriteOptions, 
     ClipboardReadOptions,
     IDisposable 
-} from '../../interfaces/IClipboard';
+} from '@textbricks/core';
 
 export class VSCodeClipboard implements IClipboard {
     
