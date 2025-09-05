@@ -97,58 +97,40 @@ export class TextBricksEngine {
 
     private async loadFromFileSystem(): Promise<string | null> {
         try {
-            // 檢查平台是否支援檔案系統操作
-            if (!this.platform.supports('filesystem')) {
+            // 直接獲取擴展路徑
+            const extensionPath = (this.platform as any).getExtensionPath?.() || 
+                                (this.platform as any).getExtensionContext?.()?.extensionPath;
+                                
+            if (!extensionPath) {
                 return null;
             }
 
-            // 使用平台功能檢測而非硬編碼字串比較
-            const info = this.platform.getInfo();
-            const isVSCode = info.features.includes('webview') && 
-                           info.capabilities.system.filesystem && 
-                           typeof (this.platform as any).getExtensionContext === 'function';
+            // 動態導入
+            const { join } = await import('path');
+            const { readFile } = await import('fs/promises');
             
-            if (isVSCode) {
-                // 透過平台方法獲取擴展路徑，避免直接存取內部屬性
-                const extensionPath = (this.platform as any).getExtensionPath?.() || 
-                                    (this.platform as any).getExtensionContext?.()?.extensionPath;
-                
-                if (!extensionPath) {
-                    this.platform.logWarning('Could not get extension path', 'TextBricksEngine');
-                    return null;
+            // 按優先級順序嘗試路徑
+            const paths = [
+                // 0.1.8 相容路徑 (最高優先級)
+                join(extensionPath, 'out', 'data', 'templates.json'),
+                // Arduino IDE 可能路徑
+                join(extensionPath, 'extension', 'out', 'data', 'templates.json'),
+                // 新架構路徑  
+                join(extensionPath, 'packages', 'vscode', 'dist', 'data', 'templates.json'),
+                join(extensionPath, 'extension', 'packages', 'vscode', 'dist', 'data', 'templates.json'),
+            ];
+            
+            for (const templatePath of paths) {
+                try {
+                    const content = await readFile(templatePath, 'utf8');
+                    return content;
+                } catch {
+                    // Continue to next path
                 }
-
-                // 動態導入以避免同步載入問題
-                const { join } = await import('path');
-                const { readFile } = await import('fs/promises');
-                
-                // 按優先順序嘗試不同路徑
-                const possiblePaths = [
-                    join(extensionPath, 'dist', 'plugins', 'vscode', 'current', 'out', 'data', 'templates.json'),
-                    join(extensionPath, 'out', 'data', 'templates.json'),
-                    join(extensionPath, 'dist', 'packages', 'vscode', 'data', 'templates.json'),
-                    join(extensionPath, 'src', 'data', 'templates.json'),
-                    join(extensionPath, 'assets', 'data', 'templates.json'),
-                    join(extensionPath, 'data', 'templates.json')
-                ];
-                
-                for (const templatePath of possiblePaths) {
-                    try {
-                        const content = await readFile(templatePath, 'utf8');
-                        this.platform.logDebug(`Successfully loaded templates from: ${templatePath}`, 'TextBricksEngine');
-                        return content;
-                    } catch (error) {
-                        this.platform.logDebug(`Failed to load from ${templatePath}: ${error}`, 'TextBricksEngine');
-                        continue;
-                    }
-                }
-                
-                this.platform.logWarning('Template file not found in any expected location', 'TextBricksEngine');
             }
             
             return null;
-        } catch (error) {
-            this.platform.logError(error as Error, 'Loading from filesystem');
+        } catch {
             return null;
         }
     }

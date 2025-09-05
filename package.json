@@ -2,7 +2,7 @@
   "name": "textbricks",
   "displayName": "TextBricks - Multi-Language Development Assistant",
   "description": "A VSCode extension providing structured templates for multiple languages to develop efficiently",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "publisher": "timcsy",
   "workspaces": [
     "packages/*"
@@ -134,15 +134,16 @@
     }
   },
   "scripts": {
-    "vscode:prepublish": "npm run build:vscode && npm run copy-data:vscode",
+    "vscode:prepublish": "npm run bundle:vscode",
+    "bundle:vscode": "npm run build --workspaces && esbuild packages/vscode/src/extension.ts --bundle --outfile=packages/vscode/dist/extension.js --external:vscode --format=cjs --platform=node --sourcemap && npm run copy-data:vscode",
     "compile": "npm run build --workspaces",
     "build:vscode": "npm run build --workspace=@textbricks/vscode",
     "copy-data:vscode": "mkdir -p packages/vscode/dist/data packages/vscode/dist/assets && cp -r packages/vscode/src/data/* packages/vscode/dist/data/ 2>/dev/null || true && cp -r assets/* packages/vscode/dist/assets/",
     "package:vscode": "vsce package --out dist/plugins/vscode/current/",
-    "package:vscode:versioned": "vsce package --out dist/plugins/vscode/v0.2.2/",
+    "package:vscode:versioned": "vsce package --out dist/plugins/vscode/v0.2.3/",
     "package:release": "npm run archive:vscode && npm run package:vscode && npm run link:current",
     "archive:vscode": "[ -f dist/plugins/vscode/current/*.vsix ] && mkdir -p dist/plugins/vscode/archive && mv dist/plugins/vscode/current/*.vsix dist/plugins/vscode/archive/ 2>/dev/null || true",
-    "link:current": "mkdir -p dist/plugins/vscode && cd dist/plugins/vscode && rm -rf current && ln -sf v0.2.2 current",
+    "link:current": "mkdir -p dist/plugins/vscode && cd dist/plugins/vscode && rm -rf current && ln -sf v0.2.3 current",
     "build": "npm run build --workspaces",
     "clean": "npm run clean --workspaces && rm -rf dist",
     "clean:dist": "rm -rf dist/temp/* dist/packages/*/",
@@ -154,11 +155,12 @@
     "test:coverage": "jest --coverage"
   },
   "devDependencies": {
-    "@types/vscode": "^1.74.0",
-    "@types/node": "16.x",
     "@types/jest": "^29.5.0",
+    "@types/node": "16.x",
+    "@types/vscode": "^1.74.0",
     "@typescript-eslint/eslint-plugin": "^5.45.0",
     "@typescript-eslint/parser": "^5.45.0",
+    "esbuild": "^0.25.9",
     "eslint": "^8.28.0",
     "jest": "^29.5.0",
     "ts-jest": "^29.1.0",

@@ -5,6 +5,30 @@ All notable changes to the TextBricks extension will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.3] - 2025-09-05
+
+### 🐛 Critical Bug Fixes
+- **Template Text Selection Insertion**: Completely resolved indentation issues when selecting and inserting partial template content
+- **Target Indentation Handling**: Fixed cursor position indentation not being properly considered during code insertion
+- **Relative Indentation Logic**: Corrected FormattingEngine to properly combine target indentation with relative indentation levels
+- **Edge Cases**: Properly handle closing braces and same-level lines alignment
+
+### 🔧 Technical Improvements
+- **FormattingEngine Optimization**: Enhanced `formatCodeSnippetWithTemplate` method with improved logic
+- **Indentation Calculation**: Fixed formula to use `targetIndentation + indentUnit.repeat(indentLevels)` instead of just relative indentation
+- **User Experience**: Template selection and insertion now works flawlessly with correct indentation preservation
+- **Debugging Enhancement**: Added comprehensive logging and error handling for formatting operations
+
+### 📦 Package Updates
+- **Version Synchronization**: Updated all packages (@textbricks/shared, @textbricks/core, @textbricks/vscode) to v0.2.3
+- **Dependencies**: Synchronized inter-package dependencies to maintain consistency
+- **Build System**: Successful VSIX generation (textbricks-0.2.3.vsix, 497.36KB)
+
+### 🎯 Impact
+- **Complete Resolution**: Template text selection insertion indentation problem fully solved
+- **User Satisfaction**: No more frustrating indentation issues when working with selected template content
+- **Code Quality**: Enhanced formatting engine stability and reliability
+
 ## [0.2.2] - 2025-09-05
 
 ### 🔧 Fixed

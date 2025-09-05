@@ -2,7 +2,7 @@
 
 A multi-editor extension providing structured programming templates for multiple languages (C, Python, JavaScript) to help beginners learn programming efficiently.
 
-> **🎉 Version 0.2.2** - Enhanced stability with improved template loading and platform compatibility! Fixed cross-environment issues for reliable usage across different VS Code installations.
+> **🎉 Version 0.2.3** - Critical bug fixes for template insertion indentation! Completely resolved text selection insertion issues and enhanced smart indentation system for perfect code formatting.
 
 ## ✨ Features
 

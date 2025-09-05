@@ -119,12 +119,22 @@ export class VSCodeEditor implements IEditor {
             throw new Error('No active editor');
         }
 
-        const insertPosition = position ? 
-            new vscode.Position(position.line, position.character) :
-            editor.selection.active;
-
         await editor.edit(editBuilder => {
-            editBuilder.insert(insertPosition, text);
+            if (position) {
+                // 如果指定了位置，在該位置插入
+                const insertPosition = new vscode.Position(position.line, position.character);
+                editBuilder.insert(insertPosition, text);
+            } else {
+                // 沒有指定位置，檢查是否有選取文字
+                const selection = editor.selection;
+                if (!selection.isEmpty) {
+                    // 有選取文字，替換選取的內容
+                    editBuilder.replace(selection, text);
+                } else {
+                    // 沒有選取文字，在游標位置插入
+                    editBuilder.insert(selection.active, text);
+                }
+            }
         });
     }
 
@@ -224,9 +234,12 @@ export class VSCodeEditor implements IEditor {
         }
 
         const document = editor.document;
+        const selection = editor.selection;
+        
+        // 如果沒有指定位置且有選取文字，使用選取文字的起始位置
         const targetPosition = position ? 
             new vscode.Position(position.line, position.character) :
-            editor.selection.active;
+            (!selection.isEmpty ? selection.start : selection.active);
 
         // 取得目前行
         const currentLine = document.lineAt(targetPosition.line);
@@ -236,6 +249,13 @@ export class VSCodeEditor implements IEditor {
         // 取得行縮排
         const indentMatch = lineText.match(/^(\s*)/);
         const lineIndentation = indentMatch?.[1] || '';
+
+        // 如果有選取文字，且選取從行首開始，返回行縮排
+        if (!selection.isEmpty && !position) {
+            if (selection.start.character === 0 || selection.start.character <= lineIndentation.length) {
+                return lineIndentation;
+            }
+        }
 
         // 游標在行首或縮排內
         if (cursorColumn <= lineIndentation.length) {

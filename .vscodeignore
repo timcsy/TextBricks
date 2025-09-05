@@ -1,9 +1,12 @@
-# Source files
+# Source files (keep packages for monorepo dependencies)
 src/**
 .vscode/**
 .claude/**
+packages/*/src/**
+packages/*/.tsbuildinfo
+packages/*/tsconfig.json
 
-# Node modules
+# Node modules  
 node_modules/**
 
 # Development files
