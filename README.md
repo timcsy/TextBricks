@@ -2,7 +2,7 @@
 
 A multi-editor extension providing structured programming templates for multiple languages (C, Python, JavaScript) to help beginners learn programming efficiently.
 
-> **🎉 Version 0.2.3** - Critical bug fixes for template insertion indentation! Completely resolved text selection insertion issues and enhanced smart indentation system for perfect code formatting.
+> **🚀 Version 0.2.4** - Major refactoring and modularization! System-wide cleanup, modular manager architecture, unified command service, and preparation for hierarchical topics. Cleaner codebase with platform-independent core for future multi-editor expansion.
 
 ## ✨ Features
 
@@ -12,12 +12,18 @@ A multi-editor extension providing structured programming templates for multiple
 - **JavaScript** - Web development and scripting
 - Easy language switching with integrated selector
 
-### 🎯 **Structured Learning Path**
-Templates organized into customizable topics:
-- **Basic Syntax** - Hello World, Variables, Input/Output
-- **Control Structures** - Conditionals, loops, program flow
-- **Functions & Data** - Function definition, data structures
-- **Advanced Applications** - OOP, file operations, complex patterns
+### 🎯 **Flexible Topic System**
+Templates organized with complete customization freedom:
+- **Customizable Topics** - Create your own topic names like "基礎概念", "網頁開發", "演算法"
+- **Semantic Organization** - Use meaningful names instead of rigid level numbers
+- **Educational Flexibility** - Perfect for educators to create course-specific topics
+- **Project-Based Organization** - Developers can organize templates by project needs
+- **Unlimited Scalability** - No more artificial 4-level restrictions
+
+**Example Topic Organizations:**
+- **For Beginners**: "基礎", "控制", "函數", "進階"
+- **For Web Development**: "HTML結構", "CSS樣式", "JavaScript互動", "React組件"
+- **For Algorithms**: "排序", "搜尋", "動態規劃", "圖形演算法"
 
 ### 🚀 **Easy Code Insertion**
 - **Click to Insert** - Click template cards to insert code directly into your editor
@@ -40,7 +46,9 @@ Templates organized into customizable topics:
 ### 🧠 **Intelligent Features**
 - **Template Recommendations** - Context-aware suggestions based on usage
 - **Smart Copy** - Automatic fallback to clipboard when editor unavailable
-- **Template Management** - Create, edit, import/export templates
+- **Template Management** - Create, edit, import/export templates with validation
+- **Enhanced Search** - Advanced filtering, sorting, and suggestion capabilities
+- **Data Validation** - Comprehensive template and import data validation
 
 ## 🚀 Quick Start
 
@@ -82,10 +90,13 @@ Support for additional editors is under development with the same core functiona
 ## 📋 Commands
 
 - `TextBricks: Open TextBricks Manager` - Launch template management interface
-- `TextBricks: Create Template` - Quick template creation
-- `TextBricks: Import Templates` - Import from JSON files  
-- `TextBricks: Export Templates` - Export to JSON format
+- `TextBricks: Create Template` - Quick template creation with validation
+- `TextBricks: Import Templates` - Import from JSON files with comprehensive validation
+- `TextBricks: Export Templates` - Export to JSON format with metadata
+- `TextBricks: Search Templates` - Advanced search with filtering and sorting
+- `TextBricks: Validate Template` - Validate current file against template standards
 - `TextBricks: Refresh Templates` - Reload template data
+- `TextBricks: Show Documentation` - View template documentation
 
 ## 📚 Template Examples
 
@@ -131,14 +142,18 @@ Access settings via `File > Preferences > Settings > Extensions > TextBricks`:
 3. Support for custom topics and documentation
 
 ### Import/Export
-- **Import**: JSON files with template collections
-- **Export**: Share your templates with others
-- **Format**: Structured JSON with metadata support
+- **Import**: JSON files with template collections and comprehensive validation
+- **Export**: Share your templates with others including metadata and topics
+- **Format**: Structured JSON with enhanced metadata support and error handling
+- **Validation**: Automatic validation of imported data with detailed error reporting
 
 ### Organization
-- **Topics**: Group templates by custom themes
-- **Tags**: Add searchable metadata
-- **Documentation**: Rich Markdown descriptions
+- **Flexible Topics**: Create unlimited custom topic names for perfect organization
+- **Semantic Naming**: Use meaningful topic names instead of artificial level numbers
+- **Educational Support**: Perfect for creating course-specific topic structures
+- **Project Organization**: Organize templates by development project needs
+- **Tags**: Add searchable metadata for enhanced discoverability
+- **Documentation**: Rich Markdown descriptions with interactive code blocks
 
 ## 🐛 Troubleshooting
 
@@ -152,6 +167,28 @@ Access settings via `File > Preferences > Settings > Extensions > TextBricks`:
 - Include VS Code and extension version
 - Describe steps to reproduce
 - Check [GitHub Issues](https://github.com/timcsy/textbricks-extensions/issues)
+
+## 🔧 What's New in v0.2.4
+
+### 🏗️ Major Architecture Improvements
+- **Modular Manager System**: Separated platform-independent business logic into specialized managers (ImportExportManager, SearchManager, ValidationManager)
+- **Unified Command Service**: Consolidated all command handling with integrated validation and enhanced error handling
+- **Code Cleanup**: Removed 200+ lines of unimplemented features and over-designed interfaces for a cleaner, more maintainable codebase
+- **Platform Abstraction**: Enhanced separation between UI layer (VSCode) and business logic (Core) for future multi-editor support
+
+### ✨ Enhanced Features
+- **Advanced Search**: Improved search capabilities with filtering, sorting, and intelligent suggestions
+- **Comprehensive Validation**: Template and import data validation with detailed error reporting
+- **Flexible Topic System**: Revolutionary topic system replacing rigid level-based categorization with customizable topic names
+- **Custom Topics**: Create meaningful topic names like "基礎概念", "網頁開發", "演算法" instead of generic levels
+- **Enhanced UI**: Cleaner interface without level badges, focusing on content and semantic organization
+- **Error Handling**: Enhanced error handling and user feedback throughout the application
+
+### 🎯 Developer Benefits
+- **Cleaner Architecture**: Easier to maintain, test, and extend
+- **Type Safety**: Complete TypeScript interfaces for all new components
+- **Future-Ready**: Prepared for hierarchical topics and cross-platform expansion
+- **Better Performance**: Optimized code structure and reduced complexity
 
 ## 🤝 Contributing
 

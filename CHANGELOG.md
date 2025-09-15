@@ -19,11 +19,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Responsibility Separation**: Clear separation between UI (VSCode), business logic (Core), and data models (Shared)
 - **Future-Ready**: Prepared architecture for hierarchical topics where languages become root nodes
 
+### ✨ Topic System Enhancement (Previous Update)
+- **Topic System Refactoring**: Replaced rigid level-based categorization (level1-4) with flexible topic-based system
+- **Customizable Topics**: Users can now define custom topic names like "基礎概念", "網頁開發", "演算法" etc.
+- **Semantic Topic Names**: Updated from `level1-4` to free-form topic names: "基礎", "控制", "函數", "進階"
+- **UI Simplification**: Removed level badges for cleaner interface focused on content
+- **TextBricks Manager Enhancement**: Topic input system with text field instead of numeric level restrictions
+
 ### 🔧 Technical Enhancements
 - **Type Safety**: Complete TypeScript interfaces for all new managers with proper exports
 - **Error Handling**: Comprehensive validation and error handling in CommandService
 - **Search Capabilities**: Enhanced search with filtering, sorting, and suggestion features
 - **Import/Export**: Robust template import/export with validation and error reporting
+- **Data Model Update**: Removed `TemplateCategory` entirely, using `Template.topic` string for complete flexibility
+- **Forward Compatibility**: Automatic migration from old level-based data to new topic system
 
 ### 📦 Removed Components
 - **ContextAnalysisService**: Eliminated 200+ lines of unimplemented context analysis methods
@@ -36,6 +45,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Modular Design**: Easy to test, extend, and maintain individual components
 - **Platform Independence**: Core business logic can be reused across different platforms
 - **Hierarchical Ready**: Architecture prepared for upcoming language-as-root-node topic hierarchy
+- **Greater Flexibility**: Educators can create course-specific topics, developers can organize by project needs
+- **Better Scalability**: Support for unlimited custom topics instead of fixed 4 levels
 
 ## [0.2.3] - 2025-09-05
 
