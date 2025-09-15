@@ -247,14 +247,6 @@ export class TextBricksEngine {
         return true;
     }
 
-    // 補充相容性方法
-    getContextualRecommendations(): any[] {
-        return [];
-    }
-
-    getPositionAwareRecommendations(): any[] {
-        return [];
-    }
 
     // context property for compatibility
     get context(): any {

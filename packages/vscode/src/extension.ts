@@ -4,7 +4,7 @@ import { TextBricksEngine, CodeOperationService, SearchService, DocumentationSer
 import { WebviewProvider } from './providers/WebviewProvider';
 import { TextBricksManagerProvider } from './providers/TextBricksManagerProvider';
 import { DocumentationProvider } from './providers/DocumentationProvider';
-import { CommandRegistry } from './commands';
+import { CommandService } from './services/CommandService';
 
 export async function activate(context: vscode.ExtensionContext) {
     try {
@@ -60,14 +60,14 @@ export async function activate(context: vscode.ExtensionContext) {
         );
 
         // 註冊所有命令
-        const commandRegistry = new CommandRegistry(
+        const commandService = new CommandService(
             context,
-            textBricksEngine, // 使用新的引擎
+            textBricksEngine,
             webviewProvider,
             textBricksManagerProvider,
             documentationProvider
         );
-        commandRegistry.registerAllCommands();
+        commandService.registerAllCommands();
 
         // 設置平台錯誤處理器
         platform.setErrorHandler((error: Error, context: string) => {

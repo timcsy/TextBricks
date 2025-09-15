@@ -11,7 +11,6 @@ export * from './adapters/vscode/VSCodeStorage';
 // Providers
 export * from './providers/WebviewProvider';
 export * from './providers/DocumentationProvider';
-export * from './providers/TemplateProvider';
 
 // Commands
 export * from './commands/index';
