@@ -86,7 +86,7 @@ export class ImportExportCommands {
      */
     private async getImportOptions(): Promise<{
         overwriteExisting: boolean;
-        mergeCategories: boolean;
+        mergeTopics: boolean;
         mergeLanguages: boolean;
     } | null> {
         const overwriteExisting = await vscode.window.showQuickPick(
@@ -96,12 +96,12 @@ export class ImportExportCommands {
 
         if (overwriteExisting === undefined) return null;
 
-        const mergeCategories = await vscode.window.showQuickPick(
+        const mergeTopics = await vscode.window.showQuickPick(
             ['是', '否'],
-            { placeHolder: '是否合併分類？' }
+            { placeHolder: '是否合併主題？' }
         );
 
-        if (mergeCategories === undefined) return null;
+        if (mergeTopics === undefined) return null;
 
         const mergeLanguages = await vscode.window.showQuickPick(
             ['是', '否'],
@@ -112,7 +112,7 @@ export class ImportExportCommands {
 
         return {
             overwriteExisting: overwriteExisting === '是',
-            mergeCategories: mergeCategories === '是',
+            mergeTopics: mergeTopics === '是',
             mergeLanguages: mergeLanguages === '是'
         };
     }

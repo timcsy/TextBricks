@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import { VSCodePlatform } from './adapters/vscode';
 import { TextBricksEngine, CodeOperationService, SearchService, DocumentationService } from '@textbricks/core';
 import { WebviewProvider } from './providers/WebviewProvider';
-import { TemplateManagerProvider } from './providers/TemplateManagerProvider';
+import { TextBricksManagerProvider } from './providers/TextBricksManagerProvider';
 import { DocumentationProvider } from './providers/DocumentationProvider';
 import { CommandRegistry } from './commands';
 
@@ -42,8 +42,8 @@ export async function activate(context: vscode.ExtensionContext) {
             textBricksEngine // 向後兼容
         );
         
-        const templateManagerProvider = new TemplateManagerProvider(
-            context.extensionUri, 
+        const textBricksManagerProvider = new TextBricksManagerProvider(
+            context.extensionUri,
             textBricksEngine // 使用新的引擎
         );
         
@@ -64,7 +64,7 @@ export async function activate(context: vscode.ExtensionContext) {
             context,
             textBricksEngine, // 使用新的引擎
             webviewProvider,
-            templateManagerProvider,
+            textBricksManagerProvider,
             documentationProvider
         );
         commandRegistry.registerAllCommands();

@@ -1,6 +1,6 @@
 {
   "name": "@textbricks/core",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "description": "Platform-agnostic core logic for TextBricks",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

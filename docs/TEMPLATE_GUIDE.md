@@ -6,7 +6,7 @@
 
 - [模板基本結構](#模板基本結構)
 - [模板創建方法](#模板創建方法)
-  - [使用 Template Manager](#使用-template-manager)
+  - [使用 TextBricks Manager](#使用-textbricks-manager)
   - [JSON 批次匯入](#json-批次匯入)
   - [直接編輯 JSON 檔案](#直接編輯-json-檔案)
 - [語言特定指南](#語言特定指南)
@@ -14,7 +14,7 @@
   - [Python 模板](#python-模板)
   - [JavaScript 模板](#javascript-模板)
 - [模板撰寫最佳實踐](#模板撰寫最佳實踐)
-- [分類和難度設定](#分類和難度設定)
+- [主題和難度設定](#主題和難度設定)
 - [模板驗證和測試](#模板驗證和測試)
 - [常見問題](#常見問題)
 
@@ -29,7 +29,7 @@
   "description": "簡短的模板描述",
   "code": "實際的程式碼內容",
   "language": "程式語言",
-  "categoryId": "難度分類"
+  "topic": "主題名稱"
 }
 ```
 
@@ -42,16 +42,16 @@
 | `description` | string | ✅ | 模板的用途和功能說明 |
 | `code` | string | ✅ | 實際的程式碼內容 |
 | `language` | string | ✅ | 程式語言 ID（如：`c`、`python`、`javascript`） |
-| `categoryId` | string | ✅ | 難度分類：`level1`（基礎）、`level2`（控制）、`level3`（進階）、`level4`（專家） |
+| `topic` | string | ✅ | 主題名稱：可自由輸入，如「基礎」、「控制」、「函數」、「進階」等 |
 
 ## 模板創建方法
 
-### 使用 Template Manager
+### 使用 TextBricks Manager
 
-**推薦方法** - Template Manager 提供直觀的圖形化介面：
+**推薦方法** - TextBricks Manager 提供直觀的圖形化介面：
 
-1. **開啟 Template Manager**
-   - 使用命令面板：`Ctrl+Shift+P` > `TextBricks: Open Template Manager`
+1. **開啟 TextBricks Manager**
+   - 使用命令面板：`Ctrl+Shift+P` > `TextBricks: Open TextBricks Manager`
    - 或點擊 TextBricks 面板標題列的設定圖示
 
 2. **創建新模板**
@@ -78,20 +78,20 @@
     "description": "展示基本變數宣告語法",
     "code": "int number = 42;\nchar letter = 'A';",
     "language": "c",
-    "categoryId": "level1"
+    "topic": "基礎"
   },
   {
     "title": "函數定義",
     "description": "基本函數定義和呼叫",
     "code": "def greet(name):\n    return f\"Hello, {name}!\"",
     "language": "python",
-    "categoryId": "level3"
+    "topic": "函數"
   }
 ]
 ```
 
 2. **使用批次匯入功能**
-   - 開啟 Template Manager
+   - 開啟 TextBricks Manager
    - 點擊 "JSON 批次匯入"
    - 貼上 JSON 內容
    - 點擊 "匯入" 進行批次新增
@@ -106,7 +106,7 @@
 
 **僅限開發環境** - 直接修改 `src/data/templates.json`：
 
-1. 找到對應的語言和分類區塊
+1. 找到對應的語言和主題區塊
 2. 添加新模板物件
 3. 確保 ID 唯一性
 4. 重新編譯擴展：`npm run compile`
@@ -166,7 +166,7 @@ const exampleFunction = (param) => {
    - 主要應用場景
    - 社群最佳實踐
 
-2. **分類對應**
+2. **主題對應**
    - 基礎語法：變數、輸出、基本運算
    - 控制結構：條件、迴圈、分支
    - 資料與函數：函數定義、集合類型、模組化
@@ -204,13 +204,13 @@ const exampleFunction = (param) => {
 ### 4. 多語言一致性和擴展性
 
 - **概念對應**：相同程式設計概念在不同語言中保持一致性
-- **難度平衡**：相同分類的模板在不同語言中難度相當
+- **難度平衡**：相同主題的模板在不同語言中難度相當
 - **功能等價**：提供特定任務的多語言實現方案
 - **特性展示**：允許每種語言展示其獨特優勢和特性
 
-## 分類和難度設定
+## 主題和難度設定
 
-### 基礎語法 (level1)
+### 基礎語法 (basic-syntax)
 **目標**：讓學生熟悉語言基本語法和開發環境
 
 **包含內容**：
@@ -225,7 +225,7 @@ const exampleFunction = (param) => {
 - 專注單一概念
 - 提供直接可執行的完整程式
 
-### 控制結構 (level2)
+### 控制結構 (control-flow)
 **目標**：掌握程式流程控制
 
 **包含內容**：
@@ -240,7 +240,7 @@ const exampleFunction = (param) => {
 - 包含實際應用場景
 - 可修改參數進行練習
 
-### 函數與資料結構 (level3)
+### 函數與資料結構 (functions-data)
 **目標**：學會函數設計和資料組織
 
 **包含內容**：
@@ -255,7 +255,7 @@ const exampleFunction = (param) => {
 - 展示函數複用
 - 包含多個相關概念
 
-### 進階概念 (level4)
+### 進階概念 (advanced-concepts)
 **目標**：掌握高級程式設計技巧
 
 **包含內容**：
@@ -274,11 +274,11 @@ const exampleFunction = (param) => {
 
 ### 自動驗證
 
-Template Manager 會自動驗證：
+TextBricks Manager 會自動驗證：
 - ✅ JSON 格式正確性
 - ✅ 必需欄位完整性
 - ✅ ID 唯一性
-- ✅ 支援的語言和分類
+- ✅ 支援的語言和主題
 - ✅ 程式碼長度合理性
 
 ### 手動測試
@@ -329,16 +329,16 @@ A: 支援 UTF-8 編碼，可以使用中文註解：
 const message = "Hello, 世界!";
 ```
 
-### Q: 可以創建自訂分類嗎？
-A: 目前使用四個通用分類架構，適用於大多數程式語言。未來版本將支援更彈性的分類系統和語言特定分類。
+### Q: 可以創建自訂主題嗎？
+A: 目前使用四個通用主題架構，適用於大多數程式語言。未來版本將支援更彈性的主題系統和語言特定主題。
 
 ### Q: 如何添加新的程式語言？
-A: 1. 在 templates.json 中添加語言定義 2. 為每個分類創建代表性模板 3. 遵循該語言的最佳實踐 4. 測試模板的教學效果。
+A: 1. 在 templates.json 中添加語言定義 2. 為每個主題創建代表性模板 3. 遵循該語言的最佳實踐 4. 測試模板的教學效果。
 
 ### Q: 如何匯出和分享模板？
-A: 使用 Template Manager 的匯出功能：
-1. 開啟 Template Manager
-2. 選擇要匯出的語言或分類
+A: 使用 TextBricks Manager 的匯出功能：
+1. 開啟 TextBricks Manager
+2. 選擇要匯出的語言或主題
 3. 點擊 "匯出模板"
 4. 保存 JSON 檔案進行分享
 

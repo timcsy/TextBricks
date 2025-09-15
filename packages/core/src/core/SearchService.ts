@@ -8,7 +8,7 @@ import { TextBricksEngine } from './TextBricksEngine';
 
 export interface SearchFilters {
     language?: string;
-    category?: string;
+    topic?: string;
     tags?: string[];
     dateRange?: {
         start?: Date;
@@ -83,10 +83,10 @@ export class SearchService {
     }
 
     /**
-     * 根據分類搜尋模板
+     * 根據主題搜尋模板
      */
-    async searchByCategory(categoryId: string, options?: SearchOptions): Promise<SearchResult> {
-        return this.searchTemplates('', { category: categoryId }, options);
+    async searchByTopic(topic: string, options?: SearchOptions): Promise<SearchResult> {
+        return this.searchTemplates('', { topic: topic }, options);
     }
 
     /**
@@ -178,8 +178,8 @@ export class SearchService {
             result = result.filter(t => t.language === filters.language);
         }
 
-        if (filters.category) {
-            result = result.filter(t => t.categoryId === filters.category);
+        if (filters.topic) {
+            result = result.filter(t => t.topic === filters.topic);
         }
 
         if (filters.tags && filters.tags.length > 0) {

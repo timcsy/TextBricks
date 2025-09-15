@@ -8,7 +8,7 @@ describe('Template Model', () => {
       description: 'Basic Hello World program',
       code: '#include <stdio.h>\n\nint main() {\n    printf("Hello, World!\\n");\n    return 0;\n}',
       language: 'c',
-      categoryId: 'level1'
+      categoryId: 'basic-syntax'
     };
 
     let templateItem: TemplateItem;
@@ -69,16 +69,16 @@ describe('Template Model', () => {
   describe('TemplateCategory interface', () => {
     it('should have all required properties', () => {
       const category: TemplateCategory = {
-        id: 'level1',
+        id: 'basic-syntax',
         name: 'Basic Syntax',
         description: 'Fundamental C language syntax',
-        level: 1
+        topic: '基礎概念'
       };
 
-      expect(category.id).toBe('level1');
+      expect(category.id).toBe('basic-syntax');
       expect(category.name).toBe('Basic Syntax');
       expect(category.description).toBe('Fundamental C language syntax');
-      expect(category.level).toBe(1);
+      expect(category.topic).toBe('基礎概念');
     });
   });
 });

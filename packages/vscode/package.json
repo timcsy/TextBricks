@@ -2,7 +2,7 @@
   "name": "@textbricks/vscode",
   "displayName": "TextBricks - Multi-Language Development Assistant",
   "description": "A VSCode extension providing structured templates for multiple languages to develop efficiently",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "publisher": "timcsy",
   "engines": {
     "vscode": "^1.74.0"

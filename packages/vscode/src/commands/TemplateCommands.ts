@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { TextBricksEngine } from '@textbricks/core';
 import { WebviewProvider } from '../providers/WebviewProvider';
-import { TemplateManagerProvider } from '../providers/TemplateManagerProvider';
+import { TextBricksManagerProvider } from '../providers/TextBricksManagerProvider';
 
 /**
  * 模板相關命令處理器
@@ -10,7 +10,7 @@ export class TemplateCommands {
     constructor(
         private templateEngine: TextBricksEngine,
         private webviewProvider: WebviewProvider,
-        private templateManagerProvider: TemplateManagerProvider
+        private textBricksManagerProvider: TextBricksManagerProvider
     ) {}
 
     /**
@@ -31,19 +31,16 @@ export class TemplateCommands {
 
         if (!description) return;
 
-        // 獲取可用的語言和分類
+        // 獲取可用的語言和主題
         const languages = this.templateEngine.getLanguages();
-        const categories = this.templateEngine.getCategories();
+        const topics = this.templateEngine.getTopics();
 
         if (languages.length === 0) {
-            vscode.window.showErrorMessage('沒有可用的程式語言，請先在模板管理器中添加語言');
+            vscode.window.showErrorMessage('沒有可用的程式語言，請先在 TextBricks Manager 中添加語言');
             return;
         }
 
-        if (categories.length === 0) {
-            vscode.window.showErrorMessage('沒有可用的分類，請先在模板管理器中添加分類');
-            return;
-        }
+        // Topics are optional, can be empty
 
         const languageItems = languages.map(lang => ({
             label: lang.displayName,
@@ -57,17 +54,14 @@ export class TemplateCommands {
 
         if (!selectedLanguage) return;
 
-        const categoryItems = categories.map(cat => ({
-            label: cat.name,
-            detail: `Level ${cat.level} - ${cat.description}`,
-            category: cat
-        }));
-
-        const selectedCategory = await vscode.window.showQuickPick(categoryItems, {
-            placeHolder: '選擇分類'
+        // 讓使用者輸入 topic
+        const topicInput = await vscode.window.showInputBox({
+            placeHolder: '輸入模板主題（可選）',
+            prompt: '例如：基礎、控制、結構、進階等',
+            value: topics.length > 0 ? topics[0] : ''
         });
 
-        if (!selectedCategory) return;
+        const topic = topicInput || '未知主題';
 
         // 開啟新文檔進行程式碼編輯
         const doc = await vscode.workspace.openTextDocument({
@@ -85,7 +79,7 @@ export class TemplateCommands {
         );
 
         if (action === '儲存為模板') {
-            await this.saveAsTemplate(editor, title, description, selectedLanguage.language.id, selectedCategory.category.id);
+            await this.saveAsTemplate(editor, title, description, selectedLanguage.language.id, topic);
         }
     }
 
@@ -97,17 +91,17 @@ export class TemplateCommands {
         title: string,
         description: string,
         languageId: string,
-        categoryId: string
+        topic: string
     ): Promise<void> {
         const code = editor.document.getText();
-        
+
         try {
             await this.templateEngine.createTemplate({
                 title,
                 description,
                 code,
                 language: languageId,
-                categoryId
+                topic
             });
             
             vscode.window.showInformationMessage(`模板「${title}」已創建成功！`);

@@ -6,16 +6,16 @@ describe('TemplateManager', () => {
   
   const mockCategories: TemplateCategory[] = [
     {
-      id: 'level1',
+      id: 'basic-syntax',
       name: 'Basic Syntax',
       description: 'Fundamental C language syntax',
-      level: 1
+      topic: '基礎概念'
     },
     {
-      id: 'level2',
+      id: 'control-flow',
       name: 'Control Structures',
       description: 'If-else, loops, and conditional statements',
-      level: 2
+      topic: '程式流程'
     }
   ];
 
@@ -26,7 +26,7 @@ describe('TemplateManager', () => {
       description: 'Basic Hello World program',
       code: '#include <stdio.h>\n\nint main() {\n    printf("Hello, World!\\n");\n    return 0;\n}',
       language: 'c',
-      categoryId: 'level1'
+      categoryId: 'basic-syntax'
     },
     {
       id: 'variable-declaration',
@@ -34,7 +34,7 @@ describe('TemplateManager', () => {
       description: 'Basic variable declaration',
       code: 'int number = 42;\nchar character = \'A\';\nfloat decimal = 3.14f;',
       language: 'c',
-      categoryId: 'level1'
+      categoryId: 'basic-syntax'
     },
     {
       id: 'if-else',
@@ -42,7 +42,7 @@ describe('TemplateManager', () => {
       description: 'Basic conditional statement',
       code: 'if (condition) {\n    // code block\n} else {\n    // alternative code block\n}',
       language: 'c',
-      categoryId: 'level2'
+      categoryId: 'control-flow'
     }
   ];
 
@@ -78,18 +78,18 @@ describe('TemplateManager', () => {
 
   describe('getTemplatesByCategory', () => {
     it('should return templates for existing category', () => {
-      const level1Templates = templateManager.getTemplatesByCategory('level1');
+      const basicSyntaxTemplates = templateManager.getTemplatesByCategory('basic-syntax');
       
-      expect(level1Templates).toHaveLength(2);
-      expect(level1Templates[0].id).toBe('hello-world');
-      expect(level1Templates[1].id).toBe('variable-declaration');
+      expect(basicSyntaxTemplates).toHaveLength(2);
+      expect(basicSyntaxTemplates[0].id).toBe('hello-world');
+      expect(basicSyntaxTemplates[1].id).toBe('variable-declaration');
     });
 
     it('should return single template for category with one item', () => {
-      const level2Templates = templateManager.getTemplatesByCategory('level2');
+      const controlFlowTemplates = templateManager.getTemplatesByCategory('control-flow');
       
-      expect(level2Templates).toHaveLength(1);
-      expect(level2Templates[0].id).toBe('if-else');
+      expect(controlFlowTemplates).toHaveLength(1);
+      expect(controlFlowTemplates[0].id).toBe('if-else');
     });
 
     it('should return empty array for non-existent category', () => {
@@ -111,8 +111,8 @@ describe('TemplateManager', () => {
       const categories = templateManager.getCategories();
       
       expect(categories).toHaveLength(2);
-      expect(categories[0].id).toBe('level1');
-      expect(categories[1].id).toBe('level2');
+      expect(categories[0].id).toBe('basic-syntax');
+      expect(categories[1].id).toBe('control-flow');
     });
 
     it('should return a copy of categories array', () => {

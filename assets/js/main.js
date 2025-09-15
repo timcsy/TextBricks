@@ -76,9 +76,12 @@
         // Handle button clicks
         document.addEventListener('click', handleButtonClick);
         
-        // Handle category collapse/expand
-        document.addEventListener('click', handleCategoryToggle);
-        
+        // Handle topic collapse/expand
+        document.addEventListener('click', handleTopicToggle);
+
+        // Handle topic documentation buttons
+        document.addEventListener('click', handleTopicDocumentationClick);
+
         // Handle tooltip on preview buttons only
         document.addEventListener('mouseenter', handleMouseEnter, true);
         document.addEventListener('mouseleave', handleMouseLeave, true);
@@ -328,8 +331,17 @@
             type: 'showDocumentation',
             templateId: templateId
         });
-        
+
         console.log('Show documentation for template:', templateId);
+    }
+
+    function showTopicDocumentation(topicName) {
+        vscode.postMessage({
+            type: 'showTopicDocumentation',
+            topicName: topicName
+        });
+
+        console.log('Show documentation for topic:', topicName);
     }
 
     function handleLanguageChange(event) {
@@ -361,21 +373,40 @@
     }
     
 
-    // Category collapse/expand functionality
-    function handleCategoryToggle(event) {
-        const categoryHeader = event.target.closest('.category-header');
-        if (!categoryHeader) return;
-        
+    // Topic collapse/expand functionality
+    function handleTopicToggle(event) {
+        // Don't toggle if clicking on topic documentation button
+        const topicDocBtn = event.target.closest('.topic-doc-btn');
+        if (topicDocBtn) return;
+
+        const topicHeader = event.target.closest('.topic-header');
+        if (!topicHeader) return;
+
         event.stopPropagation();
-        
-        const category = categoryHeader.closest('.category');
-        const templatesGrid = category.querySelector('.templates-grid');
-        
+
+        const topicGroup = topicHeader.closest('.topic-group');
+        const templatesGrid = topicGroup.querySelector('.templates-grid');
+
         // Toggle collapsed state
-        categoryHeader.classList.toggle('collapsed');
+        topicHeader.classList.toggle('collapsed');
         templatesGrid.classList.toggle('collapsed');
-        
-        console.log('Toggle category:', category.dataset.level);
+
+        console.log('Toggle topic:', topicGroup.dataset.topic);
+    }
+
+    function handleTopicDocumentationClick(event) {
+        const topicDocBtn = event.target.closest('.topic-doc-btn');
+        if (!topicDocBtn) return;
+
+        event.preventDefault();
+        event.stopPropagation();
+
+        const topicName = topicDocBtn.dataset.topicName;
+        if (topicName) {
+            showTopicDocumentation(topicName);
+
+            // No visual feedback needed - just the hover animation is enough
+        }
     }
 
     function handleMouseEnter(event) {

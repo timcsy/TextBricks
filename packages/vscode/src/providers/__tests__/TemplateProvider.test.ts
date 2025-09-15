@@ -9,10 +9,10 @@ describe('TemplateProvider', () => {
 
   const mockCategories: TemplateCategory[] = [
     {
-      id: 'level1',
+      id: 'basic-syntax',
       name: 'Basic Syntax',
       description: 'Fundamental C language syntax',
-      level: 1
+      topic: '基礎概念'
     }
   ];
 
@@ -23,7 +23,7 @@ describe('TemplateProvider', () => {
       description: 'Basic Hello World program',
       code: '#include <stdio.h>\n\nint main() {\n    printf("Hello, World!\\n");\n    return 0;\n}',
       language: 'c',
-      categoryId: 'level1'
+      categoryId: 'basic-syntax'
     }
   ];
 
@@ -60,7 +60,7 @@ describe('TemplateProvider', () => {
       expect(children).toHaveLength(1);
       expect(children[0]).toBeInstanceOf(TemplateTreeItemImpl);
       expect(children[0].label).toBe('Hello World');
-      expect(mockTemplateManager.getTemplatesByCategory).toHaveBeenCalledWith('level1');
+      expect(mockTemplateManager.getTemplatesByCategory).toHaveBeenCalledWith('basic-syntax');
     });
 
     it('should return empty array for template items', async () => {
@@ -95,10 +95,10 @@ describe('TemplateProvider', () => {
 
 describe('CategoryTreeItem', () => {
   const mockCategory: TemplateCategory = {
-    id: 'level1',
+    id: 'basic-syntax',
     name: 'Basic Syntax',
     description: 'Fundamental C language syntax',
-    level: 1
+    topic: '基礎概念'
   };
 
   it('should create with correct properties', () => {
@@ -119,7 +119,7 @@ describe('TemplateTreeItemImpl', () => {
     description: 'Basic Hello World program',
     code: '#include <stdio.h>\n\nint main() {\n    printf("Hello, World!\\n");\n    return 0;\n}',
     language: 'c',
-    categoryId: 'level1'
+    categoryId: 'basic-syntax'
   };
 
   it('should create with correct properties', () => {

@@ -1,4 +1,4 @@
-// Template Manager JavaScript
+// TextBricks Manager JavaScript
 
 (function() {
     const vscode = acquireVsCodeApi();
@@ -6,8 +6,8 @@
     // State
     let currentData = {
         templates: [],
-        categories: [],
-        languages: []
+        languages: [],
+        topics: []
     };
     let currentTab = 'templates';
     let editingItem = null;
@@ -16,7 +16,7 @@
     function init() {
         setupEventListeners();
         loadData();
-        console.log('Template Manager initialized');
+        console.log('TextBricks Manager initialized');
     }
 
     function setupEventListeners() {
@@ -32,7 +32,7 @@
 
         // Quick action buttons
         document.getElementById('create-template-btn').addEventListener('click', () => openModal('template'));
-        document.getElementById('create-category-btn').addEventListener('click', () => openModal('category'));
+        document.getElementById('create-topic-btn').addEventListener('click', () => openModal('topic'));
         document.getElementById('create-language-btn').addEventListener('click', () => openModal('language'));
         
         // JSON import button - check if exists first
@@ -43,7 +43,6 @@
 
         // Filters and search
         document.getElementById('filter-language').addEventListener('change', applyFilters);
-        document.getElementById('filter-category').addEventListener('change', applyFilters);
         document.getElementById('search-templates').addEventListener('input', applyFilters);
 
         // Modal
@@ -102,11 +101,33 @@
 
         // Event delegation for dynamic buttons
         document.addEventListener('click', handleButtonClick);
+
+        // Event delegation for topic input changes
+        document.addEventListener('input', function(e) {
+            if (e.target.id === 'template-topic') {
+                handleTopicInputChange(e.target.value);
+            }
+        });
+
+        // Event delegation for topic selection changes
+        document.addEventListener('change', function(e) {
+            if (e.target.id === 'template-topic') {
+                handleTopicSelectChange(e.target.value);
+            }
+        });
+
+        // Event delegation for create topic button
+        document.addEventListener('click', function(e) {
+            if (e.target.id === 'create-topic-from-template') {
+                e.preventDefault();
+                handleCreateTopicFromTemplate();
+            }
+        });
     }
 
     // Button click handler
     function handleButtonClick(event) {
-        const button = event.target.closest('button[data-action], #create-first-template-btn, #create-first-category-btn, #create-first-language-btn');
+        const button = event.target.closest('button[data-action], #create-first-template-btn, #create-first-topic-btn, #create-first-language-btn');
         if (!button) return;
 
         // Handle special "create first" buttons
@@ -114,8 +135,8 @@
             openModal('template');
             return;
         }
-        if (button.id === 'create-first-category-btn') {
-            openModal('category');
+        if (button.id === 'create-first-topic-btn') {
+            openModal('topic');
             return;
         }
         if (button.id === 'create-first-language-btn') {
@@ -135,13 +156,17 @@
                 const deleteTemplateId = button.dataset.templateId;
                 deleteTemplate(deleteTemplateId);
                 break;
-            case 'edit-category':
-                const categoryId = button.dataset.categoryId;
-                editCategory(categoryId);
+            case 'edit-topic':
+                const topicId = button.dataset.topicId;
+                editTopic(topicId);
                 break;
-            case 'delete-category':
-                const deleteCategoryId = button.dataset.categoryId;
-                deleteCategory(deleteCategoryId);
+            case 'delete-topic':
+                const deleteTopicId = button.dataset.topicId;
+                deleteTopic(deleteTopicId);
+                break;
+            case 'view-topic-doc':
+                const viewTopicId = button.dataset.topicId;
+                viewTopicDocumentation(viewTopicId);
                 break;
             case 'edit-language':
                 const languageId = button.dataset.languageId;
@@ -159,7 +184,7 @@
     function handleMessage(event) {
         const message = event.data;
         console.log('Received message:', message);
-        
+
         switch (message.type) {
             case 'dataLoaded':
                 currentData = message.data;
@@ -167,6 +192,23 @@
                 showLoading(false);
                 updateFilters();
                 renderCurrentTab();
+
+                // If template modal is open, refresh topic list
+                const modal = document.getElementById('modal');
+                if (modal && modal.classList.contains('active') && modal.dataset.type === 'template') {
+                    const topicSelect = document.getElementById('template-topic');
+                    if (topicSelect) {
+                        const currentValue = topicSelect.value;
+                        // Regenerate topic options
+                        const options = getExistingTopics().map(topicName => {
+                            return `<option value="${escapeHtml(topicName)}" ${currentValue === topicName ? 'selected' : ''}>${escapeHtml(topicName)}</option>`;
+                        }).join('');
+                        topicSelect.innerHTML = `<option value="">選擇現有主題...</option>${options}`;
+                        if (currentValue) {
+                            topicSelect.value = currentValue;
+                        }
+                    }
+                }
                 break;
             
             case 'error':
@@ -212,8 +254,8 @@
             case 'templates':
                 renderTemplates();
                 break;
-            case 'categories':
-                renderCategories();
+            case 'topics':
+                renderTopics();
                 break;
             case 'languages':
                 renderLanguages();
@@ -224,6 +266,9 @@
     function renderTemplates() {
         const container = document.getElementById('templates-list');
         const templates = getFilteredTemplates();
+
+        // Render topics statistics
+        renderTopicsStats();
 
         if (templates.length === 0) {
             container.innerHTML = `
@@ -238,7 +283,6 @@
         }
 
         container.innerHTML = templates.map(template => {
-            const category = currentData.categories.find(c => c.id === template.categoryId);
             const language = currentData.languages.find(l => l.id === template.language);
             
             return `
@@ -257,7 +301,7 @@
                     
                     <div class="data-item-tags">
                         <span class="tag language">${language ? escapeHtml(language.displayName) : '未知語言'}</span>
-                        <span class="tag category">${category ? escapeHtml(category.name) : '未知分類'}</span>
+                        <span class="tag topic">${template.topic ? escapeHtml(template.topic) : '未知主題'}</span>
                         ${template.metadata?.difficulty ? `<span class="tag difficulty">${template.metadata.difficulty}</span>` : ''}
                     </div>
                     
@@ -284,45 +328,110 @@ ${escapeHtml(template.code)}
         }).join('');
     }
 
-    function renderCategories() {
-        const container = document.getElementById('categories-list');
-        const categories = currentData.categories;
+    function renderTopicsStats() {
+        const statsContainer = document.getElementById('topics-stats');
+        if (!statsContainer) return;
 
-        if (categories.length === 0) {
+        const topicsStats = getTopicsStatistics();
+
+        if (topicsStats.length === 0) {
+            statsContainer.innerHTML = `
+                <div class="stats-card">
+                    <h4>主題統計</h4>
+                    <p style="color: var(--vscode-descriptionForeground);">尚無模板，主題統計將在創建模板後顯示。</p>
+                </div>
+            `;
+            return;
+        }
+
+        const statsHtml = topicsStats.map(stat => `
+            <div class="topic-stat-item">
+                <span class="topic-name">${escapeHtml(stat.topic)}</span>
+                <span class="topic-count">${stat.count} 個模板</span>
+            </div>
+        `).join('');
+
+        statsContainer.innerHTML = `
+            <div class="stats-card">
+                <h4>主題統計 (${topicsStats.length} 個主題)</h4>
+                <div class="topics-stats-list">
+                    ${statsHtml}
+                </div>
+            </div>
+        `;
+    }
+
+    function getTopicsStatistics() {
+        if (!currentData.templates) return [];
+
+        const topicCounts = {};
+        currentData.templates.forEach(template => {
+            const topic = template.topic || '未知主題';
+            topicCounts[topic] = (topicCounts[topic] || 0) + 1;
+        });
+
+        return Object.entries(topicCounts)
+            .map(([topic, count]) => ({ topic, count }))
+            .sort((a, b) => b.count - a.count); // 按模板數量降序排列
+    }
+
+    function renderTopics() {
+        const container = document.getElementById('topics-list');
+        const topics = currentData.topics || [];
+
+        if (topics.length === 0) {
             container.innerHTML = `
                 <div style="text-align: center; padding: 40px; color: var(--vscode-descriptionForeground);">
-                    <p>沒有分類</p>
-                    <button class="btn btn-primary" id="create-first-category-btn">
-                        <span class="icon">➕</span> 創建第一個分類
+                    <p>沒有主題</p>
+                    <button class="btn btn-primary" id="create-first-topic-btn">
+                        <span class="icon">➕</span> 創建第一個主題
                     </button>
                 </div>
             `;
             return;
         }
 
-        container.innerHTML = categories.map(category => {
-            const templateCount = currentData.templates.filter(t => t.categoryId === category.id).length;
-            
+        container.innerHTML = topics.map(topic => {
+            const templateCount = currentData.templates.filter(t => t.topic === topic.name).length;
+
             return `
                 <div class="data-item">
                     <div class="data-item-header">
-                        <h3 class="data-item-title">${escapeHtml(category.name)}</h3>
+                        <h3 class="data-item-title">${escapeHtml(topic.name)}</h3>
                         <div class="data-item-actions">
-                            <button class="btn btn-secondary" data-action="edit-category" data-category-id="${category.id}">
+                            <button class="btn btn-secondary" data-action="edit-topic" data-topic-id="${topic.id}">
                                 <span class="icon">✏️</span> 編輯
                             </button>
-                            <button class="btn btn-danger" data-action="delete-category" data-category-id="${category.id}" ${templateCount > 0 ? 'disabled title="無法刪除：有模板使用此分類"' : ''}>
+                            <button class="btn btn-danger" data-action="delete-topic" data-topic-id="${topic.id}">
                                 <span class="icon">🗑️</span> 刪除
                             </button>
                         </div>
                     </div>
-                    
+
                     <div class="data-item-meta">
-                        ID: ${category.id} • Level: ${category.level} • 包含 ${templateCount} 個模板
+                        ID: ${topic.id} • 包含 ${templateCount} 個模板
+                        ${topic.createdAt ? `• 創建時間: ${new Date(topic.createdAt).toLocaleDateString()}` : ''}
                     </div>
-                    
+
                     <div class="data-item-description">
-                        ${escapeHtml(category.description)}
+                        ${escapeHtml(topic.description)}
+                    </div>
+
+                    <div class="topic-details">
+                        <div class="topic-details-row">
+                            ${topic.color || topic.icon ? `
+                                <div class="topic-info-tags">
+                                    ${topic.icon ? `<span class="topic-info-tag topic-icon-tag">${topic.icon}</span>` : ''}
+                                    ${topic.color ? `<span class="topic-info-tag topic-color-tag" style="background-color: ${topic.color}; color: white;">${topic.color}</span>` : ''}
+                                </div>
+                            ` : ''}
+
+                            ${topic.documentation ? `
+                                <button class="btn btn-info btn-small" data-action="view-topic-doc" data-topic-id="${topic.id}">
+                                    <span class="icon">📖</span> 查看詳細說明
+                                </button>
+                            ` : ''}
+                        </div>
                     </div>
                 </div>
             `;
@@ -373,28 +482,19 @@ ${escapeHtml(template.code)}
         const languageFilter = document.getElementById('filter-language');
         languageFilter.innerHTML = '<option value="">所有語言</option>' +
             currentData.languages.map(lang => `<option value="${lang.id}">${escapeHtml(lang.displayName)}</option>`).join('');
-
-        // Update category filter
-        const categoryFilter = document.getElementById('filter-category');
-        categoryFilter.innerHTML = '<option value="">所有分類</option>' +
-            currentData.categories.map(cat => `<option value="${cat.id}">${escapeHtml(cat.name)}</option>`).join('');
     }
 
     function getFilteredTemplates() {
         const languageFilter = document.getElementById('filter-language').value;
-        const categoryFilter = document.getElementById('filter-category').value;
         const searchText = document.getElementById('search-templates').value.toLowerCase();
 
         return currentData.templates.filter(template => {
             // Language filter
             if (languageFilter && template.language !== languageFilter) return false;
-            
-            // Category filter
-            if (categoryFilter && template.categoryId !== categoryFilter) return false;
-            
+
             // Search filter
             if (searchText) {
-                const searchableText = (template.title + ' ' + template.description + ' ' + template.code).toLowerCase();
+                const searchableText = (template.title + ' ' + template.description + ' ' + template.code + ' ' + (template.topic || '')).toLowerCase();
                 if (!searchableText.includes(searchText)) return false;
             }
             
@@ -429,9 +529,9 @@ ${escapeHtml(template.code)}
                 titleText = item ? '編輯模板' : '創建新模板';
                 bodyHTML = getTemplateForm(item);
                 break;
-            case 'category':
-                titleText = item ? '編輯分類' : '創建新分類';
-                bodyHTML = getCategoryForm(item);
+            case 'topic':
+                titleText = item ? '編輯主題' : '創建新主題';
+                bodyHTML = getTopicForm(item);
                 break;
             case 'language':
                 titleText = item ? '編輯語言' : '創建新語言';
@@ -456,6 +556,30 @@ ${escapeHtml(template.code)}
                     const docType = getDocumentationType(item.documentation);
                     docTypeSelect.value = docType;
                     handleDocumentationTypeChange(docType);
+                }
+            }, 50);
+        }
+
+        // Initialize topic selection if editing template
+        if (type === 'template' && item && item.topic) {
+            setTimeout(() => {
+                const select = document.getElementById('template-topic');
+                if (select) {
+                    // Check if topic exists in options
+                    const optionExists = Array.from(select.options).some(opt => opt.value === item.topic);
+                    if (optionExists) {
+                        select.value = item.topic;
+                    } else {
+                        // Topic doesn't exist in options, add it as an option
+                        const newOption = document.createElement('option');
+                        newOption.value = item.topic;
+                        newOption.textContent = item.topic;
+                        newOption.selected = true;
+                        select.appendChild(newOption);
+                    }
+
+                    // Trigger change to show hint
+                    handleTopicSelectChange(select.value);
                 }
             }, 50);
         }
@@ -500,15 +624,18 @@ ${escapeHtml(template.code)}
                 </div>
                 
                 <div class="form-group">
-                    <label for="template-category">分類 *</label>
-                    <select id="template-category" required>
-                        <option value="">選擇分類</option>
-                        ${currentData.categories.map(cat => `
-                            <option value="${cat.id}" ${template && template.categoryId === cat.id ? 'selected' : ''}>
-                                ${escapeHtml(cat.name)}
-                            </option>
-                        `).join('')}
-                    </select>
+                    <label for="template-topic">主題 *</label>
+                    <div style="display: flex; gap: 8px; align-items: center;">
+                        <select id="template-topic" style="flex: 1;" required>
+                            <option value="">選擇現有主題...</option>
+                            ${getExistingTopics().map(topicName => {
+                                return `<option value="${escapeHtml(topicName)}" ${template && template.topic === topicName ? 'selected' : ''}>${escapeHtml(topicName)}</option>`;
+                            }).join('')}
+                        </select>
+                        <button type="button" id="create-topic-from-template" class="btn btn-secondary btn-small">+ 新增主題</button>
+                    </div>
+                    <div class="form-help">可選擇現有主題或點擊「新增主題」創建新主題。</div>
+                    <div id="topic-description-hint" style="font-size: 12px; color: var(--vscode-descriptionForeground); margin-top: 5px; padding: 8px; background: var(--vscode-editorWidget-background); border-radius: 4px; display: none;"></div>
                 </div>
             </div>
             
@@ -564,22 +691,39 @@ ${escapeHtml(template.code)}
         `;
     }
 
-    function getCategoryForm(category) {
+
+    function getTopicForm(topic) {
         return `
             <div class="form-group">
-                <label for="category-name">名稱 *</label>
-                <input type="text" id="category-name" value="${category ? escapeHtml(category.name) : ''}" required>
+                <label for="topic-name">主題名稱 *</label>
+                <input type="text" id="topic-name" value="${topic ? escapeHtml(topic.name) : ''}" required>
+                <div class="form-help">主題的顯示名稱，如：基礎、進階、演算法</div>
             </div>
-            
+
             <div class="form-group">
-                <label for="category-description">描述 *</label>
-                <textarea id="category-description" rows="3" required>${category ? escapeHtml(category.description) : ''}</textarea>
+                <label for="topic-description">主題簡介 *</label>
+                <textarea id="topic-description" rows="2" required>${topic ? escapeHtml(topic.description) : ''}</textarea>
+                <div class="form-help">簡短描述（1-2句話），會顯示在主題列表中</div>
             </div>
-            
+
             <div class="form-group">
-                <label for="category-level">級別 *</label>
-                <input type="number" id="category-level" min="1" max="10" value="${category ? category.level : 1}" required>
-                <div class="form-help">1-10，數字越小表示越基礎</div>
+                <label for="topic-documentation">詳細說明文件</label>
+                <textarea id="topic-documentation" rows="8" placeholder="使用 Markdown 格式撰寫詳細說明...">${topic ? escapeHtml(topic.documentation || '') : ''}</textarea>
+                <div class="form-help">詳細的學習指南，支援 Markdown 格式。用戶可以點擊「查看詳細說明」按鈕查看</div>
+            </div>
+
+            <div class="form-group-inline">
+                <div class="form-group">
+                    <label for="topic-color">主題顏色</label>
+                    <input type="color" id="topic-color" value="${topic?.color || '#007acc'}">
+                    <div class="form-help">用於標識主題的顏色</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="topic-icon">主題圖標</label>
+                    <input type="text" id="topic-icon" value="${topic?.icon || ''}" placeholder="🏷️">
+                    <div class="form-help">表示主題的 emoji 圖標</div>
+                </div>
             </div>
         `;
     }
@@ -591,19 +735,19 @@ ${escapeHtml(template.code)}
                 <input type="text" id="language-id" value="${language ? language.id : ''}" ${language ? 'readonly' : ''} required>
                 <div class="form-help">語言的唯一識別碼，如：javascript, python, cpp</div>
             </div>
-            
+
             <div class="form-group">
                 <label for="language-name">名稱 *</label>
                 <input type="text" id="language-name" value="${language ? language.name : ''}" required>
                 <div class="form-help">程式語言的內部名稱</div>
             </div>
-            
+
             <div class="form-group">
                 <label for="language-display-name">顯示名稱 *</label>
                 <input type="text" id="language-display-name" value="${language ? escapeHtml(language.displayName) : ''}" required>
                 <div class="form-help">在界面上顯示的名稱</div>
             </div>
-            
+
             <div class="form-group">
                 <label for="language-extension">副檔名 *</label>
                 <input type="text" id="language-extension" value="${language ? language.extension : ''}" required placeholder=".js">
@@ -630,17 +774,17 @@ ${escapeHtml(template.code)}
                         messageType = 'createTemplate';
                     }
                     break;
-                    
-                case 'category':
-                    data = getCategoryData();
+
+                case 'topic':
+                    data = getTopicData();
                     if (editingItem) {
-                        messageType = 'updateCategory';
+                        messageType = 'updateTopic';
                         id = editingItem.id;
                     } else {
-                        messageType = 'createCategory';
+                        messageType = 'createTopic';
                     }
                     break;
-                    
+
                 case 'language':
                     data = getLanguageData();
                     if (editingItem) {
@@ -668,11 +812,21 @@ ${escapeHtml(template.code)}
         }
     }
 
+    function getExistingTopics() {
+        const topicsFromTemplates = currentData.templates ?
+            currentData.templates.map(t => t.topic).filter(t => t) : [];
+        const managedTopics = currentData.topics ?
+            currentData.topics.map(t => t.name) : [];
+
+        const allTopics = new Set([...topicsFromTemplates, ...managedTopics]);
+        return Array.from(allTopics).sort();
+    }
+
     function getTemplateData() {
         const title = document.getElementById('template-title').value.trim();
         const description = document.getElementById('template-description').value.trim();
         const language = document.getElementById('template-language').value;
-        const categoryId = document.getElementById('template-category').value;
+        const topic = document.getElementById('template-topic').value.trim();
         const code = document.getElementById('template-code').value;
         const author = document.getElementById('template-author').value.trim();
         const difficulty = document.getElementById('template-difficulty').value;
@@ -684,14 +838,14 @@ ${escapeHtml(template.code)}
         if (!title) throw new Error('請輸入標題');
         if (!description) throw new Error('請輸入描述');
         if (!language) throw new Error('請選擇語言');
-        if (!categoryId) throw new Error('請選擇分類');
+        if (!topic) throw new Error('請輸入主題');
         if (!code.trim()) throw new Error('請輸入程式碼');
 
         const data = {
             title,
             description,
             language,
-            categoryId,
+            topic,
             code,
             metadata: {}
         };
@@ -711,16 +865,26 @@ ${escapeHtml(template.code)}
         return data;
     }
 
-    function getCategoryData() {
-        const name = document.getElementById('category-name').value.trim();
-        const description = document.getElementById('category-description').value.trim();
-        const level = parseInt(document.getElementById('category-level').value);
+    function getTopicData() {
+        const name = document.getElementById('topic-name').value.trim();
+        const description = document.getElementById('topic-description').value.trim();
+        const documentation = document.getElementById('topic-documentation').value.trim();
+        const color = document.getElementById('topic-color').value;
+        const icon = document.getElementById('topic-icon').value.trim();
 
-        if (!name) throw new Error('請輸入名稱');
-        if (!description) throw new Error('請輸入描述');
-        if (!level || level < 1 || level > 10) throw new Error('級別必須在1-10之間');
+        if (!name) throw new Error('請輸入主題名稱');
+        if (!description) throw new Error('請輸入主題簡介');
 
-        return { name, description, level };
+        const data = {
+            name,
+            description
+        };
+
+        if (documentation) data.documentation = documentation;
+        if (color && color !== '#007acc') data.color = color;
+        if (icon) data.icon = icon;
+
+        return data;
     }
 
     function getLanguageData() {
@@ -759,20 +923,29 @@ ${escapeHtml(template.code)}
         });
     }
     
-    function editCategory(categoryId) {
-        const category = currentData.categories.find(c => c.id === categoryId);
-        if (category) {
-            openModal('category', category);
+    
+    function editTopic(topicId) {
+        const topic = currentData.topics.find(t => t.id === topicId);
+        if (topic) {
+            openModal('topic', topic);
         }
     }
-    
-    function deleteCategory(categoryId) {
+
+    function deleteTopic(topicId) {
         vscode.postMessage({
-            type: 'deleteCategory',
-            categoryId: categoryId
+            type: 'deleteTopic',
+            topicId: topicId
         });
     }
-    
+
+    function viewTopicDocumentation(topicId) {
+        const topic = currentData.topics.find(t => t.id === topicId);
+        if (topic && topic.documentation) {
+            // 創建文件查看模態窗口
+            showDocumentationModal(topic.name, topic.documentation);
+        }
+    }
+
     function editLanguage(languageId) {
         const language = currentData.languages.find(l => l.id === languageId);
         if (language) {
@@ -790,18 +963,14 @@ ${escapeHtml(template.code)}
 
     function exportTemplates() {
         const filters = {};
-        
+
         // Get selected filters
         const languageFilter = document.getElementById('filter-language').value;
-        const categoryFilter = document.getElementById('filter-category').value;
-        
+
         if (languageFilter) {
             filters.languageIds = [languageFilter];
         }
-        if (categoryFilter) {
-            filters.categoryIds = [categoryFilter];
-        }
-        
+
         vscode.postMessage({
             type: 'exportTemplates',
             filters: Object.keys(filters).length > 0 ? filters : undefined
@@ -832,7 +1001,7 @@ ${escapeHtml(template.code)}
             console.error('JSON modal not found');
             return;
         }
-        populateAvailableLanguagesAndCategories();
+        populateAvailableLanguages();
         clearJsonInput();
         jsonModal.classList.add('active');
         console.log('JSON modal opened');
@@ -849,12 +1018,11 @@ ${escapeHtml(template.code)}
         console.log('JSON modal closed');
     }
 
-    function populateAvailableLanguagesAndCategories() {
+    function populateAvailableLanguages() {
         const languagesDiv = document.getElementById('available-languages');
-        const categoriesDiv = document.getElementById('available-categories');
 
-        if (!languagesDiv || !categoriesDiv) {
-            console.error('Available languages or categories div not found');
+        if (!languagesDiv) {
+            console.error('Available languages div not found');
             return;
         }
 
@@ -871,20 +1039,6 @@ ${escapeHtml(template.code)}
             languagesHtml = '<div class="info-list-item">暫無可用語言</div>';
         }
         languagesDiv.innerHTML = languagesHtml;
-
-        // Populate categories
-        let categoriesHtml = '';
-        if (currentData.categories && currentData.categories.length > 0) {
-            currentData.categories.forEach(cat => {
-                categoriesHtml += `<div class="info-list-item">
-                    <span>${escapeHtml(cat.name)} (Level ${cat.level})</span>
-                    <code>${escapeHtml(cat.id)}</code>
-                </div>`;
-            });
-        } else {
-            categoriesHtml = '<div class="info-list-item">暫無可用分類</div>';
-        }
-        categoriesDiv.innerHTML = categoriesHtml;
     }
 
     function clearJsonInput() {
@@ -967,19 +1121,15 @@ ${escapeHtml(template.code)}
             if (!template.language || typeof template.language !== 'string') {
                 return { valid: false, error: `模板 ${index}: 缺少有效的 language` };
             }
-            if (!template.categoryId || typeof template.categoryId !== 'string') {
-                return { valid: false, error: `模板 ${index}: 缺少有效的 categoryId` };
+            if (!template.topic || typeof template.topic !== 'string') {
+                return { valid: false, error: `模板 ${index}: 缺少有效的 topic` };
             }
 
-            // Validate language and category exist
+            // Validate language exists
             const languageExists = currentData.languages && currentData.languages.some(l => l.id === template.language);
-            const categoryExists = currentData.categories && currentData.categories.some(c => c.id === template.categoryId);
-            
+
             if (!languageExists) {
                 return { valid: false, error: `模板 ${index}: 語言 "${template.language}" 不存在` };
-            }
-            if (!categoryExists) {
-                return { valid: false, error: `模板 ${index}: 分類 "${template.categoryId}" 不存在` };
             }
         }
 
@@ -1495,9 +1645,105 @@ ${code}
         closeJsonModal();
     }
 
+    function handleTopicInputChange(topicName) {
+        const hintDiv = document.getElementById('topic-description-hint');
+        if (!hintDiv || !currentData.topics) return;
+
+        const managedTopic = currentData.topics.find(t => t.name === topicName.trim());
+        if (managedTopic && managedTopic.description) {
+            hintDiv.textContent = `💡 ${managedTopic.description}`;
+            hintDiv.style.display = 'block';
+        } else {
+            hintDiv.style.display = 'none';
+        }
+    }
+
+    function handleTopicSelectChange(selectedValue) {
+        const hintDiv = document.getElementById('topic-description-hint');
+
+        if (selectedValue && hintDiv && currentData.topics) {
+            // Show topic description hint
+            const managedTopic = currentData.topics.find(t => t.name === selectedValue);
+            if (managedTopic && managedTopic.description) {
+                hintDiv.textContent = `💡 ${managedTopic.description}`;
+                hintDiv.style.display = 'block';
+            } else {
+                hintDiv.style.display = 'none';
+            }
+        } else if (hintDiv) {
+            hintDiv.style.display = 'none';
+        }
+    }
+
+    function handleCreateTopicFromTemplate() {
+        // Store current template modal state
+        const currentModal = document.getElementById('modal');
+        const currentModalData = {
+            type: currentModal.dataset.type,
+            editing: editingItem
+        };
+
+        // Open topic creation modal
+        openModal('topic', null);
+
+        // After topic is created, we need to refresh the topic list in template modal
+        // This will be handled by the data reload after topic creation
+    }
+
+    function showDocumentationModal(title, documentation) {
+        // 創建文件模態窗口
+        const docModal = document.createElement('div');
+        docModal.className = 'modal documentation-modal';
+        docModal.style.display = 'block';
+
+        docModal.innerHTML = `
+            <div class="modal-content" style="max-width: 800px; width: 90%; max-height: 80vh;">
+                <div class="modal-header">
+                    <h3>${escapeHtml(title)} - 詳細說明</h3>
+                    <button class="btn btn-text doc-modal-close">✕</button>
+                </div>
+                <div class="modal-body" style="overflow-y: auto; max-height: 60vh;">
+                    <div class="documentation-content">${markdownToHtml(documentation)}</div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary doc-modal-close">關閉</button>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(docModal);
+
+        // 綁定關閉事件
+        docModal.querySelectorAll('.doc-modal-close').forEach(closeBtn => {
+            closeBtn.addEventListener('click', () => {
+                document.body.removeChild(docModal);
+            });
+        });
+
+        // 點擊背景關閉
+        docModal.addEventListener('click', (e) => {
+            if (e.target === docModal) {
+                document.body.removeChild(docModal);
+            }
+        });
+    }
+
+    function markdownToHtml(markdown) {
+        // 簡單的 Markdown 轉換，處理基本格式
+        return markdown
+            .replace(/### (.*$)/gim, '<h3>$1</h3>')
+            .replace(/## (.*$)/gim, '<h2>$1</h2>')
+            .replace(/# (.*$)/gim, '<h1>$1</h1>')
+            .replace(/\*\*(.*?)\*\*/gim, '<strong>$1</strong>')
+            .replace(/\*(.*?)\*/gim, '<em>$1</em>')
+            .replace(/^\- (.*$)/gim, '<li>$1</li>')
+            .replace(/(<li>.*<\/li>)/gims, '<ul>$1</ul>')
+            .replace(/\n/gim, '<br>');
+    }
+
     // Utility function to show error messages
     function showError(message) {
-        console.error('Template Manager Error:', message);
+        console.error('TextBricks Manager Error:', message);
         vscode.postMessage({
             type: 'showError',
             message: message

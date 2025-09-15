@@ -3,7 +3,7 @@ import { TemplateCommands } from './TemplateCommands';
 import { ImportExportCommands } from './ImportExportCommands';
 import { TextBricksEngine } from '@textbricks/core';
 import { WebviewProvider } from '../providers/WebviewProvider';
-import { TemplateManagerProvider } from '../providers/TemplateManagerProvider';
+import { TextBricksManagerProvider } from '../providers/TextBricksManagerProvider';
 import { DocumentationProvider } from '../providers/DocumentationProvider';
 
 /**
@@ -17,13 +17,13 @@ export class CommandRegistry {
         private context: vscode.ExtensionContext,
         private templateEngine: TextBricksEngine,
         private webviewProvider: WebviewProvider,
-        private templateManagerProvider: TemplateManagerProvider,
+        private textBricksManagerProvider: TextBricksManagerProvider,
         private documentationProvider: DocumentationProvider
     ) {
         this.templateCommands = new TemplateCommands(
             templateEngine, 
             webviewProvider, 
-            templateManagerProvider
+textBricksManagerProvider
         );
         this.importExportCommands = new ImportExportCommands(
             templateEngine, 
@@ -40,8 +40,8 @@ export class CommandRegistry {
             this.webviewProvider.refresh();
         });
 
-        const openManagerCommand = vscode.commands.registerCommand('textbricks.openTemplateManager', () => {
-            this.templateManagerProvider.createOrShow();
+        const openManagerCommand = vscode.commands.registerCommand('textbricks.openTextBricksManager', () => {
+            this.textBricksManagerProvider.createOrShow();
         });
 
         // 模板相關命令

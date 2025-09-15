@@ -145,6 +145,23 @@ body {
     color: var(--doc-secondary-color);
 }
 
+/* Topic Info */
+.topic-info {
+    background-color: var(--vscode-editorWidget-background);
+    border: 1px solid var(--doc-border-color);
+    border-radius: 6px;
+    padding: 16px;
+    margin-bottom: 24px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+.topic-name {
+    font-weight: 600;
+    color: var(--doc-primary-color);
+}
+
 /* Documentation Content */
 .documentation-content {
     line-height: 1.7;

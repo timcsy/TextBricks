@@ -1,4 +1,4 @@
-/* Template Manager CSS */
+/* TextBricks Manager CSS */
 :root {
     --primary-color: #007ACC;
     --secondary-color: #6C757D;
@@ -410,7 +410,7 @@ textarea {
     background: var(--success-color);
 }
 
-.tag.category {
+.tag.topic {
     background: var(--warning-color);
     color: #212529;
 }
@@ -679,4 +679,101 @@ textarea {
 
 #json-validation-message.error {
     color: var(--danger-color);
+}
+
+/* Topics Statistics */
+.stats-card {
+    background: var(--dark-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 20px;
+}
+
+.stats-card h4 {
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 12px;
+    color: var(--text-color);
+}
+
+.topics-stats-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.topic-stat-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    background: var(--light-bg);
+    border-radius: 4px;
+    border: 1px solid var(--border-color);
+    transition: all 0.2s ease;
+}
+
+.topic-stat-item:hover {
+    background: var(--hover-bg);
+    border-color: var(--primary-color);
+}
+
+.topic-name {
+    font-weight: 500;
+    color: var(--text-color);
+}
+
+.topic-count {
+    font-size: 12px;
+    color: var(--muted-text);
+    background: var(--primary-color);
+    color: white;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-weight: 500;
+}
+
+/* Topic Details Layout */
+.topic-details {
+    margin-top: 12px;
+}
+
+.topic-details-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+}
+
+.topic-info-tags {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.topic-info-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.topic-icon-tag {
+    background: var(--hover-bg);
+    color: var(--text-color);
+    border: 1px solid var(--border-color);
+}
+
+.topic-color-tag {
+    border: 1px solid rgba(0, 0, 0, 0.2);
+    font-family: monospace;
+}
+
+/* Ensure button aligns to the right */
+.topic-details-row .btn {
+    margin-left: auto;
 }

@@ -11,11 +11,11 @@
 │   ├── css/         # 樣式表
 │   │   ├── style.css
 │   │   ├── documentation.css
-│   │   └── template-manager.css
+│   │   └── textbricks-manager.css  # TextBricks Manager styles
 │   └── js/          # JavaScript 檔案
 │       ├── main.js
 │       ├── documentation.js
-│       └── template-manager.js
+│       └── textbricks-manager.js  # TextBricks Manager logic
 ```
 
 ### VS Code 包資產 (開發時使用)

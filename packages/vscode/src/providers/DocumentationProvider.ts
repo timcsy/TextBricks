@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import { DocumentationService } from '@textbricks/core';
 import { TextBricksEngine } from '@textbricks/core';
 import { CodeOperationService } from '@textbricks/core';
-import { Template, DocumentationType } from '@textbricks/shared';
+import { Template, DocumentationType, Topic } from '@textbricks/shared';
 
 export class DocumentationProvider {
     public static readonly viewType = 'textbricks-documentation';
@@ -65,6 +65,47 @@ export class DocumentationProvider {
 
         // Load and display documentation
         await this._updateWebview();
+    }
+
+    public async showTopicDocumentation(topic: Topic) {
+        if (!topic.documentation) {
+            vscode.window.showWarningMessage(`主題 "${topic.name}" 沒有說明文檔`);
+            return;
+        }
+
+        // Create or show panel for topic
+        const column = vscode.ViewColumn.Beside; // Open beside current editor
+
+        if (this._panel) {
+            this._panel.reveal(column);
+        } else {
+            this._panel = vscode.window.createWebviewPanel(
+                DocumentationProvider.viewType,
+                `📖 ${topic.name} 主題 - 學習指南`,
+                column,
+                {
+                    enableScripts: true,
+                    localResourceRoots: [this._extensionUri],
+                    retainContextWhenHidden: true
+                }
+            );
+
+            this._panel.onDidDispose(
+                () => this._onPanelDisposed(),
+                null,
+                this._disposables
+            );
+
+            // Handle messages from webview if needed
+            this._panel.webview.onDidReceiveMessage(
+                message => this._handleMessage(message),
+                null,
+                this._disposables
+            );
+        }
+
+        // Load and display topic documentation
+        await this._updateTopicWebview(topic);
     }
 
     private _onPanelDisposed() {
@@ -150,6 +191,40 @@ export class DocumentationProvider {
         } catch (error) {
             console.error('Documentation loading error:', error);
             this._panel.webview.html = this._getErrorHtml(`載入說明文檔時發生錯誤：${error}`);
+        }
+    }
+
+    private async _updateTopicWebview(topic: Topic) {
+        if (!this._panel || !topic.documentation) {
+            return;
+        }
+
+        try {
+            // Show loading state
+            this._panel.webview.html = this._getLoadingHtml();
+
+            // Update title
+            this._panel.title = `📖 ${topic.name}`;
+
+            // Generate HTML for topic documentation (simple markdown content)
+            const docResult = {
+                type: 'markdown' as DocumentationType,
+                content: topic.documentation,
+                processedAt: new Date(),
+                metadata: {}
+            };
+
+            // Generate final HTML
+            this._panel.webview.html = this._getTopicDocumentationHtml(docResult, topic);
+
+            // Send refresh complete message to webview
+            setTimeout(() => {
+                this._panel?.webview.postMessage({ type: 'refresh-complete' });
+            }, 100); // Small delay to ensure HTML is loaded
+
+        } catch (error) {
+            console.error('Topic documentation loading error:', error);
+            this._panel.webview.html = this._getErrorHtml(`載入主題說明文檔時發生錯誤：${error}`);
         }
     }
 
@@ -257,7 +332,7 @@ export class DocumentationProvider {
             </div>`;
         } else {
             // Convert markdown to HTML (simple implementation)
-            contentHtml = this._markdownToHtml(docResult.content);
+            contentHtml = this._markdownToHtml(docResult.content, template.id);
         }
 
         return `<!DOCTYPE html>
@@ -297,8 +372,8 @@ export class DocumentationProvider {
                 <span class="value language-tag">${template.language.toUpperCase()}</span>
             </div>
             <div class="info-item">
-                <span class="label">分類：</span>
-                <span class="value">${this._getCategoryName(template.categoryId)}</span>
+                <span class="label">主題：</span>
+                <span class="value">${this._getTopicName(template.topic)}</span>
             </div>
             <div class="info-item">
                 <span class="label">文檔類型：</span>
@@ -321,7 +396,7 @@ export class DocumentationProvider {
 </html>`;
     }
 
-    private _markdownToHtml(markdown: string): string {
+    private _markdownToHtml(markdown: string, identifier?: string): string {
         // Simple markdown to HTML conversion
         // In a real implementation, you'd use a proper markdown parser like 'marked'
         let html = markdown;
@@ -338,7 +413,8 @@ export class DocumentationProvider {
             const codeId = Math.random().toString(36).substring(2, 11); // Generate unique ID
             // Store the raw code in a data attribute to preserve formatting
             const rawCodeEscaped = this._escapeHtml(trimmedCode);
-            return `<div class="code-block-container" data-template-id="${this._currentTemplate?.id || ''}">
+            const dataId = identifier || this._currentTemplate?.id || '';
+            return `<div class="code-block-container" data-template-id="${dataId}">
                 <div class="code-block-header">
                     <span class="language-label">${language.toUpperCase() || 'CODE'}</span>
                     <div class="code-actions">
@@ -360,47 +436,82 @@ export class DocumentationProvider {
         // Links
         html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" onclick="handleLinkClick(\'$2\')">$1</a>');
 
-        // Lists - improved handling to avoid cross-paragraph merging
+        // Lists - improved handling for both bulleted and numbered lists
         const lines = html.split('\n');
         let processedLines: string[] = [];
-        let inList = false;
-        
+        let inBulletList = false;
+        let inNumberedList = false;
+
         for (let i = 0; i < lines.length; i++) {
             const line = lines[i];
-            const isListItem = /^- (.*)/.test(line);
-            
-            if (isListItem) {
+            const isBulletItem = /^- (.*)/.test(line);
+            const isNumberedItem = /^\d+\.\s+(.*)/.test(line);
+
+            if (isBulletItem) {
                 const content = line.replace(/^- (.*)/, '$1');
-                if (!inList) {
+                if (inNumberedList) {
+                    processedLines.push('</ol>');
+                    inNumberedList = false;
+                }
+                if (!inBulletList) {
                     processedLines.push('<ul>');
-                    inList = true;
+                    inBulletList = true;
+                }
+                processedLines.push(`<li>${content}</li>`);
+            } else if (isNumberedItem) {
+                const content = line.replace(/^\d+\.\s+(.*)/, '$1');
+                if (inBulletList) {
+                    processedLines.push('</ul>');
+                    inBulletList = false;
+                }
+                if (!inNumberedList) {
+                    processedLines.push('<ol>');
+                    inNumberedList = true;
                 }
                 processedLines.push(`<li>${content}</li>`);
             } else {
-                if (inList && line.trim() === '') {
+                if ((inBulletList || inNumberedList) && line.trim() === '') {
                     // Empty line after list items - check if next non-empty line is also a list item
                     let nextNonEmptyIndex = i + 1;
                     while (nextNonEmptyIndex < lines.length && lines[nextNonEmptyIndex].trim() === '') {
                         nextNonEmptyIndex++;
                     }
-                    
-                    if (nextNonEmptyIndex >= lines.length || !/^- (.*)/.test(lines[nextNonEmptyIndex])) {
-                        // Close the list
-                        processedLines.push('</ul>');
-                        inList = false;
+
+                    const nextLineIsList = nextNonEmptyIndex < lines.length &&
+                        (/^- (.*)/.test(lines[nextNonEmptyIndex]) || /^\d+\.\s+(.*)/.test(lines[nextNonEmptyIndex]));
+
+                    if (!nextLineIsList) {
+                        // Close the appropriate list
+                        if (inBulletList) {
+                            processedLines.push('</ul>');
+                            inBulletList = false;
+                        }
+                        if (inNumberedList) {
+                            processedLines.push('</ol>');
+                            inNumberedList = false;
+                        }
                     }
-                } else if (inList) {
-                    // Non-list line while in list - close the list
-                    processedLines.push('</ul>');
-                    inList = false;
+                } else if (inBulletList || inNumberedList) {
+                    // Non-list line while in list - close the appropriate list
+                    if (inBulletList) {
+                        processedLines.push('</ul>');
+                        inBulletList = false;
+                    }
+                    if (inNumberedList) {
+                        processedLines.push('</ol>');
+                        inNumberedList = false;
+                    }
                 }
                 processedLines.push(line);
             }
         }
-        
-        // Close list if still open at end
-        if (inList) {
+
+        // Close lists if still open at end
+        if (inBulletList) {
             processedLines.push('</ul>');
+        }
+        if (inNumberedList) {
+            processedLines.push('</ol>');
         }
         
         html = processedLines.join('\n');
@@ -421,9 +532,93 @@ export class DocumentationProvider {
         return html;
     }
 
-    private _getCategoryName(categoryId: string): string {
-        const category = this.templateEngine.getCategories().find(cat => cat.id === categoryId);
-        return category ? category.name : categoryId;
+    private _getTopicDocumentationHtml(docResult: any, topic: Topic): string {
+        const styleUri = this._panel!.webview.asWebviewUri(
+            vscode.Uri.joinPath(this._extensionUri, 'assets', 'css', 'documentation.css')
+        );
+        const scriptUri = this._panel!.webview.asWebviewUri(
+            vscode.Uri.joinPath(this._extensionUri, 'assets', 'js', 'documentation.js')
+        );
+
+        // Import highlight.js for code syntax highlighting
+        const highlightCssUri = 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/vs2015.min.css';
+        const highlightJsUri = 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js';
+
+        const nonce = this._getNonce();
+
+        let contentHtml = '';
+
+        if (docResult.error) {
+            contentHtml = `<div class="error">
+                <h2>⚠️ 載入錯誤</h2>
+                <p>${docResult.error}</p>
+            </div>`;
+        } else {
+            // Convert markdown to HTML for topic documentation
+            contentHtml = this._markdownToHtml(docResult.content, topic.name);
+        }
+
+        return `<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none';
+        style-src ${this._panel!.webview.cspSource} 'unsafe-inline' https://cdnjs.cloudflare.com;
+        script-src 'nonce-${nonce}' https://cdnjs.cloudflare.com 'unsafe-inline';
+        img-src ${this._panel!.webview.cspSource} data: https:;">
+
+    <title>${topic.name}</title>
+    <link href="${styleUri}" rel="stylesheet">
+    <link rel="stylesheet" href="${highlightCssUri}">
+</head>
+<body>
+    <div class="documentation-container">
+        <div class="header">
+            <h1 class="doc-title">
+                <span class="doc-icon">${topic.icon || '📚'}</span>
+                ${this._escapeHtml(topic.name)}
+            </h1>
+            <div class="header-actions">
+                <button id="refresh-btn" class="btn btn-secondary" title="重新載入">
+                    <span class="icon">🔄</span> 重新載入
+                </button>
+            </div>
+        </div>
+
+        <div class="topic-info">
+            <div class="info-item">
+                <span class="label">主題名稱：</span>
+                <span class="value topic-name">${this._escapeHtml(topic.name)}</span>
+            </div>
+            <div class="info-item">
+                <span class="label">簡介：</span>
+                <span class="value">${this._escapeHtml(topic.description)}</span>
+            </div>
+            <div class="info-item">
+                <span class="label">建立時間：</span>
+                <span class="value">${topic.createdAt ? new Date(topic.createdAt).toLocaleDateString('zh-TW') : '未知'}</span>
+            </div>
+        </div>
+
+        <div class="documentation-content">
+            ${contentHtml}
+        </div>
+    </div>
+
+    <script src="${highlightJsUri}"></script>
+    <script nonce="${nonce}">
+        // Initialize syntax highlighting
+        hljs.highlightAll();
+    </script>
+    <script nonce="${nonce}" src="${scriptUri}"></script>
+</body>
+</html>`;
+    }
+
+    private _getTopicName(topic: string): string {
+        // For topic-based system, just return the topic name
+        return topic || '未知主題';
     }
 
     private _getDocTypeDisplay(type: DocumentationType): string {

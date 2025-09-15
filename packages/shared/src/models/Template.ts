@@ -6,21 +6,25 @@ export interface Language {
   icon?: string;
 }
 
+export interface Topic {
+  id: string;
+  name: string;
+  description: string; // 簡短描述 (1-2句話)
+  documentation?: string; // 詳細說明文件 (Markdown content, local file path, or URL)
+  color?: string; // 主題顏色 (可選)
+  icon?: string;  // 主題圖標 (可選)
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
 export interface Template {
   id: string;
   title: string;
   description: string;
   code: string;
   language: string;
-  categoryId: string;
+  topic: string;
   documentation?: string; // Markdown content, local file path, or URL
-}
-
-export interface TemplateCategory {
-  id: string;
-  name: string;
-  description: string;
-  level: number;
 }
 
 export class TemplateItem {
@@ -72,7 +76,6 @@ export interface DocumentationContent {
 
 export interface TemplateImportData {
   templates: ExtendedTemplate[];
-  categories?: TemplateCategory[];
   languages?: Language[];
   version?: string;
   exportedAt?: Date;

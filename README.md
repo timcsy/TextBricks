@@ -13,7 +13,7 @@ A multi-editor extension providing structured programming templates for multiple
 - Easy language switching with integrated selector
 
 ### 🎯 **Structured Learning Path**
-Templates organized into progressive categories:
+Templates organized into customizable topics:
 - **Basic Syntax** - Hello World, Variables, Input/Output
 - **Control Structures** - Conditionals, loops, program flow
 - **Functions & Data** - Function definition, data structures
@@ -60,7 +60,7 @@ Templates organized into progressive categories:
 1. **Open a code file** (`.c`, `.py`, `.js`, etc.)
 2. **Open TextBricks panel** from the activity bar
 3. **Select your language** using the language selector (🌐)
-4. **Browse templates** by category
+4. **Browse templates** by topic
 5. **Click templates** to insert or **drag** to editor
 6. **Check recommendations** (⭐ section) for personalized suggestions
 
@@ -81,7 +81,7 @@ Support for additional editors is under development with the same core functiona
 
 ## 📋 Commands
 
-- `TextBricks: Open Template Manager` - Launch template management interface
+- `TextBricks: Open TextBricks Manager` - Launch template management interface
 - `TextBricks: Create Template` - Quick template creation
 - `TextBricks: Import Templates` - Import from JSON files  
 - `TextBricks: Export Templates` - Export to JSON format
@@ -127,8 +127,8 @@ Access settings via `File > Preferences > Settings > Extensions > TextBricks`:
 
 ### Creating Templates
 1. Use `TextBricks: Create Template` command
-2. Or create via Template Manager interface
-3. Support for custom categories and documentation
+2. Or create via TextBricks Manager interface
+3. Support for custom topics and documentation
 
 ### Import/Export
 - **Import**: JSON files with template collections
@@ -136,7 +136,7 @@ Access settings via `File > Preferences > Settings > Extensions > TextBricks`:
 - **Format**: Structured JSON with metadata support
 
 ### Organization
-- **Categories**: Group templates by learning level
+- **Topics**: Group templates by custom themes
 - **Tags**: Add searchable metadata
 - **Documentation**: Rich Markdown descriptions
 

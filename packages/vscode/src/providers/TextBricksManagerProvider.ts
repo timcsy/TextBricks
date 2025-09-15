@@ -1,9 +1,9 @@
 import * as vscode from 'vscode';
 import { TextBricksEngine } from '@textbricks/core';
-import { ExtendedTemplate, TemplateCategory, Language } from '@textbricks/shared';
+import { ExtendedTemplate, Language } from '@textbricks/shared';
 
-export class TemplateManagerProvider {
-    public static readonly viewType = 'textbricks-template-manager';
+export class TextBricksManagerProvider {
+    public static readonly viewType = 'textbricks-manager';
     
     private _panel?: vscode.WebviewPanel;
     private _disposables: vscode.Disposable[] = [];
@@ -26,8 +26,8 @@ export class TemplateManagerProvider {
 
         // Otherwise, create a new panel.
         this._panel = vscode.window.createWebviewPanel(
-            TemplateManagerProvider.viewType,
-            'Template Manager',
+            TextBricksManagerProvider.viewType,
+            'TextBricks Manager',
             column || vscode.ViewColumn.One,
             {
                 enableScripts: true,
@@ -83,17 +83,6 @@ export class TemplateManagerProvider {
                     await this._deleteTemplate(message.templateId);
                     break;
 
-                case 'createCategory':
-                    await this._createCategory(message.data);
-                    break;
-
-                case 'updateCategory':
-                    await this._updateCategory(message.categoryId, message.data);
-                    break;
-
-                case 'deleteCategory':
-                    await this._deleteCategory(message.categoryId);
-                    break;
 
                 case 'createLanguage':
                     await this._createLanguage(message.data);
@@ -101,6 +90,18 @@ export class TemplateManagerProvider {
 
                 case 'updateLanguage':
                     await this._updateLanguage(message.languageId, message.data);
+                    break;
+
+                case 'createTopic':
+                    await this._createTopic(message.data);
+                    break;
+
+                case 'updateTopic':
+                    await this._updateTopic(message.topicId, message.data);
+                    break;
+
+                case 'deleteTopic':
+                    await this._deleteTopic(message.topicId);
                     break;
 
                 case 'exportTemplates':
@@ -141,21 +142,23 @@ export class TemplateManagerProvider {
                 const templates = templateManager.getAllTemplates();
                 console.log('Templates count:', templates.length);
                 
-                console.log('Getting categories...');
-                const categories = templateManager.getCategories();
-                console.log('Categories count:', categories.length);
+                // Topics are now managed differently
                 
                 console.log('Getting languages...');
                 const languages = templateManager.getLanguages();
                 console.log('Languages count:', languages.length);
+
+                console.log('Getting topics...');
+                const topics = templateManager.getManagedTopics();
+                console.log('Topics count:', topics.length);
 
                 console.log('Sending dataLoaded message...');
                 this._panel.webview.postMessage({
                     type: 'dataLoaded',
                     data: {
                         templates,
-                        categories,
-                        languages
+                        languages,
+                        topics
                     }
                 });
                 console.log('dataLoaded message sent');
@@ -207,31 +210,8 @@ export class TemplateManagerProvider {
         }
     }
 
-    private async _createCategory(categoryData: Omit<TemplateCategory, 'id'>) {
-        const newCategory = await this.templateEngine.createCategory(categoryData);
-        vscode.window.showInformationMessage(`分類 "${newCategory.name}" 已創建成功`);
-        await this._sendData();
-    }
 
-    private async _updateCategory(categoryId: string, updates: Partial<TemplateCategory>) {
-        const updated = await this.templateEngine.updateCategory(categoryId, updates);
-        if (updated) {
-            vscode.window.showInformationMessage(`分類 "${updated.name}" 已更新成功`);
-            await this._sendData();
-        } else {
-            vscode.window.showErrorMessage('找不到指定的分類');
-        }
-    }
 
-    private async _deleteCategory(categoryId: string) {
-        try {
-            await this.templateEngine.deleteCategory(categoryId);
-            vscode.window.showInformationMessage('分類已刪除');
-            await this._sendData();
-        } catch (error) {
-            vscode.window.showErrorMessage(`${error}`);
-        }
-    }
 
     private async _createLanguage(languageData: Language) {
         const newLanguage = await this.templateEngine.createLanguage(languageData);
@@ -345,21 +325,16 @@ export class TemplateManagerProvider {
 
                 try {
                     // Validate required fields
-                    if (!template.title || !template.description || !template.code || !template.language || !template.categoryId) {
+                    if (!template.title || !template.description || !template.code || !template.language || !template.topic) {
                         throw new Error(`模板 ${index}: 缺少必要欄位`);
                     }
 
-                    // Check if language and category exist
+                    // Check if language exists
                     const templateManager = this.templateEngine.getTemplateManager();
                     const languageExists = templateManager.getLanguageById(template.language);
-                    const categoryExists = templateManager.getCategories().find(c => c.id === template.categoryId);
 
                     if (!languageExists) {
                         throw new Error(`模板 ${index}: 語言 "${template.language}" 不存在`);
-                    }
-
-                    if (!categoryExists) {
-                        throw new Error(`模板 ${index}: 分類 "${template.categoryId}" 不存在`);
                     }
 
                     // Create the template
@@ -368,7 +343,7 @@ export class TemplateManagerProvider {
                         description: template.description,
                         code: template.code,
                         language: template.language,
-                        categoryId: template.categoryId
+                        topic: template.topic
                     });
 
                     successCount++;
@@ -413,9 +388,9 @@ export class TemplateManagerProvider {
             { placeHolder: '是否覆蓋現有的模板？' }
         );
 
-        const mergeCategories = await vscode.window.showQuickPick(
+        const mergeTopics = await vscode.window.showQuickPick(
             ['是', '否'],
-            { placeHolder: '是否合併分類？' }
+            { placeHolder: '是否合併主題？' }
         );
 
         const mergeLanguages = await vscode.window.showQuickPick(
@@ -425,17 +400,53 @@ export class TemplateManagerProvider {
 
         return {
             overwriteExisting: overwriteExisting === '是',
-            mergeCategories: mergeCategories === '是',
+            mergeTopics: mergeTopics === '是',
             mergeLanguages: mergeLanguages === '是'
         };
     }
 
+    private async _createTopic(topicData: any) {
+        const newTopic = await this.templateEngine.createTopic(topicData);
+        vscode.window.showInformationMessage(`主題 "${newTopic.name}" 已創建成功`);
+        await this._sendData();
+    }
+
+    private async _updateTopic(topicId: string, updates: any) {
+        const updated = await this.templateEngine.updateTopic(topicId, updates);
+        if (updated) {
+            vscode.window.showInformationMessage(`主題 "${updated.name}" 已更新成功`);
+            await this._sendData();
+        } else {
+            vscode.window.showErrorMessage('找不到指定的主題');
+        }
+    }
+
+    private async _deleteTopic(topicId: string) {
+        const topic = this.templateEngine.getTopicById(topicId);
+        if (!topic) {
+            vscode.window.showErrorMessage('找不到指定的主題');
+            return;
+        }
+
+        const confirmed = await vscode.window.showWarningMessage(
+            `確定要刪除主題 "${topic.name}" 嗎？此操作無法恢復。`,
+            '確定',
+            '取消'
+        );
+
+        if (confirmed === '確定') {
+            await this.templateEngine.deleteTopic(topicId);
+            vscode.window.showInformationMessage(`主題 "${topic.name}" 已刪除`);
+            await this._sendData();
+        }
+    }
+
     private _getHtmlForWebview(webview: vscode.Webview): string {
         const styleUri = webview.asWebviewUri(
-            vscode.Uri.joinPath(this._extensionUri, 'assets', 'css', 'template-manager.css')
+            vscode.Uri.joinPath(this._extensionUri, 'assets', 'css', 'textbricks-manager.css')
         );
         const scriptUri = webview.asWebviewUri(
-            vscode.Uri.joinPath(this._extensionUri, 'assets', 'js', 'template-manager.js')
+            vscode.Uri.joinPath(this._extensionUri, 'assets', 'js', 'textbricks-manager.js')
         );
 
         const nonce = this._getNonce();
@@ -447,12 +458,12 @@ export class TemplateManagerProvider {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource} 'unsafe-inline'; script-src 'nonce-${nonce}' 'unsafe-inline'; img-src ${webview.cspSource} data:;">
     <link href="${styleUri}" rel="stylesheet">
-    <title>Template Manager</title>
+    <title>TextBricks Manager</title>
 </head>
 <body>
     <div id="app">
         <div class="header">
-            <h1>TextBricks 模板管理器</h1>
+            <h1>TextBricks Manager</h1>
             <div class="toolbar">
                 <button id="refresh-btn" class="btn btn-secondary">
                     <span class="icon">🔄</span> 重新整理
@@ -474,8 +485,8 @@ export class TemplateManagerProvider {
                         <button class="nav-item active" data-tab="templates">
                             <span class="icon">📄</span> 模板管理
                         </button>
-                        <button class="nav-item" data-tab="categories">
-                            <span class="icon">📁</span> 分類管理
+                        <button class="nav-item" data-tab="topics">
+                            <span class="icon">🏷️</span> 主題管理
                         </button>
                         <button class="nav-item" data-tab="languages">
                             <span class="icon">💬</span> 語言管理
@@ -495,8 +506,8 @@ export class TemplateManagerProvider {
                         <button id="create-template-btn" class="btn btn-success btn-full">
                             <span class="icon">➕</span> 新增模板
                         </button>
-                        <button id="create-category-btn" class="btn btn-secondary btn-full">
-                            <span class="icon">📁</span> 新增分類
+                        <button id="create-topic-btn" class="btn btn-secondary btn-full">
+                            <span class="icon">🏷️</span> 新增主題
                         </button>
                         <button id="create-language-btn" class="btn btn-secondary btn-full">
                             <span class="icon">💬</span> 新增語言
@@ -522,21 +533,20 @@ export class TemplateManagerProvider {
                             <select id="filter-language">
                                 <option value="">所有語言</option>
                             </select>
-                            <select id="filter-category">
-                                <option value="">所有分類</option>
-                            </select>
                             <input type="text" id="search-templates" placeholder="搜尋模板...">
                         </div>
                     </div>
+                    <div id="topics-stats"></div>
                     <div id="templates-list" class="data-list"></div>
                 </div>
 
-                <!-- Categories Tab -->
-                <div id="categories-tab" class="tab-content">
+
+                <!-- Topics Tab -->
+                <div id="topics-tab" class="tab-content">
                     <div class="tab-header">
-                        <h2>分類管理</h2>
+                        <h2>主題管理</h2>
                     </div>
-                    <div id="categories-list" class="data-list"></div>
+                    <div id="topics-list" class="data-list"></div>
                 </div>
 
                 <!-- Languages Tab -->
@@ -587,7 +597,7 @@ export class TemplateManagerProvider {
   "description": "模板描述",
   "code": "程式碼內容",
   "language": "語言ID",
-  "categoryId": "分類ID"
+  "topic": "主題名稱"
 }</code></pre>
                                 <p><strong>2. 模板陣列：</strong></p>
                                 <pre><code>[
@@ -596,14 +606,14 @@ export class TemplateManagerProvider {
     "description": "描述1",
     "code": "程式碼1",
     "language": "python",
-    "categoryId": "beginner"
+    "topic": "基礎"
   },
   {
     "title": "模板2",
     "description": "描述2", 
     "code": "程式碼2",
     "language": "javascript",
-    "categoryId": "intermediate"
+    "topic": "進階"
   }
 ]</code></pre>
                             </div>
@@ -611,8 +621,6 @@ export class TemplateManagerProvider {
                         <div style="flex: 1;">
                             <h4>可用的語言ID</h4>
                             <div id="available-languages" class="info-list"></div>
-                            <h4>可用的分類ID</h4>
-                            <div id="available-categories" class="info-list"></div>
                         </div>
                     </div>
                     <div style="margin-top: 20px;">

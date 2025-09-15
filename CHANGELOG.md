@@ -5,6 +5,27 @@ All notable changes to the TextBricks extension will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.4] - 2025-09-15
+
+### ✨ Major Feature Enhancement
+- **Topic System Refactoring**: Replaced rigid level-based categorization (level1-4) with flexible topic-based system
+- **Customizable Topics**: Users can now define custom topic names like "基礎概念", "網頁開發", "演算法" etc.
+- **Semantic Topic Names**: Updated from `level1-4` to free-form topic names: "基礎", "控制", "函數", "進階"
+- **UI Simplification**: Removed level badges for cleaner interface focused on content
+- **TextBricks Manager Enhancement**: Topic input system with text field instead of numeric level restrictions
+
+### 🔧 Technical Improvements
+- **Data Model Update**: Removed `TemplateCategory` entirely, using `Template.topic` string for complete flexibility
+- **Forward Compatibility**: Automatic migration from old level-based data to new topic system
+- **Test Coverage**: Updated all test cases to use new topic-based categorization
+- **Documentation**: Refreshed TEMPLATE_GUIDE.md with new topic system examples
+
+### 🎯 User Experience
+- **Greater Flexibility**: Educators can create course-specific topics, developers can organize by project needs
+- **Intuitive Organization**: No more artificial numeric levels, use meaningful topic names
+- **Simplified Interface**: Cleaner topic display without visual badges
+- **Better Scalability**: Support for unlimited custom topics instead of fixed 4 levels
+
 ## [0.2.3] - 2025-09-05
 
 ### 🐛 Critical Bug Fixes
@@ -50,7 +71,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.2.1] - 2025-09-05
 
 ### 🔧 Fixed
-- **Template Manager Layout**: Fixed broken layout caused by incorrect asset paths
+- **TextBricks Manager Layout**: Fixed broken layout caused by incorrect asset paths
 - **Resource Loading**: Corrected CSS and JS file loading paths from `media/` to `assets/`
 - **Documentation Provider**: Fixed asset path references for proper styling
 - **Build System**: Ensured all asset files are correctly copied to build output
@@ -168,7 +189,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - **Documentation System**: Rich Markdown documentation for templates with examples and explanations
-- **Template Manager Integration**: Edit and preview documentation with modal preview window
+- **TextBricks Manager Integration**: Edit and preview documentation with modal preview window
 - **Side Panel Display**: Documentation opens in editor side panel with syntax highlighting
 - **Smart Content Detection**: Automatically distinguish between file paths, URLs, and Markdown content
 - **UI Integration**: Documentation buttons in hover tooltips (📖 icon) for clean interface
@@ -176,7 +197,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Multiple Doc Types**: Support for embedded Markdown, local files (.md), and external URLs
 
 ### Fixed
-- **Template Manager**: Resolved loading issues and documentation content processing
+- **TextBricks Manager**: Resolved loading issues and documentation content processing
 
 ## [0.1.3] - 2024-XX-XX
 
@@ -191,7 +212,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - **Multi-Language Support**: Added Python and JavaScript templates alongside C
-- **Template Manager**: Comprehensive template management interface with CRUD operations
+- **TextBricks Manager**: Comprehensive template management interface with CRUD operations
 - **JSON Batch Import**: Quick bulk template addition feature with validation
 - **Import/Export**: Full template collection backup and sharing capabilities
 - **Enhanced Validation**: Real-time validation for template data integrity

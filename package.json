@@ -2,7 +2,7 @@
   "name": "textbricks",
   "displayName": "TextBricks - Multi-Language Development Assistant",
   "description": "A VSCode extension providing structured templates for multiple languages to develop efficiently",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "publisher": "timcsy",
   "workspaces": [
     "packages/*"
@@ -71,8 +71,8 @@
         "title": "Copy Template"
       },
       {
-        "command": "textbricks.openTemplateManager",
-        "title": "Open Template Manager",
+        "command": "textbricks.openTextBricksManager",
+        "title": "Open TextBricks Manager",
         "icon": "$(settings-gear)"
       },
       {
@@ -104,15 +104,15 @@
           "group": "navigation"
         },
         {
-          "command": "textbricks.openTemplateManager",
+          "command": "textbricks.openTextBricksManager",
           "when": "view == textbricks-webview",
           "group": "navigation"
         }
       ],
       "commandPalette": [
         {
-          "command": "textbricks.openTemplateManager",
-          "title": "TextBricks: Open Template Manager"
+          "command": "textbricks.openTextBricksManager",
+          "title": "TextBricks: Open TextBricks Manager"
         },
         {
           "command": "textbricks.createTemplate",

@@ -36,10 +36,10 @@ class SearchService {
         };
     }
     /**
-     * 根據分類搜尋模板
+     * 根據主題搜尋模板
      */
-    async searchByCategory(categoryId, options) {
-        return this.searchTemplates('', { category: categoryId }, options);
+    async searchByTopic(topic, options) {
+        return this.searchTemplates('', { topic: topic }, options);
     }
     /**
      * 根據語言搜尋模板
@@ -115,8 +115,8 @@ class SearchService {
         if (filters.language) {
             result = result.filter(t => t.language === filters.language);
         }
-        if (filters.category) {
-            result = result.filter(t => t.categoryId === filters.category);
+        if (filters.topic) {
+            result = result.filter(t => t.topic === filters.topic);
         }
         if (filters.tags && filters.tags.length > 0) {
             result = result.filter(t => t.metadata?.tags && filters.tags.some(tag => t.metadata?.tags.includes(tag)));

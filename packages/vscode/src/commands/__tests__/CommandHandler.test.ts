@@ -14,7 +14,7 @@ describe('CommandHandler', () => {
     description: 'Basic Hello World program',
     code: '#include <stdio.h>\n\nint main() {\n    printf("Hello, World!\\n");\n    return 0;\n}',
     language: 'c',
-    categoryId: 'level1'
+    categoryId: 'basic-syntax'
   };
 
   beforeEach(() => {

@@ -157,7 +157,7 @@ export class DocumentationService {
             metadata: {
                 title: template.title,
                 language: template.language,
-                category: template.categoryId,
+                topic: template.topic,
                 ...metadata
             }
         };
@@ -173,8 +173,8 @@ export class DocumentationService {
             metadata.language = template.language;
         }
 
-        if (template.categoryId) {
-            metadata.category = template.categoryId;
+        if (template.topic) {
+            metadata.topic = template.topic;
         }
 
         if ((template as any).metadata?.tags && (template as any).metadata.tags.length > 0) {
@@ -224,13 +224,13 @@ export class DocumentationService {
     async generateTemplateListDocumentation(templates: Template[]): Promise<DocumentationContent> {
         let content = '# Templates\n\n';
 
-        // 按分類分組
-        const grouped = this.groupTemplatesByCategory(templates);
+        // 按主題分組
+        const grouped = this.groupTemplatesByTopic(templates);
 
-        for (const [category, categoryTemplates] of Object.entries(grouped)) {
-            content += `## ${category}\n\n`;
+        for (const [topic, topicTemplates] of Object.entries(grouped)) {
+            content += `## ${topic}\n\n`;
 
-            for (const template of categoryTemplates) {
+            for (const template of topicTemplates) {
                 content += `### ${template.title}\n\n`;
                 
                 if (template.description) {
@@ -256,23 +256,23 @@ export class DocumentationService {
             metadata: {
                 title: 'Template List',
                 templateCount: templates.length,
-                categories: Object.keys(grouped).length
+                topics: Object.keys(grouped).length
             }
         };
     }
 
     /**
-     * 根據分類分組模板
+     * 根據主題分組模板
      */
-    private groupTemplatesByCategory(templates: Template[]): Record<string, Template[]> {
+    private groupTemplatesByTopic(templates: Template[]): Record<string, Template[]> {
         const grouped: Record<string, Template[]> = {};
 
         for (const template of templates) {
-            const category = template.categoryId || 'Uncategorized';
-            if (!grouped[category]) {
-                grouped[category] = [];
+            const topic = template.topic || 'Uncategorized';
+            if (!grouped[topic]) {
+                grouped[topic] = [];
             }
-            grouped[category].push(template);
+            grouped[topic].push(template);
         }
 
         return grouped;

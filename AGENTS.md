@@ -179,7 +179,7 @@
 
 ### 2025 Q3 (當前)
 - ✅ VS Code 架構重構完成 (v0.2.3)
-- ✅ Template Manager 修復和資源路徑統一
+- ✅ TextBricks Manager 修復和資源路徑統一
 - ✅ 模板插入縮排問題修復 (v0.2.3)
 - 🎯 智慧化功能開發 - 上下文感知、機器學習推薦
 - 🌐 更多語言支援 - Java, Go, Rust, Swift, TypeScript

@@ -4,7 +4,7 @@ import { TextBricksEngine } from '@textbricks/core';
 import { DocumentationProvider } from './DocumentationProvider';
 import { DocumentationService } from '@textbricks/core';
 import { CodeOperationService } from '@textbricks/core';
-import { Template, TemplateCategory, Language, ProgrammingContext } from '@textbricks/shared';
+import { Template, Language, ProgrammingContext } from '@textbricks/shared';
 
 export class WebviewProvider implements vscode.WebviewViewProvider {
     public static readonly viewType = 'textbricks-webview';
@@ -70,6 +70,9 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
                     case 'showDocumentation':
                         this._showDocumentation(message.templateId);
                         break;
+                    case 'showTopicDocumentation':
+                        this._showTopicDocumentation(message.topicName);
+                        break;
                 }
             },
             undefined,
@@ -115,11 +118,22 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
         }
     }
 
+    private _showTopicDocumentation(topicName: string) {
+        const managedTopic = this.templateEngine.getTopicByName?.(topicName);
+        if (managedTopic && managedTopic.documentation) {
+            if (this._documentationProvider) {
+                this._documentationProvider.showTopicDocumentation(managedTopic);
+            } else {
+                vscode.window.showErrorMessage('說明文檔服務未初始化');
+            }
+        }
+    }
+
 
 
 
     private _getHtmlForWebview(webview: vscode.Webview): string {
-        const categories = this.templateEngine.getCategories();
+        const topics = this.templateEngine.getTopics();
         const languages = this.templateEngine.getLanguages();
         
         // Get CSS and JS URIs
@@ -155,7 +169,7 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
     
     <div class="container">
         ${this._generateRecommendedTemplatesHtml()}
-        ${this._generateCategoriesHtml(categories)}
+        ${this._generateTopicsHtml(topics)}
     </div>
 
     <script nonce="${nonce}" src="${scriptUri}"></script>
@@ -199,14 +213,14 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
             .join('');
 
         return `
-            <div class="category recommended-category" data-level="0">
-                <div class="category-header">
-                    <h3 class="category-title">
-                        <span class="category-toggle"></span>
+            <div class="topic-group recommended-topic" data-topic="recommended">
+                <div class="topic-header">
+                    <h3 class="topic-title">
+                        <span class="topic-toggle"></span>
                         <span class="recommended-badge">⭐ 推薦</span>
                         推薦模板
                     </h3>
-                    <p class="category-description">基於您的使用習慣智能推薦</p>
+                    <p class="topic-description">基於您的使用習慣智能推薦</p>
                 </div>
                 <div class="templates-grid">
                     ${recommendedHtml}
@@ -247,24 +261,48 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
         `;
     }
 
-    private _generateCategoriesHtml(categories: TemplateCategory[]): string {
-        return categories.map(category => {
-            const templates = this.templateEngine.getTemplatesByLanguageAndCategory(this._selectedLanguage, category.id);
+    private _generateTopicsHtml(topics: string[]): string {
+        return topics.map(topic => {
+            const templates = this.templateEngine.getTemplatesByLanguageAndTopic(this._selectedLanguage, topic);
             if (templates.length === 0) {
-                return ''; // Don't show empty categories
+                return ''; // Don't show empty topics
             }
-            
+
             const templatesHtml = templates.map(template => this._generateTemplateCardHtml(template)).join('');
-            
+
+            // Get managed topic information for enhanced display
+            const managedTopic = this.templateEngine.getTopicByName?.(topic);
+            let topicDescription = `${templates.length} 個模板`;
+
+            if (managedTopic && managedTopic.description) {
+                topicDescription = managedTopic.description;
+            }
+
+            // Check if topic has documentation
+            const hasDocumentation = managedTopic && managedTopic.documentation && managedTopic.documentation.trim().length > 0;
+
+            const topicColorStyles = managedTopic && managedTopic.color ?
+                `data-topic-color style="--topic-color: ${managedTopic.color}; --topic-color-light: ${managedTopic.color}20; --topic-color-medium: ${managedTopic.color}80;"` : '';
+
             return `
-                <div class="category" data-level="${category.level}">
-                    <div class="category-header">
-                        <h3 class="category-title">
-                            <span class="category-toggle"></span>
-                            <span class="level-badge">Level ${category.level}</span>
-                            ${category.name}
-                        </h3>
-                        <p class="category-description">${category.description}</p>
+                <div class="topic-group" data-topic="${topic}" ${topicColorStyles}>
+                    <div class="topic-header">
+                        <div class="topic-title-row">
+                            <h3 class="topic-title">
+                                <span class="topic-toggle"></span>
+                                ${managedTopic && managedTopic.icon ? `<span class="topic-icon">${managedTopic.icon}</span>` : ''}
+                                ${topic}
+                            </h3>
+                            ${hasDocumentation ? `
+                                <button class="topic-doc-btn"
+                                        data-topic-name="${topic}"
+                                        title="查看 ${topic} 的詳細學習指南">
+                                    📖
+                                </button>
+                            ` : ''}
+                        </div>
+                        <p class="topic-description">${this._escapeHtml(topicDescription)}</p>
+                        <p class="topic-count">${templates.length} 個模板</p>
                     </div>
                     <div class="templates-grid">
                         ${templatesHtml}
@@ -324,7 +362,10 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
         }
     }
 
-    private _escapeHtml(text: string): string {
+    private _escapeHtml(text: string | undefined | null): string {
+        if (!text) {
+            return '';
+        }
         return text
             .replace(/&/g, '&amp;')
             .replace(/</g, '&lt;')

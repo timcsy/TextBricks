@@ -3,26 +3,26 @@
  * 整合所有核心業務邏輯，不依賴任何特定平台 API
  */
 
-import { 
-    Template, 
-    TemplateCategory, 
-    Language, 
-    ExtendedTemplate, 
-    TemplateImportData 
+import {
+    Template,
+    Language,
+    ExtendedTemplate,
+    TemplateImportData,
+    Topic
 } from '@textbricks/shared';
 import { FormattingEngine } from './FormattingEngine';
 import { IPlatform } from '../interfaces/IPlatform';
 
 interface TemplateData {
     languages: Language[];
-    categories: TemplateCategory[];
     templates: ExtendedTemplate[];
+    topics?: Topic[];
 }
 
 export class TextBricksEngine {
     private languages: Language[] = [];
-    private categories: TemplateCategory[] = [];
     private templates: ExtendedTemplate[] = [];
+    private topics: Topic[] = [];
     private formattingEngine: FormattingEngine;
     private platform: IPlatform;
 
@@ -48,13 +48,13 @@ export class TextBricksEngine {
         try {
             const data = await this.loadTemplateData();
             this.languages = data.languages || [];
-            this.categories = data.categories;
             this.templates = data.templates;
+            this.topics = data.topics || [];
         } catch (error) {
             this.platform.logError(error as Error, 'Loading templates');
             this.languages = [];
-            this.categories = [];
             this.templates = [];
+            this.topics = [];
         }
     }
 
@@ -69,26 +69,35 @@ export class TextBricksEngine {
 
     private async loadTemplateData(): Promise<TemplateData> {
         try {
-            // 首先嘗試從 storage 載入（用戶資料）
+            const CURRENT_DATA_VERSION = '0.2.4-topic-with-docs';
+
+            // 檢查 storage 中的資料版本
+            const storedVersion = await this.platform.storage.get<string>('templates.version');
             const storageData = await this.platform.storage.get<string>('templates.json');
-            if (storageData) {
-                return JSON.parse(storageData);
+
+            // 如果版本匹配且資料有效，使用 storage 中的資料
+            if (storageData && storedVersion === CURRENT_DATA_VERSION) {
+                const data = JSON.parse(storageData);
+                if (data.templates && data.templates.length > 0 && data.templates[0].topic) {
+                    return data;
+                }
             }
-            
-            // 如果 storage 沒有，從檔案系統載入預設資料
+
+            // 從檔案系統載入預設資料
             const rawData = await this.loadFromFileSystem();
             if (rawData) {
                 const data = JSON.parse(rawData);
-                // 將預設資料儲存到 storage 供後續使用
+                // 儲存新資料和版本標記到 storage
                 await this.platform.storage.set('templates.json', rawData);
+                await this.platform.storage.set('templates.version', CURRENT_DATA_VERSION);
                 return data;
             }
 
             // 返回默認結構
             return {
                 languages: [],
-                categories: [],
-                templates: []
+                templates: [],
+                topics: []
             };
         } catch (error) {
             throw new Error(`Failed to load template data: ${error}`);
@@ -141,17 +150,17 @@ export class TextBricksEngine {
         return this.templates.find(template => template.id === id);
     }
 
-    getTemplatesByCategory(categoryId: string): ExtendedTemplate[] {
-        return this.templates.filter(template => template.categoryId === categoryId);
+    getTemplatesByTopic(topic: string): ExtendedTemplate[] {
+        return this.templates.filter(template => template.topic === topic);
     }
 
     getTemplatesByLanguage(languageId: string): ExtendedTemplate[] {
         return this.templates.filter(template => template.language === languageId);
     }
 
-    getTemplatesByLanguageAndCategory(languageId: string, categoryId: string): ExtendedTemplate[] {
+    getTemplatesByLanguageAndTopic(languageId: string, topic: string): ExtendedTemplate[] {
         return this.templates.filter(
-            template => template.language === languageId && template.categoryId === categoryId
+            template => template.language === languageId && template.topic === topic
         );
     }
 
@@ -159,8 +168,9 @@ export class TextBricksEngine {
         return [...this.templates];
     }
 
-    getCategories(): TemplateCategory[] {
-        return [...this.categories];
+    getTopics(): string[] {
+        const topics = new Set(this.templates.map(template => template.topic));
+        return Array.from(topics).sort();
     }
 
     getLanguages(): Language[] {
@@ -251,53 +261,6 @@ export class TextBricksEngine {
         return null;
     }
 
-    // === 分類 CRUD 操作 ===
-
-    async createCategory(category: Omit<TemplateCategory, 'id'>): Promise<TemplateCategory> {
-        const newCategory: TemplateCategory = {
-            ...category,
-            id: this.generateCategoryId()
-        };
-
-        const data = await this.loadTemplateData();
-        data.categories.push(newCategory);
-        await this.saveTemplateData(data);
-        await this.loadTemplates();
-
-        return newCategory;
-    }
-
-    async updateCategory(categoryId: string, updates: Partial<TemplateCategory>): Promise<TemplateCategory | null> {
-        const category = this.categories.find(c => c.id === categoryId);
-        if (!category) {
-            return null;
-        }
-
-        const updatedCategory = { ...category, ...updates, id: categoryId };
-        const data = await this.loadTemplateData();
-        const index = data.categories.findIndex(c => c.id === categoryId);
-        if (index !== -1) {
-            data.categories[index] = updatedCategory;
-            await this.saveTemplateData(data);
-            await this.loadTemplates();
-        }
-
-        return updatedCategory;
-    }
-
-    async deleteCategory(categoryId: string): Promise<boolean> {
-        const templatesInCategory = this.getTemplatesByCategory(categoryId);
-        if (templatesInCategory.length > 0) {
-            throw new Error(`Cannot delete category "${categoryId}": ${templatesInCategory.length} templates are using this category.`);
-        }
-
-        const data = await this.loadTemplateData();
-        data.categories = data.categories.filter(c => c.id !== categoryId);
-        await this.saveTemplateData(data);
-        await this.loadTemplates();
-
-        return true;
-    }
 
     // === 語言管理 ===
 
@@ -332,6 +295,99 @@ export class TextBricksEngine {
         }
 
         return updatedLanguage;
+    }
+
+    // === 主題管理 ===
+
+    getManagedTopics(): Topic[] {
+        return [...this.topics];
+    }
+
+    getTopicById(id: string): Topic | undefined {
+        return this.topics.find(topic => topic.id === id);
+    }
+
+    async createTopic(topic: Omit<Topic, 'id' | 'createdAt' | 'updatedAt'>): Promise<Topic> {
+        const newTopic: Topic = {
+            ...topic,
+            id: this.generateTopicId(),
+            createdAt: new Date(),
+            updatedAt: new Date()
+        };
+
+        const data = await this.loadTemplateData();
+        if (!data.topics) {
+            data.topics = [];
+        }
+        data.topics.push(newTopic);
+        await this.saveTemplateData(data);
+        await this.loadTemplates();
+
+        return newTopic;
+    }
+
+    async updateTopic(topicId: string, updates: Partial<Topic>): Promise<Topic | null> {
+        const existingTopic = this.getTopicById(topicId);
+        if (!existingTopic) {
+            return null;
+        }
+
+        const updatedTopic: Topic = {
+            ...existingTopic,
+            ...updates,
+            id: topicId,
+            updatedAt: new Date()
+        };
+
+        const data = await this.loadTemplateData();
+        if (!data.topics) {
+            data.topics = [];
+        }
+        const index = data.topics.findIndex(t => t.id === topicId);
+        if (index !== -1) {
+            data.topics[index] = updatedTopic;
+            await this.saveTemplateData(data);
+            await this.loadTemplates();
+        }
+
+        return updatedTopic;
+    }
+
+    async deleteTopic(topicId: string): Promise<boolean> {
+        const topic = this.getTopicById(topicId);
+        if (!topic) {
+            return false;
+        }
+
+        const data = await this.loadTemplateData();
+        if (!data.topics) {
+            return false;
+        }
+        data.topics = data.topics.filter(t => t.id !== topicId);
+        await this.saveTemplateData(data);
+        await this.loadTemplates();
+
+        return true;
+    }
+
+    getTopicByName(name: string): Topic | undefined {
+        return this.topics.find(topic => topic.name === name);
+    }
+
+    async ensureTopicExists(topicName: string): Promise<Topic> {
+        // 檢查是否已存在具有該名稱的主題
+        let topic = this.getTopicByName(topicName);
+        if (topic) {
+            return topic;
+        }
+
+        // 如果不存在，創建新主題
+        topic = await this.createTopic({
+            name: topicName,
+            description: `自動生成的主題：${topicName}`
+        });
+
+        return topic;
     }
 
     // === 格式化相關 ===
@@ -386,7 +442,7 @@ export class TextBricksEngine {
 
     async exportTemplates(filters?: {
         languageIds?: string[];
-        categoryIds?: string[];
+        topics?: string[];
         templateIds?: string[];
     }): Promise<TemplateImportData> {
         let templates = this.getAllTemplates();
@@ -395,8 +451,8 @@ export class TextBricksEngine {
             if (filters.languageIds && filters.languageIds.length > 0) {
                 templates = templates.filter(t => filters.languageIds!.includes(t.language));
             }
-            if (filters.categoryIds && filters.categoryIds.length > 0) {
-                templates = templates.filter(t => filters.categoryIds!.includes(t.categoryId));
+            if (filters.topics && filters.topics.length > 0) {
+                templates = templates.filter(t => filters.topics!.includes(t.topic));
             }
             if (filters.templateIds && filters.templateIds.length > 0) {
                 templates = templates.filter(t => filters.templateIds!.includes(t.id));
@@ -405,17 +461,15 @@ export class TextBricksEngine {
 
         return {
             templates,
-            categories: this.getCategories(),
             languages: this.getLanguages(),
             version: '1.0.0',
             exportedAt: new Date(),
-            exportedBy: 'TextBricks Template Manager'
+            exportedBy: 'TextBricks Manager'
         };
     }
 
     async importTemplates(importData: TemplateImportData, options?: {
         overwriteExisting?: boolean;
-        mergeCategories?: boolean;
         mergeLanguages?: boolean;
     }): Promise<{
         imported: number;
@@ -438,18 +492,6 @@ export class TextBricksEngine {
                 }
             }
 
-            if (importData.categories && options?.mergeCategories) {
-                for (const category of importData.categories) {
-                    try {
-                        const existing = this.categories.find(c => c.id === category.id);
-                        if (!existing) {
-                            await this.createCategory(category);
-                        }
-                    } catch (error) {
-                        result.errors.push(`Failed to import category ${category.id}: ${error instanceof Error ? error.message : String(error)}`);
-                    }
-                }
-            }
 
             for (const template of importData.templates) {
                 try {
@@ -553,7 +595,8 @@ export class TextBricksEngine {
         return `template-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
     }
 
-    private generateCategoryId(): string {
-        return `category-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
+    private generateTopicId(): string {
+        return `topic-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
     }
+
 }

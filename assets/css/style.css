@@ -75,37 +75,49 @@ body {
     padding: 8px;
 }
 
-.category {
+.topic-group {
     margin-bottom: 20px;
     position: relative;
     border-radius: 6px;
     padding: 4px;
     transition: all 0.25s cubic-bezier(0.4, 0.0, 0.2, 1);
-    background: linear-gradient(135deg, 
-        rgba(var(--vscode-focusBorder), 0.05) 0%, 
+    background: linear-gradient(135deg,
+        rgba(var(--vscode-focusBorder), 0.05) 0%,
         transparent 50%);
 }
 
-.category::before {
+.topic-group[data-topic-color] {
+    background: linear-gradient(135deg,
+        var(--topic-color-light) 0%,
+        transparent 50%);
+}
+
+.topic-group::before {
     content: '';
     position: absolute;
     left: 0;
     top: 0;
     bottom: 0;
     width: 3px;
-    background: linear-gradient(180deg, 
-        var(--vscode-focusBorder) 0%, 
+    background: linear-gradient(180deg,
+        var(--vscode-focusBorder) 0%,
         transparent 100%);
     border-radius: 0 2px 2px 0;
     opacity: 0;
     transition: opacity 0.25s cubic-bezier(0.4, 0.0, 0.2, 1);
 }
 
-.category:hover::before {
+.topic-group[data-topic-color]::before {
+    background: linear-gradient(180deg,
+        var(--topic-color) 0%,
+        transparent 100%);
+}
+
+.topic-group:hover::before {
     opacity: 0.7;
 }
 
-.category-header {
+.topic-header {
     padding: 10px 8px;
     margin-bottom: 6px;
     border-radius: 6px;
@@ -118,45 +130,59 @@ body {
     overflow: hidden;
 }
 
-.category-header::after {
+.topic-header::after {
     content: '';
     position: absolute;
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
-    background: linear-gradient(90deg, 
-        var(--vscode-focusBorder) 0%, 
+    background: linear-gradient(90deg,
+        var(--vscode-focusBorder) 0%,
         transparent 20%);
     opacity: 0;
     transition: opacity 0.25s cubic-bezier(0.4, 0.0, 0.2, 1);
     z-index: -1;
 }
 
-.category-header:hover {
+.topic-header:hover {
     background-color: var(--vscode-list-hoverBackground);
     border-color: var(--vscode-focusBorder);
     transform: translateX(2px);
 }
 
-.category-header:hover::after {
+.topic-header:hover::after {
     opacity: 0.1;
 }
 
-.category-header.collapsed {
+.topic-group[data-topic-color] .topic-header {
+    border-color: var(--topic-color-medium);
+}
+
+.topic-group[data-topic-color] .topic-header:hover {
+    border-color: var(--topic-color);
+}
+
+.topic-group[data-topic-color] .topic-header::after {
+    background: linear-gradient(90deg,
+        var(--topic-color-medium) 0%,
+        transparent 20%);
+}
+
+.topic-header.collapsed {
     margin-bottom: 8px;
     background-color: var(--vscode-list-inactiveSelectionBackground);
     opacity: 0.8;
     border-style: dashed;
 }
 
-.category-header.collapsed:hover {
+.topic-header.collapsed:hover {
     opacity: 1;
     background-color: var(--vscode-list-hoverBackground);
     border-style: solid;
 }
 
-.category-title {
+.topic-title {
     font-size: 14px;
     font-weight: 600;
     margin-bottom: 4px;
@@ -166,7 +192,13 @@ body {
     position: relative;
 }
 
-.category-toggle {
+.topic-icon {
+    font-size: 14px;
+    line-height: 1;
+    opacity: 0.9;
+}
+
+.topic-toggle {
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -182,44 +214,82 @@ body {
     transform: rotate(0deg);
 }
 
-.category-header:hover .category-toggle {
+.topic-header:hover .topic-toggle {
     background-color: var(--vscode-button-hoverBackground);
     transform: rotate(0deg) scale(1.1);
 }
 
-.category-header.collapsed .category-toggle {
+.topic-header.collapsed .topic-toggle {
     transform: rotate(90deg);
 }
 
-.category-header.collapsed:hover .category-toggle {
+.topic-header.collapsed:hover .topic-toggle {
     transform: rotate(90deg) scale(1.1);
 }
 
-.category-toggle::before {
+.topic-toggle::before {
     content: '−';
     line-height: 1;
     transition: all 0.25s cubic-bezier(0.4, 0.0, 0.2, 1);
 }
 
-.category-header.collapsed .category-toggle::before {
+.topic-header.collapsed .topic-toggle::before {
     content: '+';
 }
 
-.level-badge {
-    background-color: var(--vscode-button-background);
-    color: var(--vscode-button-foreground);
-    font-size: 10px;
-    font-weight: 500;
-    padding: 2px 6px;
-    border-radius: 10px;
-    min-width: 50px;
-    text-align: center;
-}
 
-.category-description {
+.topic-description {
     font-size: 12px;
     color: var(--vscode-descriptionForeground);
     margin: 0;
+    margin-bottom: 4px;
+    line-height: 1.4;
+}
+
+.topic-count {
+    font-size: 11px;
+    color: var(--vscode-descriptionForeground);
+    margin: 0;
+    opacity: 0.8;
+    font-weight: 500;
+}
+
+/* Topic Title Row */
+.topic-title-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+}
+
+/* Topic Documentation Button */
+.topic-doc-btn {
+    background: var(--vscode-button-secondaryBackground);
+    border: 1px solid var(--vscode-panel-border);
+    border-radius: 4px;
+    padding: 4px 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 24px;
+    min-height: 24px;
+    transition: all 0.2s ease;
+    margin-left: 8px;
+    flex-shrink: 0;
+    font-size: 12px;
+    line-height: 1;
+    color: var(--vscode-textLink-foreground);
+}
+
+.topic-doc-btn:hover {
+    background: var(--vscode-button-hoverBackground);
+    color: var(--vscode-button-foreground);
+    animation: docBounce 0.3s ease;
+}
+
+.topic-doc-btn:active {
+    transform: scale(0.95);
 }
 
 .templates-grid {
@@ -656,75 +726,75 @@ body {
     animation: templateInsert 0.3s ease;
 }
 
-/* Recommended Category - simple design */
-.recommended-category {
+/* Recommended Topic - simple design */
+.recommended-topic {
     border-left: 3px solid #FFD700;
 }
 
-.recommended-category .category-title {
+.recommended-topic .topic-title {
     color: var(--vscode-foreground);
 }
 
 /* Override the blue left border on hover */
-.recommended-category::before {
-    background: linear-gradient(180deg, 
-        #FFD700 0%, 
+.recommended-topic::before {
+    background: linear-gradient(180deg,
+        #FFD700 0%,
         transparent 100%) !important;
 }
 
-.recommended-category:hover::before {
+.recommended-topic:hover::before {
     opacity: 0 !important;
 }
 
-/* Complete override of blue styles for recommended category */
-.recommended-category .category-header:hover {
+/* Complete override of blue styles for recommended topic */
+.recommended-topic .topic-header:hover {
     border-color: rgba(255, 215, 0, 0.5) !important;
     background-color: var(--vscode-sideBar-background) !important;
 }
 
-.recommended-category .category-header:hover::after {
-    background: linear-gradient(90deg, 
-        #FFD700 0%, 
+.recommended-topic .topic-header:hover::after {
+    background: linear-gradient(90deg,
+        #FFD700 0%,
         transparent 20%) !important;
 }
 
-.recommended-category .category-header.collapsed:hover {
+.recommended-topic .topic-header.collapsed:hover {
     border-color: rgba(255, 215, 0, 0.5) !important;
     background-color: var(--vscode-sideBar-background) !important;
 }
 
 /* Override focus styles */
-.recommended-category .category-header:focus {
+.recommended-topic .topic-header:focus {
     border-color: rgba(255, 215, 0, 0.7) !important;
     background-color: var(--vscode-sideBar-background) !important;
 }
 
-.recommended-category .category-header:focus::after {
-    background: linear-gradient(90deg, 
-        #FFD700 0%, 
+.recommended-topic .topic-header:focus::after {
+    background: linear-gradient(90deg,
+        #FFD700 0%,
         transparent 20%) !important;
 }
 
-/* Override toggle button color for recommended category */
-.recommended-category .category-toggle {
+/* Override toggle button color for recommended topic */
+.recommended-topic .topic-toggle {
     color: #FFD700 !important;
     background-color: rgba(255, 215, 0, 0.1) !important;
     border: 1px solid rgba(255, 215, 0, 0.3) !important;
 }
 
-.recommended-category .category-header:hover .category-toggle {
+.recommended-topic .topic-header:hover .topic-toggle {
     color: #FFA500 !important;
     background-color: rgba(255, 215, 0, 0.2) !important;
     border: 1px solid rgba(255, 215, 0, 0.5) !important;
 }
 
-.recommended-category .category-header.collapsed .category-toggle {
+.recommended-topic .topic-header.collapsed .topic-toggle {
     color: #FFD700 !important;
     background-color: rgba(255, 215, 0, 0.1) !important;
     border: 1px solid rgba(255, 215, 0, 0.3) !important;
 }
 
-.recommended-category .category-header.collapsed:hover .category-toggle {
+.recommended-topic .topic-header.collapsed:hover .topic-toggle {
     color: #FFA500 !important;
     background-color: rgba(255, 215, 0, 0.2) !important;
     border: 1px solid rgba(255, 215, 0, 0.5) !important;
