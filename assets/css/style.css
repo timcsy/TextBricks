@@ -14,6 +14,10 @@ body {
     padding: 0;
     margin: 0;
     line-height: 1.4;
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
 }
 
 .header {
@@ -23,6 +27,7 @@ body {
     position: sticky;
     top: 0;
     z-index: 10;
+    flex-shrink: 0;
 }
 
 .header-top {
@@ -73,6 +78,10 @@ body {
 
 .container {
     padding: 8px;
+    padding-bottom: 20px;
+    flex: 1;
+    overflow-y: auto;
+    min-height: 0;
 }
 
 .topic-group {
@@ -297,9 +306,8 @@ body {
     grid-template-columns: 1fr;
     gap: 6px;
     transition: all 0.35s cubic-bezier(0.4, 0.0, 0.2, 1);
-    overflow: hidden;
+    overflow: visible;
     transform-origin: top;
-    max-height: 2000px; /* 預設足夠大的高度以容納所有內容 */
     opacity: 1;
     margin-top: 8px;
     padding-top: 0;
@@ -319,15 +327,20 @@ body {
     background-color: var(--vscode-editor-background);
     border: 1px solid var(--vscode-panel-border);
     border-radius: 6px;
-    padding: 8px 10px;
+    padding: 10px 12px;
     cursor: pointer;
     transition: all 0.25s cubic-bezier(0.4, 0.0, 0.2, 1);
     position: relative;
-    min-height: 55px;
+    min-height: 70px;
+    height: auto;
+    width: 100%;
+    min-width: 200px;
     display: flex;
     flex-direction: column;
+    justify-content: space-between;
     opacity: 1;
     transform: translateY(0);
+    box-sizing: border-box;
 }
 
 /* 為展開時的模板卡片添加延遲入場動畫 */
@@ -341,8 +354,6 @@ body {
 .templates-grid:not(.collapsed) .template-card:nth-child(4) { animation-delay: 0.2s; }
 .templates-grid:not(.collapsed) .template-card:nth-child(5) { animation-delay: 0.25s; }
 .templates-grid:not(.collapsed) .template-card:nth-child(n+6) { animation-delay: 0.3s; }
-    justify-content: space-between;
-}
 
 .template-card:hover {
     border-color: var(--vscode-focusBorder);
@@ -434,18 +445,16 @@ body {
     50% { transform: scale(1.2); }
     100% { transform: scale(1); }
 }
-}
 
 .template-description {
     font-size: 11px;
     color: #666666;
-    margin: 2px 0;
-    line-height: 1.2;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    margin: 2px 0 4px 0;
+    line-height: 1.3;
     flex: 1;
-    min-height: 0;
+    min-height: 15px;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
 }
 
 /* Tooltip styles */
@@ -682,21 +691,21 @@ body {
     opacity: 0.8;
 }
 
-/* Responsive adjustments */
+/* Responsive adjustments - 調整為更適合側邊欄的斷點 */
 @media (min-width: 250px) {
     .templates-grid {
         grid-template-columns: 1fr;
     }
 }
 
-@media (min-width: 400px) {
+@media (min-width: 500px) {
     .templates-grid {
         grid-template-columns: 1fr 1fr;
         gap: 8px;
     }
 }
 
-@media (min-width: 600px) {
+@media (min-width: 800px) {
     .templates-grid {
         grid-template-columns: 1fr 1fr 1fr;
         gap: 10px;
