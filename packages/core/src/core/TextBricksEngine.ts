@@ -69,7 +69,7 @@ export class TextBricksEngine {
 
     private async loadTemplateData(): Promise<TemplateData> {
         try {
-            const CURRENT_DATA_VERSION = '0.2.4-topic-with-docs';
+            const CURRENT_DATA_VERSION = '0.2.4-atomic-v2-' + Date.now();
 
             // 檢查 storage 中的資料版本
             const storedVersion = await this.platform.storage.get<string>('templates.version');
@@ -169,8 +169,23 @@ export class TextBricksEngine {
     }
 
     getTopics(): string[] {
-        const topics = new Set(this.templates.map(template => template.topic));
-        return Array.from(topics).sort();
+        const templateTopics = new Set(this.templates.map(template => template.topic));
+        // 按照 topics 陣列中定義的順序返回主題，而不是字母順序
+        const topicOrder = this.topics.map(topic => topic.name);
+        const orderedTopics = topicOrder.filter(topicName => templateTopics.has(topicName));
+
+        // 添加任何在模板中存在但在 topics 陣列中未定義的主題
+        const remainingTopics = Array.from(templateTopics).filter(topicName => !topicOrder.includes(topicName));
+
+        const result = [...orderedTopics, ...remainingTopics.sort()];
+
+        // Debug log
+        console.log('TextBricksEngine.getTopics() called');
+        console.log('Topic order from topics array:', topicOrder);
+        console.log('Template topics found:', Array.from(templateTopics));
+        console.log('Final ordered topics:', result);
+
+        return result;
     }
 
     getLanguages(): Language[] {

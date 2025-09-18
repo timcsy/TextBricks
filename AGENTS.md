@@ -310,6 +310,37 @@
 - **狀態**：時間規劃已校正，符合實際開發進度
 - **下一步**：根據 Q3 2025 目標推進智慧化功能開發
 
+### 2025-09-17 - C++/Arduino/ESP32 教學模板系統和快取修復方案
+- **執行者**：Claude Code
+- **變更**：
+  - ✅ **語言擴展**：新增 C++, Arduino, ESP32 三種語言支援
+  - ✅ **教學主題**：建立 8 個新主題涵蓋 C++ 基礎到 ESP32 進階應用
+  - ✅ **模板實作**：完成 C++ 基礎語法 10 個模板（原子式、片段式、範例式）
+  - 🔧 **關鍵修復**：解決模板無法顯示的快取問題
+- **技術成果**：
+  - 📚 **C++ 基礎語法主題**：包含變數宣告、控制結構、函數定義等 10 個完整模板
+  - 🏗️ **教學架構**：8 個循序漸進主題，從語法基礎到物聯網應用
+  - 🔧 **快取修復機制**：更新 CURRENT_DATA_VERSION 強制重新載入模板資料
+- **重要技術發現 - 模板快取修復方法**：
+  ```typescript
+  // 問題：TextBricksEngine 使用版本快取機制，修改 templates.json 後 UI 不更新
+  // 位置：packages/core/src/core/TextBricksEngine.ts:72
+
+  // 解決方案：更新資料版本號強制重新載入
+  const CURRENT_DATA_VERSION = '0.2.4-with-cpp-arduino-esp32';
+
+  // 步驟：
+  // 1. 修改 CURRENT_DATA_VERSION 為新版本
+  // 2. 執行 npm run build:vscode 重新編譯
+  // 3. 在 VS Code 中執行 "Developer: Reload Window"
+  ```
+- **檔案結構**：
+  - 📝 **源檔案**：`packages/vscode/src/data/templates.json` (87,210 bytes)
+  - 🏗️ **編譯輸出**：`packages/vscode/dist/data/templates.json`
+  - 🎯 **載入優先級**：out/data/ → dist/data/ → 其他路徑
+- **狀態**：C++ 模板系統完成，Arduino/ESP32 模板待開發
+- **下一步**：實作 C++ 物件導向模板，繼續 Arduino 硬體基礎模板
+
 ### 2025-09-05 - 策略調整：功能增強優先於多平台擴展
 - **執行者**：Claude Code
 - **變更**：
