@@ -5,6 +5,28 @@ All notable changes to the TextBricks extension will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.5] - 2025-09-19
+
+### 🎨 UI/UX Improvements
+- **Template Card Display**: Fixed template cards being cut off in the middle due to CSS overflow issues
+- **Responsive Layout**: Optimized grid breakpoints for VSCode sidebar - adjusted multi-column layout thresholds (400px → 500px, 600px → 800px)
+- **Template Card Sizing**: Increased minimum height (55px → 70px) and improved padding for better content visibility
+- **Scrolling Behavior**: Removed restrictive overflow constraints and max-height limitations for smoother scrolling
+- **Description Text**: Enhanced text wrapping and removed forced truncation for better readability
+- **Visual Hierarchy**: Improved template description color contrast (lighter text for better visual separation)
+
+### 🔧 Technical Fixes
+- **CSS Syntax**: Fixed malformed CSS rules causing display issues
+- **Container Layout**: Improved flexbox layout for better space utilization
+- **Grid Overflow**: Changed templates grid from `overflow: hidden` to `overflow: visible` for complete content display
+- **Card Dimensions**: Added proper box-sizing and width constraints for consistent rendering
+
+### 🎯 User Experience
+- **Content Accessibility**: All template content now fully visible without unexpected cutoffs
+- **Better Readability**: Improved text contrast and spacing for easier template browsing
+- **Responsive Design**: Optimized layout specifically for VSCode sidebar width constraints
+- **Consistent Rendering**: Fixed cross-platform display inconsistencies
+
 ## [0.2.4] - 2025-09-15
 
 ### 🧹 Major Refactoring & Code Cleanup

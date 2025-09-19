@@ -2,7 +2,7 @@
 
 A multi-editor extension providing structured programming templates for multiple languages (C, Python, JavaScript) to help beginners learn programming efficiently.
 
-> **🚀 Version 0.2.4** - Major refactoring and modularization! System-wide cleanup, modular manager architecture, unified command service, and preparation for hierarchical topics. Cleaner codebase with platform-independent core for future multi-editor expansion.
+> **🚀 Version 0.2.5** - UI/UX improvements! Fixed template card display issues, optimized responsive layout, improved template visibility and scrolling behavior. Enhanced user experience with better visual hierarchy and content accessibility.
 
 ## ✨ Features
 
