@@ -75,7 +75,16 @@
         
         // Handle button clicks
         document.addEventListener('click', handleButtonClick);
-        
+
+        // Handle navigation button clicks (topic/link cards)
+        document.addEventListener('click', handleNavigationClick);
+
+        // Handle breadcrumb navigation clicks
+        document.addEventListener('click', handleBreadcrumbClick);
+
+        // Handle page navigation buttons
+        document.addEventListener('click', handlePageNavigationClick);
+
         // Handle topic collapse/expand
         document.addEventListener('click', handleTopicToggle);
 
@@ -100,23 +109,77 @@
 
     function handleClick(event) {
         const templateCard = event.target.closest('.template-card');
-        if (!templateCard) return;
+        const topicCard = event.target.closest('.topic-card');
+        const linkCard = event.target.closest('.link-card');
 
-        // Prevent default behavior for button clicks
-        if (event.target.closest('.action-btn')) {
+        // Handle template card clicks
+        if (templateCard) {
+            // Prevent default behavior for button clicks
+            if (event.target.closest('.action-btn')) {
+                return;
+            }
+
+            const templateId = templateCard.dataset.templateId;
+            if (templateId) {
+                // Single click - copy template
+                copyTemplate(templateId);
+
+                // Visual feedback
+                templateCard.style.animation = 'none';
+                setTimeout(() => {
+                    templateCard.style.animation = 'templateInsert 0.3s ease';
+                }, 10);
+            }
             return;
         }
 
-        const templateId = templateCard.dataset.templateId;
-        if (templateId) {
-            // Single click - copy template
-            copyTemplate(templateId);
-            
-            // Visual feedback
-            templateCard.style.animation = 'none';
-            setTimeout(() => {
-                templateCard.style.animation = 'templateInsert 0.3s ease';
-            }, 10);
+        // Handle topic card clicks (navigate to topic)
+        if (topicCard) {
+            // Prevent default behavior for navigate button clicks
+            if (event.target.closest('.navigate-btn')) {
+                return;
+            }
+
+            const topicPath = topicCard.dataset.topicPath;
+            if (topicPath) {
+                navigateToTopic(topicPath);
+
+                // Visual feedback
+                topicCard.style.animation = 'none';
+                setTimeout(() => {
+                    topicCard.style.animation = 'cardClick 0.2s ease';
+                }, 10);
+            }
+            return;
+        }
+
+        // Handle link card clicks (navigate to link target)
+        if (linkCard) {
+            // Prevent default behavior for navigate button clicks
+            if (event.target.closest('.navigate-btn')) {
+                return;
+            }
+
+            const linkTarget = linkCard.dataset.linkTarget;
+            if (linkTarget) {
+                if (linkTarget.startsWith('http')) {
+                    // External link
+                    vscode.postMessage({
+                        type: 'openExternalLink',
+                        url: linkTarget
+                    });
+                } else {
+                    // Topic link
+                    navigateToTopic(linkTarget);
+                }
+
+                // Visual feedback
+                linkCard.style.animation = 'none';
+                setTimeout(() => {
+                    linkCard.style.animation = 'cardClick 0.2s ease';
+                }, 10);
+            }
+            return;
         }
     }
 
@@ -160,13 +223,30 @@
 
     function handleButtonClick(event) {
         if (!event.target.closest('.action-btn')) return;
-        
+
         event.stopPropagation(); // Prevent card click
-        
+
         const button = event.target.closest('.action-btn');
+
+        // Handle back button (topic navigation)
+        if (button.classList.contains('topic-back-btn')) {
+            navigateBack();
+            // Visual feedback for back button
+            const icon = button.querySelector('.icon');
+            const originalText = icon.textContent;
+            icon.textContent = '⏳';
+            setTimeout(() => {
+                icon.textContent = originalText;
+            }, 1000);
+            return;
+        }
+
         const templateCard = button.closest('.template-card');
+
+        if (!templateCard) return; // Not a template card button
+
         const templateId = templateCard.dataset.templateId;
-        
+
         if (button.classList.contains('insert-btn')) {
             insertTemplate(templateId);
             // Visual feedback for insert button
@@ -187,6 +267,131 @@
                 icon.textContent = originalText;
                 button.style.opacity = '';
             }, 1000);
+        }
+    }
+
+    function handleNavigationClick(event) {
+        const navigateBtn = event.target.closest('.navigate-btn');
+        if (!navigateBtn) return;
+
+        event.stopPropagation(); // Prevent card click
+
+        const topicCard = navigateBtn.closest('.topic-card');
+        const linkCard = navigateBtn.closest('.link-card');
+
+        if (topicCard) {
+            // Handle topic navigation
+            const topicPath = topicCard.dataset.topicPath;
+            if (topicPath) {
+                navigateToTopic(topicPath);
+
+                // Visual feedback
+                const icon = navigateBtn.querySelector('.icon');
+                const originalText = icon.textContent;
+                icon.textContent = '⏳';
+                setTimeout(() => {
+                    icon.textContent = originalText;
+                }, 1000);
+            }
+        } else if (linkCard) {
+            // Handle link navigation
+            const linkTarget = linkCard.dataset.linkTarget;
+            if (linkTarget) {
+                // Check if it's a topic link or external link
+                if (linkTarget.startsWith('http')) {
+                    // External link - open in browser
+                    vscode.postMessage({
+                        type: 'openExternalLink',
+                        url: linkTarget
+                    });
+                } else {
+                    // Topic link - navigate to topic
+                    navigateToTopic(linkTarget);
+                }
+
+                // Visual feedback
+                const icon = navigateBtn.querySelector('.icon');
+                const originalText = icon.textContent;
+                icon.textContent = '⏳';
+                setTimeout(() => {
+                    icon.textContent = originalText;
+                }, 1000);
+            }
+        } else {
+            // Handle topic group navigation (main topic navigation)
+            const topicGroup = navigateBtn.closest('.topic-group');
+            if (topicGroup) {
+                const topicPath = navigateBtn.dataset.topicPath;
+                if (topicPath) {
+                    navigateToTopic(topicPath);
+
+                    // Visual feedback
+                    const icon = navigateBtn.querySelector('.icon');
+                    const originalText = icon.textContent;
+                    icon.textContent = '⏳';
+                    setTimeout(() => {
+                        icon.textContent = originalText;
+                    }, 1000);
+                }
+            }
+        }
+    }
+
+    function handleBreadcrumbClick(event) {
+        const breadcrumbItem = event.target.closest('.breadcrumb-item.clickable');
+        if (!breadcrumbItem) return;
+
+        event.stopPropagation(); // Prevent other click handlers
+        event.preventDefault();
+
+        const navigationPath = breadcrumbItem.dataset.navigatePath;
+
+        // Navigate to the specified path
+        if (navigationPath === '') {
+            // Navigate to root/home (empty path means go to root)
+            navigateToTopic('');
+        } else {
+            // Navigate to specific topic
+            navigateToTopic(navigationPath);
+        }
+
+        // Visual feedback for breadcrumb click
+        const originalOpacity = breadcrumbItem.style.opacity;
+        breadcrumbItem.style.opacity = '0.5';
+        setTimeout(() => {
+            breadcrumbItem.style.opacity = originalOpacity;
+        }, 200);
+    }
+
+    function handlePageNavigationClick(event) {
+        const navBtn = event.target.closest('.nav-btn:not(.disabled)');
+        if (!navBtn) return;
+
+        event.stopPropagation();
+        event.preventDefault();
+
+        const action = navBtn.dataset.action;
+        if (action) {
+            // Send history navigation message
+            vscode.postMessage({
+                type: action
+            });
+
+            // Visual feedback for navigation button click
+            const icon = navBtn.querySelector('.nav-icon');
+            const originalContent = icon.textContent;
+
+            // Add loading state
+            icon.textContent = '⏳';
+            navBtn.style.opacity = '0.6';
+
+            // Restore original state after a short delay
+            setTimeout(() => {
+                icon.textContent = originalContent;
+                navBtn.style.opacity = '1';
+            }, 300);
+
+            console.log('History navigation:', action);
         }
     }
 
@@ -344,6 +549,23 @@
         console.log('Show documentation for topic:', topicName);
     }
 
+    function navigateToTopic(topicPath) {
+        vscode.postMessage({
+            type: 'navigateToTopic',
+            topicPath: topicPath
+        });
+
+        console.log('Navigate to topic:', topicPath);
+    }
+
+    function navigateBack() {
+        vscode.postMessage({
+            type: 'navigateBack'
+        });
+
+        console.log('Navigate back');
+    }
+
     function handleLanguageChange(event) {
         const selectedLanguage = event.target.value;
         
@@ -379,6 +601,14 @@
         const topicDocBtn = event.target.closest('.topic-doc-btn');
         if (topicDocBtn) return;
 
+        // Don't toggle if clicking on navigation button
+        const navigateBtn = event.target.closest('.topic-navigate-btn');
+        if (navigateBtn) return;
+
+        // Don't toggle if clicking on any action button
+        const actionBtn = event.target.closest('.action-btn');
+        if (actionBtn) return;
+
         const topicHeader = event.target.closest('.topic-header');
         if (!topicHeader) return;
 
@@ -386,10 +616,16 @@
 
         const topicGroup = topicHeader.closest('.topic-group');
         const templatesGrid = topicGroup.querySelector('.templates-grid');
+        const recommendedContainer = topicGroup.querySelector('.recommended-templates-container');
 
         // Toggle collapsed state
         topicHeader.classList.toggle('collapsed');
-        templatesGrid.classList.toggle('collapsed');
+        if (templatesGrid) {
+            templatesGrid.classList.toggle('collapsed');
+        }
+        if (recommendedContainer) {
+            recommendedContainer.classList.toggle('collapsed');
+        }
 
         console.log('Toggle topic:', topicGroup.dataset.topic);
     }
@@ -414,7 +650,7 @@
         if (!event.target || typeof event.target.closest !== 'function') {
             return;
         }
-        
+
         const previewBtn = event.target.closest('.preview-btn');
         const tooltip = event.target.closest('.template-tooltip');
         
@@ -511,9 +747,25 @@
         
         const templateId = templateCard.dataset.templateId;
         const templateCode = templateCard.dataset.templateCode;
-        const title = templateCard.querySelector('.template-title').textContent;
-        const description = templateCard.querySelector('.template-description').textContent;
-        const languageTag = templateCard.querySelector('.language-tag').textContent;
+
+        // Safe element queries with null checks (support both CSS selector formats)
+        const titleElement = templateCard.querySelector('.card-title, .template-title');
+        const descriptionElement = templateCard.querySelector('.card-description, .template-description');
+        const languageElement = templateCard.querySelector('.language-tag');
+
+        if (!titleElement || !descriptionElement || !languageElement) {
+            console.error('Missing template card elements:', {
+                title: !!titleElement,
+                description: !!descriptionElement,
+                language: !!languageElement,
+                templateCard
+            });
+            return;
+        }
+
+        const title = titleElement.textContent;
+        const description = descriptionElement.textContent;
+        const languageTag = languageElement.textContent;
         
         // Check if template has documentation
         const hasDocumentation = templateCard.dataset.hasDocumentation === 'true';
@@ -1037,7 +1289,11 @@
         templateCards.forEach((card, index) => {
             card.setAttribute('tabindex', '0');
             card.setAttribute('role', 'button');
-            card.setAttribute('aria-label', `Template: ${card.querySelector('.template-title').textContent}`);
+
+            // Safe title query with null check (support both CSS selector formats)
+            const titleElement = card.querySelector('.card-title, .template-title');
+            const title = titleElement ? titleElement.textContent : 'Template';
+            card.setAttribute('aria-label', `Template: ${title}`);
             
             // Handle Enter key on focused cards
             card.addEventListener('keydown', function(event) {

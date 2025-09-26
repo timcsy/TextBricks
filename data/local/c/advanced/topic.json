@@ -1,0 +1,16 @@
+{
+  "id": "c-advanced",
+  "name": "advanced",
+  "displayName": "進階技巧",
+  "description": "C 語言進階概念，包括指標、記憶體管理等",
+  "documentation": "深入學習 C 語言的進階功能，包括指標操作、動態記憶體配置、檔案處理等進階主題。",
+  "templates": "templates",
+  "links": "links",
+  "display": {
+    "icon": "🚀",
+    "color": "#FF5722",
+    "order": 2,
+    "collapsed": false,
+    "showInNavigation": true
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "id": "c-basic",
+  "name": "basic",
+  "displayName": "基礎語法",
+  "description": "C 語言基礎語法，包括變數、輸入輸出等",
+  "documentation": "學習 C 語言的基礎概念，適合初學者。包含變數宣告、printf、scanf 等基本操作。",
+  "templates": "templates",
+  "links": "links",
+  "display": {
+    "icon": "📚",
+    "color": "#4CAF50",
+    "order": 1,
+    "collapsed": false,
+    "showInNavigation": true
+  }
+}

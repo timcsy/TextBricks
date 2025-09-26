@@ -9,10 +9,25 @@ export interface Language {
 export interface Topic {
   id: string;
   name: string;
+  displayName?: string; // 顯示名稱，如果不設定就用 name
   description: string; // 簡短描述 (1-2句話)
   documentation?: string; // 詳細說明文件 (Markdown content, local file path, or URL)
-  color?: string; // 主題顏色 (可選)
-  icon?: string;  // 主題圖標 (可選)
+
+  // 資料夾配置
+  templates?: string; // 模板資料夾名稱，預設 "templates"
+  links?: string; // 連結資料夾名稱，預設 "links"
+  subtopics?: string[]; // 子主題名稱陣列
+
+  // 顯示設定
+  display?: {
+    icon?: string; // 主題圖標
+    color?: string; // 主題顏色 (hex)
+    order?: number; // 排序權重
+    collapsed?: boolean; // 預設收合狀態
+    showInNavigation?: boolean; // 導航顯示
+    cardStyle?: string; // 卡片樣式
+  };
+
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -25,6 +40,27 @@ export interface Template {
   language: string;
   topic: string;
   documentation?: string; // Markdown content, local file path, or URL
+}
+
+// 統一的卡片介面，支援三種類型
+export interface Card {
+  type: 'template' | 'topic' | 'link';
+  id: string;
+  title: string;
+  description: string;
+  language: string;
+  topic: string;
+
+  // template 類型專用
+  code?: string;
+  documentation?: string;
+
+  // link 類型專用
+  target?: string;
+}
+
+export interface ExtendedCard extends Card {
+  metadata?: TemplateManagementMetadata;
 }
 
 export class TemplateItem {

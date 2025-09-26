@@ -1,0 +1,8 @@
+{
+  "id": "c-hello-world",
+  "title": "Hello World",
+  "description": "基本的 Hello World 程式",
+  "language": "c",
+  "code": "#include <stdio.h>\n\nint main() {\n    printf(\"Hello, World!\\n\");\n    return 0;\n}",
+  "documentation": "這是最基本的 C 程式，用來輸出 \"Hello, World!\" 訊息。"
+}

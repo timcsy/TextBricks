@@ -576,7 +576,7 @@ export class DocumentationProvider {
     <div class="documentation-container">
         <div class="header">
             <h1 class="doc-title">
-                <span class="doc-icon">${topic.icon || '📚'}</span>
+                <span class="doc-icon">${topic.display?.icon || '📚'}</span>
                 ${this._escapeHtml(topic.name)}
             </h1>
             <div class="header-actions">

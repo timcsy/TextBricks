@@ -1,0 +1,8 @@
+{
+  "id": "js-variables",
+  "title": "變數宣告",
+  "description": "JavaScript 基本變數宣告範例",
+  "language": "javascript",
+  "code": "// JavaScript 變數宣告範例\n\n// 使用 let 宣告變數\nlet age = 25;\nlet height = 175.5;\nlet name = \"張三\";\nlet isStudent = true;\n\n// 使用 const 宣告常數\nconst PI = 3.14159;\n\n// 輸出變數值\nconsole.log(`姓名: ${name}`);\nconsole.log(`年齡: ${age}`);\nconsole.log(`身高: ${height} cm`);\nconsole.log(`是否為學生: ${isStudent}`);\nconsole.log(`圓周率: ${PI}`);",
+  "documentation": "展示如何在 JavaScript 中使用 let 和 const 宣告變數。"
+}

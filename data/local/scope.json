@@ -1,0 +1,43 @@
+{
+  "id": "local",
+  "name": "本機範圍",
+  "description": "本機開發環境的程式語言模板和主題",
+  "languages": [
+    {
+      "id": "c",
+      "name": "C",
+      "displayName": "C 語言",
+      "tagName": "C",
+      "description": "系統程式設計語言",
+      "fileExtensions": [".c", ".h"],
+      "icon": "⚙️",
+      "color": "#A8B9CC"
+    },
+    {
+      "id": "python",
+      "name": "Python",
+      "displayName": "Python",
+      "tagName": "PY",
+      "description": "高階程式設計語言",
+      "fileExtensions": [".py", ".pyw"],
+      "icon": "🐍",
+      "color": "#3776AB"
+    },
+    {
+      "id": "javascript",
+      "name": "JavaScript",
+      "displayName": "JavaScript",
+      "tagName": "JS",
+      "description": "網頁前端程式設計語言",
+      "fileExtensions": [".js", ".mjs", ".jsx"],
+      "icon": "📜",
+      "color": "#F7DF1E"
+    }
+  ],
+  "topics": ["c", "python", "javascript"],
+  "metadata": {
+    "version": "1.0.0",
+    "lastUpdated": "2024-09-26",
+    "author": "TextBricks"
+  }
+}

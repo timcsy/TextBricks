@@ -1,0 +1,8 @@
+{
+  "id": "python-hello-world",
+  "title": "Hello World",
+  "description": "基本的 Hello World 程式",
+  "language": "python",
+  "code": "# Python Hello World 程式\nprint(\"Hello, World!\")",
+  "documentation": "這是最基本的 Python 程式，用來輸出 \"Hello, World!\" 訊息。"
+}

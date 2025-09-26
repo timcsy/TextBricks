@@ -1,0 +1,17 @@
+{
+  "id": "python-basics",
+  "name": "Python 基礎",
+  "displayName": "Python 基礎語法",
+  "description": "Python 語言基礎概念學習",
+  "subtopics": ["變數與資料型別", "控制結構", "函數定義"],
+  "display": {
+    "icon": "🐍",
+    "color": "#3776ab",
+    "order": 1,
+    "collapsed": false,
+    "showInNavigation": true,
+    "cardStyle": "default"
+  },
+  "createdAt": "2025-09-25T10:00:00Z",
+  "updatedAt": "2025-09-25T12:30:00Z"
+}

@@ -5,6 +5,66 @@ All notable changes to the TextBricks extension will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased] - 2025-09-26
+
+### ✨ New Features
+- **Browsing History Navigation**: Added browser-like back/forward navigation based on actual browsing history
+  - Smart history management that automatically clears forward history when navigating to new pages
+  - Dynamic button states (enabled/disabled) based on history availability
+  - Intelligent tooltips showing target page titles
+  - Loading animations and visual feedback for navigation actions
+- **Clickable Breadcrumb Navigation**: Enhanced breadcrumb navigation with clickable path elements
+  - Click on any breadcrumb segment to navigate directly to that level
+  - Uses displayName from managed topics for better readability
+  - Integrated with browsing history system
+- **Centralized Language Management**: Introduced scope.json for unified language and topic configuration
+  - Centralized language definitions with id, name, displayName, tagName, description, fileExtensions, icon, and color
+  - Template cards now display short tagNames (C, PY, JS) instead of full language names
+  - Added language property to all template files for future language conversion features
+- **Hierarchical Topic System Foundation**: Implemented topic.json structure for v0.3.0 architecture
+  - Individual topic.json files with id, name, displayName, description, documentation
+  - Subtopic hierarchy support with configurable templates/links folder structure
+  - Display configuration with icon, color, order, collapsed state, and navigation visibility
+  - Cross-topic link system for topic navigation (e.g., basic → advanced topics)
+- **Enhanced Template Preview System**: Fixed template card preview functionality
+  - Resolved missing language properties causing preview failures
+  - Updated JavaScript selectors to handle both .template-title and .card-title formats
+  - Added comprehensive null checks and fallback logic for robust preview display
+
+### 🎨 UI/UX Improvements
+- **Unified Scrollable Containers**: Standardized all topic areas to use 3.5 card height scrollable containers
+  - Consistent scrolling experience across recommended templates and topic areas
+  - Improved scrollbar styling integrated with VSCode theme
+  - Better space utilization with fixed container heights
+- **Navigation Controls Layout**: Enhanced breadcrumb navigation area with integrated history buttons
+  - Flexible layout accommodating both breadcrumbs and navigation controls
+  - Professional button styling with hover and active states
+  - Responsive design maintaining usability across different sidebar widths
+
+### 🔧 Technical Improvements
+- **History Management System**: Implemented robust browsing history tracking in WebviewProvider
+  - `_browsingHistory` array storing complete navigation path
+  - `_historyIndex` for precise history position tracking
+  - Prevents duplicate entries and manages history state transitions
+- **Enhanced Navigation Logic**:
+  - `_handleBackNavigation()` and `_handleForwardNavigation()` for history-based navigation
+  - `_getPageTitle()` method for intelligent page title resolution
+  - Integration with existing topic navigation system
+- **Improved Event Handling**: Updated JavaScript navigation event handlers
+  - `handlePageNavigationClick()` for history navigation messages
+  - Visual feedback with loading states and opacity changes
+  - Better separation of concerns between different navigation types
+- **Topic System Architecture**: Established foundation for hierarchical topic management
+  - Scope configuration system with `_loadScopeConfig()` and `_getLanguageTagName()` methods
+  - Topic.json file structure supporting nested subtopics and configurable folders
+  - Link system implementation for cross-topic references and navigation
+  - Display configuration management for topic presentation and behavior
+
+### 🎯 Developer Experience
+- **Comprehensive Logging**: Added detailed console logging for navigation state tracking
+- **Type Safety**: Enhanced TypeScript interfaces for navigation state management
+- **Maintainable Code**: Clear separation between UI, business logic, and state management
+
 ## [0.2.5] - 2025-09-19
 
 ### 🎨 UI/UX Improvements
