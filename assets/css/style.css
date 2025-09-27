@@ -573,6 +573,20 @@ body {
     overflow: hidden;
 }
 
+/* Collapsed state for tab navigation */
+.tab-navigation.collapsed {
+    opacity: 0.6;
+}
+
+/* Visual feedback for collapsible active tabs */
+.tab-btn.active {
+    cursor: pointer;
+}
+
+.tab-btn.active:hover {
+    /* 移除opacity效果，保持黃色邊框可見 */
+}
+
 /* Animation support for recommended templates */
 .recommended-templates-container .template-card {
     animation: slideInUp 0.3s cubic-bezier(0.4, 0.0, 0.2, 1) forwards;
@@ -1027,7 +1041,12 @@ body {
 
 /* Recommended Topic - simple design */
 .recommended-topic {
-    border-left: 3px solid #FFD700;
+    position: relative;
+}
+
+/* Remove yellow border from recommended templates container */
+.recommended-topic .recommended-templates-container {
+    position: relative;
 }
 
 .recommended-topic .topic-title {
@@ -1042,7 +1061,7 @@ body {
 }
 
 .recommended-topic:hover::before {
-    opacity: 0 !important;
+    opacity: 1 !important;
 }
 
 /* Complete override of blue styles for recommended topic */
@@ -1097,6 +1116,139 @@ body {
     color: #FFA500 !important;
     background-color: rgba(255, 215, 0, 0.2) !important;
     border: 1px solid rgba(255, 215, 0, 0.5) !important;
+}
+
+/* Tab Navigation */
+.tab-navigation {
+    display: flex;
+    gap: 4px;
+    margin: 0 0 4px 0;
+    padding: 0 2px;
+}
+
+.tab-btn {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 12px;
+    border: 1px solid var(--vscode-panel-border);
+    border-radius: 6px 6px 0 0;
+    background: var(--vscode-button-secondaryBackground);
+    color: var(--vscode-button-secondaryForeground);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 12px;
+    font-weight: 500;
+    position: relative;
+    border-bottom: none;
+}
+
+.tab-btn:hover:not(.active) {
+    background: var(--vscode-button-secondaryHoverBackground);
+    transform: translateY(-1px);
+    border-color: var(--vscode-focusBorder);
+}
+
+.tab-btn.active {
+    background: var(--vscode-editor-background);
+    color: var(--vscode-foreground);
+    border-color: var(--vscode-panel-border);
+    border-bottom: 1px solid var(--vscode-editor-background);
+    z-index: 1;
+}
+
+
+.tab-btn.active::after {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: var(--vscode-editor-background);
+}
+
+.tab-icon {
+    font-size: 14px;
+    line-height: 1;
+}
+
+/* Tab Content */
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 24px 16px;
+    color: var(--vscode-descriptionForeground);
+    font-style: italic;
+    font-size: 12px;
+}
+
+/* Favorite Button */
+.favorite-btn {
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    padding: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 14px;
+    line-height: 1;
+    color: var(--vscode-descriptionForeground);
+}
+
+.favorite-btn:hover {
+    background: var(--vscode-list-hoverBackground);
+    border-color: var(--vscode-panel-border);
+    transform: scale(1.1);
+}
+
+.favorite-btn .icon {
+    display: block;
+    transition: all 0.2s ease;
+}
+
+.favorite-btn[title*="取消收藏"] {
+    color: #e74c3c;
+}
+
+.favorite-btn[title*="取消收藏"]:hover {
+    color: #c0392b;
+    background: rgba(231, 76, 60, 0.1);
+    border-color: rgba(231, 76, 60, 0.3);
+}
+
+.favorite-btn[title*="加入收藏"]:hover {
+    color: #e74c3c;
+    background: rgba(231, 76, 60, 0.05);
+}
+
+/* Favorite Template Cards */
+.favorite-template {
+    position: relative;
+}
+
+.favorite-template::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 3px;
+    background: linear-gradient(180deg, #e74c3c 0%, #c0392b 100%);
+    border-radius: 3px 0 0 3px;
+}
+
+.favorite-star {
+    color: #e74c3c;
+    font-size: 14px;
+    font-weight: bold;
 }
 
 .recommended-badge {

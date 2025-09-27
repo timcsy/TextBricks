@@ -85,6 +85,10 @@
         // Handle page navigation buttons
         document.addEventListener('click', handlePageNavigationClick);
 
+        // Handle tab switching and favorite functionality
+        document.addEventListener('click', handleTabClick);
+        document.addEventListener('click', handleFavoriteClick);
+
         // Handle topic collapse/expand
         document.addEventListener('click', handleTopicToggle);
 
@@ -115,7 +119,7 @@
         // Handle template card clicks
         if (templateCard) {
             // Prevent default behavior for button clicks
-            if (event.target.closest('.action-btn')) {
+            if (event.target.closest('.action-btn') || event.target.closest('.favorite-btn')) {
                 return;
             }
 
@@ -135,8 +139,8 @@
 
         // Handle topic card clicks (navigate to topic)
         if (topicCard) {
-            // Prevent default behavior for navigate button clicks
-            if (event.target.closest('.navigate-btn')) {
+            // Prevent default behavior for button clicks
+            if (event.target.closest('.action-btn') || event.target.closest('.favorite-btn') || event.target.closest('.navigate-btn')) {
                 return;
             }
 
@@ -155,8 +159,8 @@
 
         // Handle link card clicks (navigate to link target)
         if (linkCard) {
-            // Prevent default behavior for navigate button clicks
-            if (event.target.closest('.navigate-btn')) {
+            // Prevent default behavior for button clicks
+            if (event.target.closest('.action-btn') || event.target.closest('.favorite-btn') || event.target.closest('.navigate-btn')) {
                 return;
             }
 
@@ -605,9 +609,10 @@
         const navigateBtn = event.target.closest('.topic-navigate-btn');
         if (navigateBtn) return;
 
-        // Don't toggle if clicking on any action button
+        // Don't toggle if clicking on any action button or favorite button
         const actionBtn = event.target.closest('.action-btn');
-        if (actionBtn) return;
+        const favoriteBtn = event.target.closest('.favorite-btn');
+        if (actionBtn || favoriteBtn) return;
 
         const topicHeader = event.target.closest('.topic-header');
         if (!topicHeader) return;
@@ -632,16 +637,198 @@
 
     function handleTopicDocumentationClick(event) {
         const topicDocBtn = event.target.closest('.topic-doc-btn');
-        if (!topicDocBtn) return;
+        const docBtn = event.target.closest('.doc-btn');
+
+        if (!topicDocBtn && !docBtn) return;
 
         event.preventDefault();
         event.stopPropagation();
 
-        const topicName = topicDocBtn.dataset.topicName;
-        if (topicName) {
-            showTopicDocumentation(topicName);
+        // Handle topic documentation button
+        if (topicDocBtn) {
+            const topicName = topicDocBtn.dataset.topicName;
+            if (topicName) {
+                showTopicDocumentation(topicName);
+            }
+        }
 
-            // No visual feedback needed - just the hover animation is enough
+        // Handle doc button from topic/link cards
+        if (docBtn) {
+            const topicName = docBtn.dataset.topicName;
+            const linkId = docBtn.dataset.linkId;
+
+            if (topicName) {
+                showTopicDocumentation(topicName);
+            } else if (linkId) {
+                // For link cards with documentation, we could show link documentation
+                // For now, treat it similarly to topic documentation
+                console.log('Link documentation not yet implemented for:', linkId);
+            }
+        }
+
+        // No visual feedback needed - just the hover animation is enough
+    }
+
+    function handleTabClick(event) {
+        const tabBtn = event.target.closest('.tab-btn');
+        if (!tabBtn) return;
+
+        event.preventDefault();
+        event.stopPropagation();
+
+        const targetTab = tabBtn.dataset.tab;
+        const tabNavigation = tabBtn.closest('.tab-navigation');
+        const recommendedContainer = tabNavigation.nextElementSibling;
+        const recommendedTopic = tabNavigation.closest('.recommended-topic');
+
+        // Check if clicked tab is already active
+        const isCurrentlyActive = tabBtn.classList.contains('active');
+
+        if (isCurrentlyActive) {
+            // Toggle collapse state of entire recommended area
+            const isCollapsed = recommendedContainer.classList.contains('collapsed');
+
+            if (isCollapsed) {
+                // Expand
+                recommendedContainer.classList.remove('collapsed');
+                tabNavigation.classList.remove('collapsed');
+                console.log('Expanded recommended area');
+            } else {
+                // Collapse
+                recommendedContainer.classList.add('collapsed');
+                tabNavigation.classList.add('collapsed');
+                console.log('Collapsed recommended area');
+            }
+        } else {
+            // Normal tab switching behavior
+            // Remove active class from all tab buttons in this navigation
+            tabNavigation.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+
+            // Add active class to clicked tab button
+            tabBtn.classList.add('active');
+
+            // Hide all tab content in this container
+            recommendedContainer.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+
+            // Show target tab content
+            const targetContent = recommendedContainer.querySelector(`[data-tab-content="${targetTab}"]`);
+            if (targetContent) {
+                targetContent.classList.add('active');
+            }
+
+            // Ensure area is expanded when switching tabs
+            recommendedContainer.classList.remove('collapsed');
+            tabNavigation.classList.remove('collapsed');
+
+            console.log('Tab switched to:', targetTab);
+        }
+    }
+
+    function handleFavoriteClick(event) {
+        const favoriteBtn = event.target.closest('.favorite-btn');
+        if (!favoriteBtn) return;
+
+        event.preventDefault();
+        event.stopPropagation();
+
+        const itemId = favoriteBtn.dataset.itemId;
+        if (!itemId) return;
+
+        // Get the icon span inside the button
+        const iconSpan = favoriteBtn.querySelector('.icon');
+        if (!iconSpan) return;
+
+        // Toggle favorite status visually first for immediate feedback
+        const isFavorite = iconSpan.textContent.trim() === '❤️';
+
+        if (isFavorite) {
+            iconSpan.textContent = '♡';
+            favoriteBtn.title = '加入收藏';
+        } else {
+            iconSpan.textContent = '❤️';
+            favoriteBtn.title = '取消收藏';
+        }
+
+        // Send message to backend to toggle favorite
+        vscode.postMessage({
+            type: 'toggleFavorite',
+            itemId: itemId
+        });
+
+        console.log('Toggle favorite for item:', itemId, isFavorite ? 'removed' : 'added');
+    }
+
+    function handleFavoriteToggled(itemId, isFavorite) {
+        // Update all favorite buttons for this item to reflect the new state
+        // But skip updating buttons that already have the correct state to avoid conflicts
+        const favoriteButtons = document.querySelectorAll(`[data-item-id="${itemId}"]`);
+
+        favoriteButtons.forEach(button => {
+            const iconSpan = button.querySelector('.icon');
+            if (iconSpan) {
+                const currentState = iconSpan.textContent.trim() === '❤️';
+                // Only update if the state is different from what we expect
+                if (currentState !== isFavorite) {
+                    iconSpan.textContent = isFavorite ? '❤️' : '♡';
+                    button.title = isFavorite ? '取消收藏' : '加入收藏';
+                }
+            }
+        });
+
+        // Handle favorites tab updates when currently viewing it
+        const favoritesTab = document.querySelector('[data-tab-content="favorites"]');
+        if (favoritesTab && favoritesTab.classList.contains('active')) {
+            if (!isFavorite) {
+                // Remove the card from favorites tab if unfavorited
+                // Find the card that contains a favorite button with the matching itemId
+                const cardToRemove = favoritesTab.querySelector(`[data-item-id="${itemId}"]`)?.closest('.template-card, .topic-card, .link-card');
+
+                if (cardToRemove) {
+                    // Add fade out animation
+                    cardToRemove.style.transition = 'opacity 0.3s ease';
+                    cardToRemove.style.opacity = '0';
+
+                    // Remove the card after animation
+                    setTimeout(() => {
+                        cardToRemove.remove();
+
+                        // Check if favorites tab is now empty (check for all card types)
+                        const remainingCards = favoritesTab.querySelectorAll('.template-card, .topic-card, .link-card');
+                        if (remainingCards.length === 0) {
+                            favoritesTab.innerHTML = '<div class="empty-state">還沒有收藏任何項目</div>';
+                        }
+                    }, 300);
+                }
+            } else {
+                // Item was favorited - refresh favorites tab content
+                // We need to request updated favorites content from backend
+                vscode.postMessage({
+                    type: 'refreshFavoritesTab'
+                });
+            }
+        }
+    }
+
+    function updateFavoritesTabContent(newContent) {
+        const favoritesTab = document.querySelector('[data-tab-content="favorites"]');
+        if (favoritesTab) {
+            // Add fade transition
+            favoritesTab.style.transition = 'opacity 0.2s ease';
+            favoritesTab.style.opacity = '0.5';
+
+            setTimeout(() => {
+                favoritesTab.innerHTML = newContent;
+                favoritesTab.style.opacity = '1';
+
+                // Remove transition after animation
+                setTimeout(() => {
+                    favoritesTab.style.transition = '';
+                }, 200);
+            }, 100);
         }
     }
 
@@ -1331,6 +1518,14 @@
             case 'theme-changed':
                 // Handle theme change
                 console.log('Theme changed');
+                break;
+            case 'favoriteToggled':
+                // Handle favorite toggle confirmation from backend
+                handleFavoriteToggled(message.itemId, message.isFavorite);
+                break;
+            case 'updateFavoritesContent':
+                // Handle favorites tab content update
+                updateFavoritesTabContent(message.content);
                 break;
         }
     });

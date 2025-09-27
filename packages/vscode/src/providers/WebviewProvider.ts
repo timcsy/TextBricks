@@ -37,7 +37,7 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
             this._scopeConfig = JSON.parse(scopeData);
         } catch (error) {
             console.error('Failed to load scope config:', error);
-            this._scopeConfig = { languages: [] };
+            this._scopeConfig = { languages: [], favorites: [], usage: {} };
         }
     }
 
@@ -48,6 +48,159 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
 
         const language = this._scopeConfig.languages?.find((lang: any) => lang.id === languageId);
         return language?.tagName || languageId.toUpperCase();
+    }
+
+    private _getFavorites(): string[] {
+        return this._scopeConfig?.favorites || [];
+    }
+
+    private _getUsageCount(itemId: string): number {
+        return this._scopeConfig?.usage?.[itemId] || 0;
+    }
+
+    private _isFavorite(itemId: string): boolean {
+        const favorites = this._getFavorites();
+        return favorites.includes(itemId);
+    }
+
+    private async _saveScopeConfig(): Promise<void> {
+        try {
+            const fs = require('fs').promises;
+            const scopePath = path.join(this._extensionUri.fsPath, 'data', 'local', 'scope.json');
+            await fs.writeFile(scopePath, JSON.stringify(this._scopeConfig, null, 2), 'utf8');
+        } catch (error) {
+            console.error('Failed to save scope config:', error);
+        }
+    }
+
+    private async _toggleFavorite(itemId: string): Promise<void> {
+        if (!this._scopeConfig) {
+            await this._loadScopeConfig();
+        }
+
+        const favorites = this._getFavorites();
+        const index = favorites.indexOf(itemId);
+
+        if (index === -1) {
+            favorites.push(itemId);
+        } else {
+            favorites.splice(index, 1);
+        }
+
+        await this._saveScopeConfig();
+    }
+
+    private _filterCurrentTopicItems(items: any[]): any[] {
+        if (!this._currentTopicPath) {
+            // 如果在根層級，顯示所有項目（不論層級）
+            return items;
+        }
+
+        // 顯示當前主題及其子主題的項目
+        return items.filter(item => {
+            if (!item.topic) return false;
+            return item.topic === this._currentTopicPath ||
+                   item.topic.startsWith(this._currentTopicPath + '/');
+        });
+    }
+
+    private _getRecommendedByUsage(items: any[], limit: number = 6): any[] {
+        return items
+            .map(item => ({
+                ...item,
+                usageCount: this._getUsageCount(item.id)
+            }))
+            .filter(item => item.usageCount > 0) // 只顯示有使用記錄的
+            .sort((a, b) => b.usageCount - a.usageCount) // 按使用次數降序排列
+            .slice(0, limit);
+    }
+
+    private _getFavoriteItems(items: any[]): any[] {
+        const favorites = this._getFavorites();
+        return items.filter(item => favorites.includes(item.id));
+    }
+
+    private _getFavoriteItemsForDisplay(): any[] {
+        // Get both templates and cards that are favorited
+        const allTemplates = this.templateEngine.getAllTemplates();
+        const allCards = this.templateEngine.getAllCards();
+        const favorites = this._getFavorites();
+
+        // Find favorited templates
+        const favoriteTemplates = allTemplates.filter(template => favorites.includes(template.id));
+
+        // Find favorited cards (topics and links)
+        // Note: For topic cards, we check both card.id and card.target because card.target is the topic path
+        // For link cards, we only check card.id
+        const favoriteCards = allCards.filter(card => {
+            if (card.type === 'topic') {
+                // For topic cards, check both id and target (topic path)
+                return favorites.includes(card.id) || favorites.includes(card.target);
+            } else {
+                // For link cards and others, only check id
+                return favorites.includes(card.id);
+            }
+        });
+
+        // Find favorited main topics (like "c", "python", "javascript")
+        // Get all possible topic names from scope configuration
+        const allPossibleTopics = this._scopeConfig?.topics || [];
+        const favoriteMainTopics = allPossibleTopics
+            .filter(topicName => favorites.includes(topicName))
+            .map(topicName => {
+                const managedTopic = this.templateEngine.getTopicByName?.(topicName);
+                return {
+                    type: 'topic',
+                    id: topicName,
+                    title: managedTopic?.displayName || topicName,
+                    description: managedTopic?.description || `${topicName} 相關內容`,
+                    documentation: managedTopic?.documentation || '', // Include documentation field
+                    topic: '', // Main topics are at root level
+                    target: topicName,
+                    language: topicName
+                };
+            });
+
+        // Combine items and remove duplicates based on ID
+        const seenIds = new Set();
+        const allFavoriteItems = [];
+
+        // Add templates first
+        favoriteTemplates.forEach(template => {
+            if (!seenIds.has(template.id)) {
+                seenIds.add(template.id);
+                allFavoriteItems.push(template);
+            }
+        });
+
+        // Add cards, but check for duplicates
+        favoriteCards.forEach(card => {
+            const cardId = card.id || card.target;
+            if (cardId && !seenIds.has(cardId)) {
+                seenIds.add(cardId);
+                allFavoriteItems.push(card);
+            }
+        });
+
+        // Add main topics, but check for duplicates
+        favoriteMainTopics.forEach(mainTopic => {
+            if (!seenIds.has(mainTopic.id)) {
+                seenIds.add(mainTopic.id);
+                allFavoriteItems.push(mainTopic);
+            }
+        });
+
+        if (!this._currentTopicPath) {
+            // At root level, show all favorite items
+            return allFavoriteItems;
+        } else {
+            // When in a specific topic, only show favorites under current topic
+            return allFavoriteItems.filter(item => {
+                if (!item.topic) return true; // Main topics have empty topic, show them at root
+                return item.topic === this._currentTopicPath ||
+                       item.topic.startsWith(this._currentTopicPath + '/');
+            });
+        }
     }
 
     public async resolveWebviewView(
@@ -103,6 +256,12 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
                     case 'navigateForward':
                         this._handleForwardNavigation();
                         break;
+                    case 'toggleFavorite':
+                        this._handleToggleFavorite(message.itemId);
+                        break;
+                    case 'refreshFavoritesTab':
+                        this._handleRefreshFavoritesTab();
+                        break;
                 }
             },
             undefined,
@@ -142,6 +301,45 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
             } else {
                 vscode.window.showErrorMessage('說明文檔服務未初始化');
             }
+        }
+    }
+
+    private async _handleToggleFavorite(itemId: string) {
+        await this._toggleFavorite(itemId);
+
+        // 發送更新訊息給前端，讓前端決定是否需要從favorites標籤中移除項目
+        if (this._view) {
+            this._view.webview.postMessage({
+                type: 'favoriteToggled',
+                itemId: itemId,
+                isFavorite: this._isFavorite(itemId)
+            });
+        }
+    }
+
+    private async _handleRefreshFavoritesTab() {
+        // Generate updated favorites content
+        const favoriteItems = this._getFavoriteItemsForDisplay();
+        const favoriteHtml = favoriteItems
+            .map(item => {
+                // Check if item has type property (it's a card) or not (it's a template)
+                if (item.type === 'topic') {
+                    return this._generateTopicCardHtml(item);
+                } else if (item.type === 'link') {
+                    return this._generateLinkCardHtml(item);
+                } else {
+                    // It's a template
+                    return this._generateRecommendedTemplateCardHtml(item, 'favorite');
+                }
+            })
+            .join('');
+
+        // Send updated content to frontend
+        if (this._view) {
+            this._view.webview.postMessage({
+                type: 'updateFavoritesContent',
+                content: favoriteHtml || '<div class="empty-state">還沒有收藏任何模板</div>'
+            });
         }
     }
 
@@ -442,71 +640,84 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
     }
 
     private _generateRecommendedTemplatesHtml(): string {
-        
-        if (!this.managementService) {
-            return ''; // 如果沒有 managementService，不顯示推薦區域
-        }
-
-        // 獲取推薦模板
-        const recommendedTemplates = this.managementService.getRecommendedTemplates(6);
-
-
-        // 如果沒有推薦模板，不顯示區域
-        if (recommendedTemplates.length === 0) {
-            return '';
-        }
-
-        // 推薦模板區域 - 只顯示當前 scope (local) 下的模板
-        // 獲取所有當前 scope 下的模板主題路徑
+        // 獲取所有模板並基於使用次數排序推薦
         const allTemplates = this.templateEngine.getAllTemplates();
-        const currentScopeTopics = new Set(allTemplates.map(template => template.topic));
 
-        // 過濾推薦模板，只顯示當前層級下的
-        const filteredRecommended = recommendedTemplates.filter(template => {
-            // 檢查推薦模板是否屬於當前 scope 下的主題
-            return currentScopeTopics.has(template.topic);
-        });
+        // 過濾當前主題下的模板
+        const currentTopicTemplates = this._filterCurrentTopicItems(allTemplates);
 
-        if (filteredRecommended.length === 0) {
+        // 基於使用次數排序獲取推薦模板（取前6個）
+        const recommendedTemplates = this._getRecommendedByUsage(currentTopicTemplates, 6);
+
+        // 獲取最愛項目（使用特殊的顯示邏輯）
+        const favoriteItems = this._getFavoriteItemsForDisplay();
+
+        // 如果沒有推薦也沒有最愛，不顯示區域
+        if (recommendedTemplates.length === 0 && favoriteItems.length === 0) {
             return '';
         }
 
-        const recommendedHtml = filteredRecommended
-            .map(template => this._generateRecommendedTemplateCardHtml(template))
+        const recommendedHtml = recommendedTemplates
+            .map(template => this._generateRecommendedTemplateCardHtml(template, 'recommended'))
+            .join('');
+
+        const favoriteHtml = favoriteItems
+            .map(item => {
+                // Check if item has type property (it's a card) or not (it's a template)
+                if (item.type === 'topic') {
+                    return this._generateTopicCardHtml(item);
+                } else if (item.type === 'link') {
+                    return this._generateLinkCardHtml(item);
+                } else {
+                    // It's a template
+                    return this._generateRecommendedTemplateCardHtml(item, 'favorite');
+                }
+            })
             .join('');
 
         return `
             <div class="topic-group recommended-topic" data-topic="recommended">
-                <div class="topic-header">
-                    <h3 class="topic-title">
-                        <span class="topic-toggle"></span>
-                        <span class="recommended-badge">⭐ 推薦</span>
-                        推薦模板
-                    </h3>
-                    <p class="topic-description">基於您的使用習慣智能推薦</p>
+                <div class="tab-navigation">
+                    <button class="tab-btn active" data-tab="recommended">
+                        <span class="tab-icon">⭐</span> 推薦
+                    </button>
+                    <button class="tab-btn" data-tab="favorites">
+                        <span class="tab-icon">❤️</span> 最愛
+                    </button>
                 </div>
+
                 <div class="recommended-templates-container">
-                    ${recommendedHtml}
+                    <div class="tab-content active" data-tab-content="recommended">
+                        ${recommendedHtml || '<div class="empty-state">沒有推薦的模板</div>'}
+                    </div>
+                    <div class="tab-content" data-tab-content="favorites">
+                        ${favoriteHtml || '<div class="empty-state">還沒有收藏任何模板</div>'}
+                    </div>
                 </div>
             </div>
         `;
     }
 
-    private _generateRecommendedTemplateCardHtml(template: any): string {
-        const usageCount = template.metadata?.usage || 0;
+    private _generateRecommendedTemplateCardHtml(template: any, type: 'recommended' | 'favorite'): string {
+        const usageCount = template.usageCount || this._getUsageCount(template.id);
         const hasDocumentation = template.documentation && template.documentation.trim().length > 0;
+        const isFavorite = this._isFavorite(template.id);
 
         return `
-            <div class="template-card recommended-template" 
-                 data-template-id="${template.id}" 
+            <div class="template-card recommended-template ${type === 'favorite' ? 'favorite-template' : ''}"
+                 data-template-id="${template.id}"
                  data-template-code="${this._escapeHtml(template.code)}"
                  data-has-documentation="${hasDocumentation}"
                  draggable="true">
                 <div class="template-header">
                     <h4 class="template-title">${this._escapeHtml(template.title)}</h4>
                     <div class="template-actions">
-                        <span class="recommended-star">⭐</span>
                         ${usageCount > 0 ? `<span class="usage-count">${usageCount} 次</span>` : ''}
+                        <button class="action-btn favorite-btn"
+                                data-item-id="${template.id}"
+                                title="${isFavorite ? '取消收藏' : '加入收藏'}">
+                            <span class="icon">${isFavorite ? '❤️' : '♡'}</span>
+                        </button>
                         <button class="action-btn preview-btn" title="預覽程式碼">
                             <span class="icon">👁️</span>
                         </button>
@@ -607,6 +818,11 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
                                 ${managedTopic?.displayName || mainTopicName}
                             </h3>
                             <div class="topic-actions">
+                                <button class="action-btn favorite-btn"
+                                        data-item-id="${mainTopicName}"
+                                        title="${this._isFavorite(mainTopicName) ? '取消收藏' : '加入收藏'}">
+                                    <span class="icon">${this._isFavorite(mainTopicName) ? '❤️' : '♡'}</span>
+                                </button>
                                 ${hasDocumentation ? `
                                     <button class="topic-doc-btn"
                                             data-topic-name="${mainTopicName}"
@@ -747,6 +963,11 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
                                 ${managedChildTopic?.displayName || childTopicName}
                             </h3>
                             <div class="topic-actions">
+                                <button class="action-btn favorite-btn"
+                                        data-item-id="${childTopicPath}"
+                                        title="${this._isFavorite(childTopicPath) ? '取消收藏' : '加入收藏'}">
+                                    <span class="icon">${this._isFavorite(childTopicPath) ? '❤️' : '♡'}</span>
+                                </button>
                                 ${hasDocumentation ? `
                                     <button class="topic-doc-btn"
                                             data-topic-name="${childTopicPath}"
@@ -814,6 +1035,11 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
                                 ${displayName}
                             </h3>
                             <div class="topic-actions">
+                                <button class="action-btn favorite-btn"
+                                        data-item-id="${subTopicPath}"
+                                        title="${this._isFavorite(subTopicPath) ? '取消收藏' : '加入收藏'}">
+                                    <span class="icon">${this._isFavorite(subTopicPath) ? '❤️' : '♡'}</span>
+                                </button>
                                 ${hasDocumentation ? `
                                     <button class="topic-doc-btn"
                                             data-topic-name="${subTopicPath}"
@@ -886,6 +1112,11 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
                                     ${displayName}
                                 </h3>
                                 <div class="topic-actions">
+                                    <button class="action-btn favorite-btn"
+                                            data-item-id="${card.target}"
+                                            title="${this._isFavorite(card.target) ? '取消收藏' : '加入收藏'}">
+                                        <span class="icon">${this._isFavorite(card.target) ? '❤️' : '♡'}</span>
+                                    </button>
                                     ${hasDocumentation ? `
                                         <button class="topic-doc-btn"
                                                 data-topic-name="${card.target}"
@@ -990,6 +1221,18 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
                         ${this._escapeHtml(card.title)}
                     </h4>
                     <div class="card-actions">
+                        <button class="action-btn favorite-btn"
+                                data-item-id="${card.target || card.id}"
+                                title="${this._isFavorite(card.target || card.id) ? '取消收藏' : '加入收藏'}">
+                            <span class="icon">${this._isFavorite(card.target || card.id) ? '❤️' : '♡'}</span>
+                        </button>
+                        ${hasDocumentation ? `
+                            <button class="action-btn doc-btn"
+                                    data-topic-name="${card.target || card.id}"
+                                    title="查看說明文件">
+                                <span class="icon">📖</span>
+                            </button>
+                        ` : ''}
                         <button class="action-btn navigate-btn" title="進入主題">
                             <span class="icon">></span>
                         </button>
@@ -1018,6 +1261,18 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
                         ${this._escapeHtml(card.title)}
                     </h4>
                     <div class="card-actions">
+                        <button class="action-btn favorite-btn"
+                                data-item-id="${card.id}"
+                                title="${this._isFavorite(card.id) ? '取消收藏' : '加入收藏'}">
+                            <span class="icon">${this._isFavorite(card.id) ? '❤️' : '♡'}</span>
+                        </button>
+                        ${hasDocumentation ? `
+                            <button class="action-btn doc-btn"
+                                    data-link-id="${card.id}"
+                                    title="查看說明文件">
+                                <span class="icon">📖</span>
+                            </button>
+                        ` : ''}
                         <button class="action-btn navigate-btn" title="${isTopicLink ? '進入主題' : '開啟連結'}">
                             <span class="icon">${isTopicLink ? '>' : '↗️'}</span>
                         </button>
@@ -1052,6 +1307,11 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
                     </h4>
                     <div class="card-actions template-actions">
                         ${isRecommended ? '<span class="recommended-star">⭐</span>' : ''}
+                        <button class="action-btn favorite-btn"
+                                data-item-id="${card.id}"
+                                title="${this._isFavorite(card.id) ? '取消收藏' : '加入收藏'}">
+                            <span class="icon">${this._isFavorite(card.id) ? '❤️' : '♡'}</span>
+                        </button>
                         <button class="action-btn preview-btn" title="預覽程式碼">
                             <span class="icon">👁️</span>
                         </button>
