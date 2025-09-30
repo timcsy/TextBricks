@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { TextBricksEngine } from '@textbricks/core';
+import { TextBricksEngine, DataPathService } from '@textbricks/core';
 import { ImportExportManager, SearchManager, ValidationManager } from '@textbricks/core';
 import { WebviewProvider } from '../providers/WebviewProvider';
 import { TextBricksManagerProvider } from '../providers/TextBricksManagerProvider';
@@ -13,6 +13,7 @@ export class CommandService {
     private importExportManager: ImportExportManager;
     private searchManager: SearchManager;
     private validationManager: ValidationManager;
+    private dataPathService: DataPathService;
     private platform: VSCodePlatform;
 
     constructor(
@@ -26,6 +27,12 @@ export class CommandService {
         this.importExportManager = new ImportExportManager(this.platform);
         this.searchManager = new SearchManager(this.platform);
         this.validationManager = new ValidationManager(this.platform);
+        this.dataPathService = new DataPathService(this.platform);
+
+        // 初始化 DataPathService
+        this.dataPathService.initialize().catch(error => {
+            console.error('Failed to initialize DataPathService:', error);
+        });
     }
 
     /**
@@ -63,6 +70,20 @@ export class CommandService {
             // 文檔命令
             vscode.commands.registerCommand('textbricks.showDocumentation', (templateId?: string) =>
                 this.showDocumentation(templateId)
+            ),
+
+            // 資料位置管理命令
+            vscode.commands.registerCommand('textbricks.openDataLocation', () =>
+                this.openDataLocation()
+            ),
+            vscode.commands.registerCommand('textbricks.changeDataLocation', () =>
+                this.changeDataLocation()
+            ),
+            vscode.commands.registerCommand('textbricks.resetToSystemDefault', () =>
+                this.resetToSystemDefault()
+            ),
+            vscode.commands.registerCommand('textbricks.initializeDataLocation', () =>
+                this.initializeDataLocation()
             )
         ];
 
@@ -71,8 +92,8 @@ export class CommandService {
 
     // ==================== 基本命令 ====================
 
-    private refreshTemplates(): void {
-        this.webviewProvider.refresh();
+    private async refreshTemplates(): Promise<void> {
+        await this.webviewProvider.refresh();
         vscode.window.showInformationMessage('模板列表已刷新');
     }
 
@@ -473,6 +494,177 @@ export class CommandService {
                 const errorMessage = result.errors.join('\n');
                 vscode.window.showErrorMessage(errorMessage);
             }
+        }
+    }
+
+    // ==================== 資料位置管理命令 ====================
+
+    private async openDataLocation(): Promise<void> {
+        try {
+            await this.dataPathService.openDataLocation();
+        } catch (error) {
+            vscode.window.showErrorMessage(`開啟資料位置失敗：${error}`);
+        }
+    }
+
+    private async changeDataLocation(): Promise<void> {
+        try {
+            // 獲取可用位置
+            const locations = await this.dataPathService.getAvailableLocations();
+
+            const locationItems = locations.map(location => ({
+                label: location.name,
+                detail: location.path,
+                description: location.recommended ? '推薦' : undefined,
+                location: location
+            }));
+
+            // 添加自定義選項
+            locationItems.push({
+                label: '自定義位置...',
+                detail: '選擇自定義資料夾',
+                description: '自定義',
+                location: null
+            });
+
+            const selected = await vscode.window.showQuickPick(locationItems, {
+                placeHolder: '選擇資料存儲位置'
+            });
+
+            if (!selected) return;
+
+            let targetPath: string;
+
+            if (selected.location) {
+                targetPath = selected.location.path;
+            } else {
+                // 自定義位置
+                const folder = await vscode.window.showOpenDialog({
+                    canSelectFiles: false,
+                    canSelectFolders: true,
+                    canSelectMany: false,
+                    openLabel: '選擇資料夾'
+                });
+
+                if (!folder || folder.length === 0) return;
+                targetPath = folder[0].fsPath;
+            }
+
+            // 詢問遷移選項
+            const migrateData = await vscode.window.showQuickPick(
+                ['是', '否'],
+                { placeHolder: '是否遷移現有資料？' }
+            );
+
+            if (migrateData === undefined) return;
+
+            const createBackup = await vscode.window.showQuickPick(
+                ['是', '否'],
+                { placeHolder: '是否建立備份？' }
+            );
+
+            if (createBackup === undefined) return;
+
+            // 確認變更
+            const confirmed = await vscode.window.showWarningMessage(
+                `確定要變更資料存儲位置到 "${targetPath}" 嗎？`,
+                { modal: true },
+                '確定',
+                '取消'
+            );
+
+            if (confirmed === '確定') {
+                await vscode.window.withProgress({
+                    location: vscode.ProgressLocation.Notification,
+                    title: '變更資料位置中...',
+                    cancellable: false
+                }, async (progress) => {
+                    progress.report({ message: '準備遷移資料...' });
+
+                    const result = await this.dataPathService.setDataPath(targetPath, {
+                        migrateData: migrateData === '是',
+                        createBackup: createBackup === '是'
+                    });
+
+                    if (result.success) {
+                        progress.report({ message: '完成！' });
+                        vscode.window.showInformationMessage(
+                            `資料位置已成功變更至 "${targetPath}"`
+                        );
+                        this.webviewProvider.refresh();
+                    } else {
+                        throw new Error(`遷移失敗: ${result.errors.join(', ')}`);
+                    }
+                });
+            }
+
+        } catch (error) {
+            vscode.window.showErrorMessage(`變更資料位置失敗：${error}`);
+        }
+    }
+
+    private async resetToSystemDefault(): Promise<void> {
+        try {
+            const confirmed = await vscode.window.showWarningMessage(
+                '確定要重設為系統預設位置嗎？這將會遷移您的資料。',
+                { modal: true },
+                '確定',
+                '取消'
+            );
+
+            if (confirmed === '確定') {
+                await vscode.window.withProgress({
+                    location: vscode.ProgressLocation.Notification,
+                    title: '重設資料位置中...',
+                    cancellable: false
+                }, async (progress) => {
+                    progress.report({ message: '準備重設...' });
+
+                    const result = await this.dataPathService.resetToSystemDefault();
+
+                    if (result.success) {
+                        progress.report({ message: '完成！' });
+                        vscode.window.showInformationMessage('已重設為系統預設位置');
+                        this.webviewProvider.refresh();
+                    } else {
+                        throw new Error(`重設失敗: ${result.errors.join(', ')}`);
+                    }
+                });
+            }
+
+        } catch (error) {
+            vscode.window.showErrorMessage(`重設資料位置失敗：${error}`);
+        }
+    }
+
+    private async initializeDataLocation(): Promise<void> {
+        try {
+            const confirmed = await vscode.window.showInformationMessage(
+                '這將初始化 TextBricks 資料位置並複製範本資料。確定要繼續嗎？',
+                { modal: true },
+                '確定',
+                '取消'
+            );
+
+            if (confirmed === '確定') {
+                await vscode.window.withProgress({
+                    location: vscode.ProgressLocation.Notification,
+                    title: '初始化資料位置中...',
+                    cancellable: false
+                }, async (progress) => {
+                    progress.report({ message: '準備初始化...' });
+
+                    // 強制重新初始化 DataPathService
+                    await this.dataPathService.initialize();
+
+                    progress.report({ message: '完成！' });
+                    vscode.window.showInformationMessage('資料位置已成功初始化');
+                    this.webviewProvider.refresh();
+                });
+            }
+
+        } catch (error) {
+            vscode.window.showErrorMessage(`初始化資料位置失敗：${error}`);
         }
     }
 }

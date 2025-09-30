@@ -259,6 +259,122 @@
 
 > 📝 **重要**：AI 助手在進行重大變更時，請更新此部分以便後續追蹤
 
+### 2025-09-30 - 主題顯示名稱統一修復 + 資料路徑管理系統實現
+- **執行者**：Claude Code
+- **變更**：
+  - 🎯 **主題顯示統一**：完成全面的「地毯式搜尋」，將所有主題顯示從原始 ID 改為 displayName 格式
+  - 🔧 **關鍵修復**：修正下拉選單選項創建時顯示原始主題名稱的問題
+  - 📊 **統計顯示修復**：主題統計頁面標題現在正確顯示 displayName
+  - 🗂️ **資料路徑管理系統**：實現完整的資料位置管理基礎架構
+  - 📁 **系統標準目錄支援**：支援 macOS/Windows/Linux 的標準應用資料目錄
+  - 🔄 **強制重載機制**：新增緩存清除和強制重新載入功能
+- **技術細節與程式碼變更**（本次會話的實際修改）：
+
+  **📝 assets/js/textbricks-manager.js 的 2 處關鍵修復**：
+
+  - ✅ **Line 681** - 修復主題統計頁面標題顯示：
+    ```javascript
+    // 修改前：只顯示內部名稱
+    <h3 class="data-item-title">${escapeHtml(topic.name)}</h3>
+
+    // 修改後：優先顯示 displayName
+    <h3 class="data-item-title">${escapeHtml(topic.displayName || topic.name)}</h3>
+    ```
+    **修改原因**：主題統計列表中的標題顯示內部技術名稱（如 "basic"）而非用戶友善的顯示名稱（如 "基礎語法"）
+
+  - ✅ **Line 889** - 修復下拉選單選項動態新增：
+    ```javascript
+    // 修改前：顯示原始主題 ID
+    newOption.textContent = item.topic;
+
+    // 修改後：使用 displayName 格式
+    newOption.textContent = getTopicDisplayName(item.topic);
+    ```
+    **修改原因**：編輯模板時，當主題不存在於現有選項中需要動態新增時，顯示的是原始 topic ID（如 "c/basic"），應該顯示友善的 displayName 格式（如 "C 語言/基礎語法"）
+
+  **🔧 問題背景**：
+  - 用戶反映界面中仍有部分地方顯示原始主題 ID 而非 displayName 格式
+  - 透過「地毯式搜尋」找到剩餘的兩個顯示問題
+  - 這兩處是之前遺漏的關鍵 UI 位置
+
+  **📊 影響範圍**：
+  - 🎯 **主題統計頁面**：現在正確顯示主題的 displayName
+  - 📋 **模板編輯界面**：下拉選單動態新增的選項現在顯示正確格式
+
+  **🗂️ 新增資料路徑管理系統**：
+
+  - ✅ **packages/core/src/services/DataPathService.ts** - 新建資料路徑管理服務：
+    ```typescript
+    export class DataPathService {
+        private platform: IPlatform;
+        private currentDataPath: string | null = null;
+        private config: DataLocationConfig | null = null;
+
+        // 支援系統標準目錄
+        // macOS: ~/Library/Application Support/TextBricks/
+        // Windows: %APPDATA%/TextBricks/
+        // Linux: ~/.config/TextBricks/
+    }
+    ```
+
+  - ✅ **packages/shared/src/models/DataLocation.ts** - 新建資料位置模型：
+    ```typescript
+    export interface DataLocationInfo {
+        id: string;
+        name: string;
+        path: string;
+        type: 'vscode' | 'system' | 'custom' | 'workspace';
+        isDefault: boolean;
+        isActive: boolean;
+        // ... 其他位置管理屬性
+    }
+    ```
+
+  - ✅ **packages/core/src/managers/ScopeManager.ts** - 新建 Scope 管理器
+  - ✅ **packages/core/src/managers/TopicManager.ts** - 新建 Topic 管理器
+  - ✅ **packages/shared/src/models/Scope.ts** - 新建 Scope 模型
+  - ✅ **packages/shared/src/models/Topic.ts** - 新建 Topic 模型
+
+  **🔄 強制重載機制**：
+
+  - ✅ **packages/core/src/core/TextBricksEngine.ts** - 新增強制重載方法：
+    ```typescript
+    // 強制重新載入數據，清除緩存
+    async forceReloadTemplates(): Promise<void> {
+        console.log('[TextBricksEngine] Force reloading templates - clearing cache first');
+        await this.invalidateCache();
+        await this.loadTemplates();
+        // ...
+    }
+    ```
+
+  - ✅ **packages/vscode/src/extension.ts** - 整合資料路徑服務：
+    ```typescript
+    import { DataPathService } from '@textbricks/core';
+
+    // 初始化資料路徑服務
+    const dataPathService = new DataPathService(platform);
+    ```
+
+  **📦 模組匯出更新**：
+  - ✅ **packages/core/src/index.ts** - 匯出新的 DataPathService
+  - ✅ **packages/shared/src/index.ts** - 匯出新的模型定義
+
+  **✅ 編譯狀態**：已執行 `npm run compile` 並成功編譯所有變更
+- **影響範圍**：
+  - 📋 **下拉選單**：模板編輯、收藏過濾、內容過濾選單全部使用 displayName
+  - 📊 **統計頁面**：主題統計列表標題顯示 displayName
+  - 🏷️ **標籤顯示**：所有模板卡片的主題標籤使用 displayName 格式
+  - 📝 **詳細面板**：模板詳細資訊面板的主題欄位使用 displayName
+  - 📈 **使用統計**：最近使用和收藏項目的主題顯示使用 displayName
+- **用戶體驗改善**：
+  - 🎯 **一致性**：所有界面現在統一顯示 "C 語言/基礎語法" 而非 "c/basic"
+  - 🔍 **可讀性**：主題名稱更加友善和易於理解
+  - 🎨 **專業感**：界面顯示更加一致和專業
+- **編譯狀態**：✅ 已執行 `npm run compile` 並成功編譯所有變更
+- **狀態**：主題顯示名稱統一修復完成，所有 UI 組件現在正確顯示 displayName 格式
+- **下一步**：可繼續其他功能開發或根據用戶反饋進行微調
+
 ### 2025-09-27 - 標籤式推薦系統和收藏功能完整實現
 - **執行者**：Claude Code
 - **變更**：

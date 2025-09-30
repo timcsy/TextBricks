@@ -966,7 +966,7 @@
                     <div class="tooltip-title">${escapeHtml(title)}</div>
                     <div class="tooltip-actions">
                         ${hasDocumentation ? `<button class="tooltip-action-btn doc-btn" data-template-id="${templateId}" title="查看說明文檔">📖 說明</button>` : ''}
-                        <button class="tooltip-action-btn insert-all-btn" data-template-id="${templateId}">➕ 插入</button>
+                        <button class="tooltip-action-btn insert-all-btn" data-template-id="${templateId}">＋ 插入</button>
                         <button class="tooltip-action-btn copy-all-btn" data-template-id="${templateId}">📋 複製</button>
                         ${supportsDrag ? `<div class="tooltip-drag-handle" draggable="true" data-template-id="${templateId}" title="拖曳到編輯器">✋ 拖曳</div>` : ''}
                     </div>
@@ -1133,7 +1133,7 @@
             insertBtn.textContent = '✅ 已插入';
             insertBtn.classList.add('success');
             setTimeout(() => {
-                insertBtn.textContent = '➕ 插入';
+                insertBtn.textContent = '＋ 插入';
                 insertBtn.classList.remove('success');
             }, 2000);
         });

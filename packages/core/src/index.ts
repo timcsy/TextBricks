@@ -3,11 +3,14 @@ export { TextBricksEngine } from './core/TextBricksEngine';
 export { DocumentationService } from './core/DocumentationService';
 export { SearchService } from './core/SearchService';
 export { CodeOperationService } from './core/CodeOperationService';
+export { DataPathService } from './services/DataPathService';
 
 // Core managers
 export { ImportExportManager } from './managers/ImportExportManager';
 export { SearchManager, SearchFilters, SearchOptions, SearchResult } from './managers/SearchManager';
 export { ValidationManager, ValidationResult, ValidationError, ValidationWarning, TemplateValidationOptions, ImportValidationOptions } from './managers/ValidationManager';
+export { ScopeManager } from './managers/ScopeManager';
+export { TopicManager } from './managers/TopicManager';
 
 // Platform interfaces
 export * from './interfaces/IEditor';

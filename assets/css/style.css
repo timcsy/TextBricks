@@ -701,6 +701,7 @@ body {
     min-width: 24px;
     min-height: 24px;
     transition: all 0.2s ease;
+    color: var(--vscode-foreground);
 }
 
 .action-btn:hover {
@@ -711,6 +712,13 @@ body {
 .action-btn .icon {
     font-size: 12px;
     line-height: 1;
+}
+
+/* Insert button color styling to match navigate buttons */
+.action-btn.insert-btn:hover {
+    background: var(--vscode-button-hoverBackground);
+    color: var(--vscode-button-foreground);
+    border-color: var(--vscode-focusBorder);
 }
 
 /* Documentation button specific styling */

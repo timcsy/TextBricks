@@ -60,6 +60,23 @@
         }
       ]
     },
+    "configuration": {
+      "title": "TextBricks",
+      "properties": {
+        "textbricks.dataLocation": {
+          "type": "string",
+          "default": "",
+          "description": "TextBricks 資料存儲位置（空值表示使用系統預設位置）",
+          "scope": "application"
+        },
+        "textbricks.useSystemDefault": {
+          "type": "boolean",
+          "default": true,
+          "description": "使用系統預設的資料存儲位置",
+          "scope": "application"
+        }
+      }
+    },
     "commands": [
       {
         "command": "textbricks.refreshTemplates",
@@ -94,6 +111,26 @@
         "command": "textbricks.showDocumentation",
         "title": "Show Template Documentation",
         "icon": "$(book)"
+      },
+      {
+        "command": "textbricks.openDataLocation",
+        "title": "Open Data Storage Location",
+        "icon": "$(folder-opened)"
+      },
+      {
+        "command": "textbricks.changeDataLocation",
+        "title": "Change Data Storage Location",
+        "icon": "$(folder)"
+      },
+      {
+        "command": "textbricks.resetToSystemDefault",
+        "title": "Reset to System Default Location",
+        "icon": "$(home)"
+      },
+      {
+        "command": "textbricks.initializeDataLocation",
+        "title": "Initialize Data Location",
+        "icon": "$(database)"
       }
     ],
     "menus": {
@@ -129,6 +166,22 @@
         {
           "command": "textbricks.showDocumentation",
           "title": "TextBricks: Show Template Documentation"
+        },
+        {
+          "command": "textbricks.openDataLocation",
+          "title": "TextBricks: Open Data Storage Location"
+        },
+        {
+          "command": "textbricks.changeDataLocation",
+          "title": "TextBricks: Change Data Storage Location"
+        },
+        {
+          "command": "textbricks.resetToSystemDefault",
+          "title": "TextBricks: Reset to System Default Location"
+        },
+        {
+          "command": "textbricks.initializeDataLocation",
+          "title": "TextBricks: Initialize Data Location"
         }
       ]
     }
@@ -138,7 +191,7 @@
     "bundle:vscode": "npm run build --workspaces && esbuild packages/vscode/src/extension.ts --bundle --outfile=packages/vscode/dist/extension.js --external:vscode --format=cjs --platform=node --sourcemap && npm run copy-data:vscode",
     "compile": "npm run build --workspaces",
     "build:vscode": "npm run build --workspace=@textbricks/vscode",
-    "copy-data:vscode": "mkdir -p packages/vscode/dist/data packages/vscode/dist/assets && cp -r packages/vscode/src/data/* packages/vscode/dist/data/ 2>/dev/null || true && cp -r assets/* packages/vscode/dist/assets/",
+    "copy-data:vscode": "mkdir -p packages/vscode/dist/data packages/vscode/dist/assets && cp -r data/* packages/vscode/dist/data/ 2>/dev/null || true && cp -r assets/* packages/vscode/dist/assets/",
     "package:vscode": "vsce package --out dist/plugins/vscode/current/",
     "package:vscode:versioned": "vsce package --out dist/plugins/vscode/v0.2.5/",
     "package:release": "npm run archive:vscode && npm run package:vscode && npm run link:current",

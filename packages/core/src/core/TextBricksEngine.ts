@@ -72,18 +72,54 @@ export class TextBricksEngine {
         }
     }
 
+    // 強制重新載入數據，清除緩存
+    async forceReloadTemplates(): Promise<void> {
+        console.log('[TextBricksEngine] Force reloading templates - clearing cache first');
+        await this.invalidateCache();
+        await this.loadTemplates();
+        console.log('[TextBricksEngine] Force reload completed. Topics loaded:', this.topics.length);
+        if (this.topics.length > 0) {
+            console.log('[TextBricksEngine] Sample topic:', {
+                name: this.topics[0].name,
+                description: this.topics[0].description,
+                docLength: this.topics[0].documentation?.length
+            });
+        }
+    }
+
     private async saveTemplateData(data: TemplateData): Promise<void> {
         try {
+            const CURRENT_DATA_VERSION = '0.2.5-with-new-topic-format';
             const jsonData = JSON.stringify(data, null, 2);
+
+            // 保存到內存存儲
             await this.platform.storage.set('templates.json', jsonData);
+            await this.platform.storage.set('templates.version', CURRENT_DATA_VERSION);
+
+            console.log('[TextBricksEngine] Template data saved to storage');
         } catch (error) {
             throw new Error(`Failed to save template data: ${error}`);
         }
     }
 
+    /**
+     * 強制清除存儲緩存並重新載入
+     */
+    private async invalidateCache(): Promise<void> {
+        try {
+            // 清除存儲中的緩存數據
+            await this.platform.storage.set('templates.version', null);
+            await this.platform.storage.set('templates.json', null);
+
+            console.log('[TextBricksEngine] Cache invalidated');
+        } catch (error) {
+            console.error('[TextBricksEngine] Error invalidating cache:', error);
+        }
+    }
+
     private async loadTemplateData(): Promise<TemplateData> {
         try {
-            const CURRENT_DATA_VERSION = '0.2.5-with-new-topic-format-' + Date.now();
+            const CURRENT_DATA_VERSION = '0.2.5-with-new-topic-format';
 
             // 檢查 storage 中的資料版本
             const storedVersion = await this.platform.storage.get<string>('templates.version');
@@ -138,31 +174,25 @@ export class TextBricksEngine {
             const { join } = await import('path');
             const { readdir, readFile, stat } = await import('fs/promises');
 
-            // 取得項目根目錄 (從 extensionPath 往上找到包含 data 的目錄)
-            const extensionPath = (this.platform as any).getExtensionPath?.() ||
-                                (this.platform as any).getExtensionContext?.()?.extensionPath;
-
-            console.log(`[TextBricksEngine] extensionPath: ${extensionPath}`);
-            if (!extensionPath) {
-                console.log('[TextBricksEngine] No extension path found');
+            // 使用動態資料目錄
+            if (!this.dataDirectory) {
+                console.log('[TextBricksEngine] No data directory configured');
                 return null;
             }
 
-            // 找到項目根目錄 (包含 data 資料夾)
-            let rootPath = extensionPath;
-            const dataPath = join(rootPath, 'data');
+            console.log(`[TextBricksEngine] Using data directory: ${this.dataDirectory}`);
 
-            console.log(`[TextBricksEngine] Looking for data path: ${dataPath}`);
+            // 檢查資料目錄是否存在
             try {
-                await stat(dataPath);
-                console.log(`[TextBricksEngine] Data path found: ${dataPath}`);
+                await stat(this.dataDirectory);
+                console.log(`[TextBricksEngine] Data directory found: ${this.dataDirectory}`);
             } catch (error) {
-                console.log(`[TextBricksEngine] Data path not found: ${dataPath}, error:`, error);
-                return null; // data 資料夾不存在
+                console.log(`[TextBricksEngine] Data directory not found: ${this.dataDirectory}, error:`, error);
+                return null; // 資料目錄不存在
             }
 
-            // 載入 local scope
-            const localScopePath = join(dataPath, 'local');
+            // 直接使用提供的資料目錄作為 localScopePath
+            const localScopePath = this.dataDirectory;
             try {
                 await stat(localScopePath);
             } catch {
@@ -204,6 +234,7 @@ export class TextBricksEngine {
             const { join } = await import('path');
             const { readdir, readFile, stat } = await import('fs/promises');
 
+            console.log('[TextBricksEngine] loadTopicsRecursively scanning directory:', dirPath);
             const items = await readdir(dirPath);
 
             for (const item of items) {
@@ -214,8 +245,15 @@ export class TextBricksEngine {
                     // 檢查是否有 topic.json
                     const topicJsonPath = join(itemPath, 'topic.json');
                     try {
+                        console.log('[TextBricksEngine] Reading topic file:', topicJsonPath);
                         const topicContent = await readFile(topicJsonPath, 'utf8');
                         const topic: Topic = JSON.parse(topicContent);
+                        console.log('[TextBricksEngine] Loaded topic:', {
+                            name: topic.name,
+                            description: topic.description,
+                            documentationLength: topic.documentation?.length,
+                            documentationPreview: topic.documentation?.substring(0, 100)
+                        });
                         topics.push(topic);
 
                         // 檢查是否應該添加為語言 (基於路徑推測)
@@ -643,13 +681,50 @@ export class TextBricksEngine {
             }
         };
 
+        // 更新文件系統中的模板文件
+        await this.updateTemplateFile(updatedTemplate);
+
         const data = await this.loadTemplateData();
-        const index = data.templates.findIndex(t => t.id === templateId);
-        if (index !== -1) {
-            data.templates[index] = updatedTemplate;
-            await this.saveTemplateData(data);
-            await this.loadTemplates();
+        const templateIndex = data.templates.findIndex(t => t.id === templateId);
+        if (templateIndex !== -1) {
+            data.templates[templateIndex] = updatedTemplate;
         }
+
+        // 同時更新對應的卡片數據
+        if (data.cards) {
+            console.log(`[TextBricksEngine] Looking for card with ID: ${templateId}, total cards: ${data.cards.length}`);
+
+            // 列出所有卡片的ID和類型用於調試
+            data.cards.forEach((card, index) => {
+                if (card.type === 'template') {
+                    console.log(`[TextBricksEngine] Card ${index}: ID=${card.id}, type=${card.type}, title=${card.title}`);
+                }
+            });
+
+            const cardIndex = data.cards.findIndex(c => c.id === templateId && c.type === 'template');
+            if (cardIndex !== -1) {
+                console.log(`[TextBricksEngine] Found card at index ${cardIndex}, updating description from "${data.cards[cardIndex].description}" to "${updatedTemplate.description}"`);
+
+                data.cards[cardIndex] = {
+                    ...data.cards[cardIndex],
+                    title: updatedTemplate.title,
+                    description: updatedTemplate.description,
+                    code: updatedTemplate.code,
+                    documentation: updatedTemplate.documentation
+                };
+                console.log(`[TextBricksEngine] Updated card data for template ${templateId}`);
+            } else {
+                console.warn(`[TextBricksEngine] Could not find card for template ID: ${templateId}`);
+            }
+        } else {
+            console.warn(`[TextBricksEngine] No cards data available`);
+        }
+
+        // 先清除緩存，確保下次載入時從文件系統重新讀取
+        await this.invalidateCache();
+
+        // 重新從文件系統載入最新數據
+        await this.loadTemplates();
 
         return updatedTemplate;
     }
@@ -1006,6 +1081,124 @@ export class TextBricksEngine {
 
     private generateTopicId(): string {
         return `topic-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
+    }
+
+    /**
+     * 更新文件系統中的模板文件
+     */
+    private async updateTemplateFile(template: ExtendedTemplate): Promise<void> {
+        try {
+            if (!this.dataDirectory) {
+                console.warn('[TextBricksEngine] No data directory configured, skipping file update');
+                return;
+            }
+
+            const { join } = await import('path');
+            const { writeFile } = await import('fs/promises');
+
+            // 構建模板文件路徑
+            // 格式: dataDirectory/topic/templates/templateId.json
+            const topicPath = join(this.dataDirectory, template.topic);
+
+            // 查找模板文件 - 需要遞迴搜索可能的位置
+            const templateFilePath = await this.findTemplateFilePath(template);
+
+            if (!templateFilePath) {
+                console.warn(`[TextBricksEngine] Could not find template file for ${template.id}`);
+                return;
+            }
+
+            // 創建要保存的模板數據（不包含推斷的 language 和 topic）
+            const templateData = {
+                id: template.id,
+                title: template.title,
+                description: template.description,
+                code: template.code,
+                documentation: template.documentation
+            };
+
+            // 保存到文件
+            await writeFile(templateFilePath, JSON.stringify(templateData, null, 2), 'utf8');
+            console.log(`[TextBricksEngine] Updated template file: ${templateFilePath}`);
+
+        } catch (error) {
+            console.error('[TextBricksEngine] Error updating template file:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * 查找模板的文件路徑
+     */
+    private async findTemplateFilePath(template: ExtendedTemplate): Promise<string | null> {
+        try {
+            const { join } = await import('path');
+            const { readdir, stat } = await import('fs/promises');
+
+            if (!this.dataDirectory) {
+                return null;
+            }
+
+            // 根據 topic 構建可能的路徑
+            const topicPath = join(this.dataDirectory, template.topic);
+
+            // 遞迴搜索模板文件
+            return await this.searchTemplateFile(topicPath, template.id);
+
+        } catch (error) {
+            console.error('[TextBricksEngine] Error finding template file path:', error);
+            return null;
+        }
+    }
+
+    /**
+     * 遞迴搜索模板文件
+     */
+    private async searchTemplateFile(dirPath: string, templateId: string): Promise<string | null> {
+        try {
+            const { join } = await import('path');
+            const { readdir, stat } = await import('fs/promises');
+
+            const items = await readdir(dirPath);
+
+            for (const item of items) {
+                const itemPath = join(dirPath, item);
+                const itemStat = await stat(itemPath);
+
+                if (itemStat.isDirectory()) {
+                    if (item === 'templates') {
+                        // 在 templates 目錄中查找模板文件
+                        const templateFiles = await readdir(itemPath);
+                        for (const file of templateFiles) {
+                            if (file.endsWith('.json')) {
+                                const filePath = join(itemPath, file);
+                                // 讀取文件檢查 ID
+                                try {
+                                    const { readFile } = await import('fs/promises');
+                                    const content = await readFile(filePath, 'utf8');
+                                    const data = JSON.parse(content);
+                                    if (data.id === templateId) {
+                                        return filePath;
+                                    }
+                                } catch {
+                                    // 忽略無法讀取的文件
+                                }
+                            }
+                        }
+                    } else {
+                        // 遞迴搜索子目錄
+                        const result = await this.searchTemplateFile(itemPath, templateId);
+                        if (result) {
+                            return result;
+                        }
+                    }
+                }
+            }
+
+            return null;
+        } catch {
+            return null;
+        }
     }
 
 }

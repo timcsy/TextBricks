@@ -19,6 +19,10 @@ export class DocumentationProvider {
     ) {}
 
     public async showDocumentation(templateId: string) {
+        // Force reload latest data to ensure we get the most current template documentation
+        console.log('[DocumentationProvider] Force reloading data before showing template documentation');
+        await this.templateEngine.forceReloadTemplates();
+
         const template = this.templateEngine.getTemplateById(templateId);
         if (!template) {
             vscode.window.showErrorMessage(`找不到模板 ID: ${templateId}`);
@@ -68,7 +72,40 @@ export class DocumentationProvider {
     }
 
     public async showTopicDocumentation(topic: Topic) {
-        if (!topic.documentation) {
+        // Force reload latest data to ensure we get the most current topic documentation
+        console.log('[DocumentationProvider] Force reloading data before showing topic documentation');
+        await this.templateEngine.forceReloadTemplates();
+
+        // Try to read directly from file system as fallback
+        let latestTopic = this.templateEngine.getTopicByName(topic.name);
+
+        if (!latestTopic) {
+            // Direct file system read as fallback
+            try {
+                const fs = require('fs').promises;
+                const path = require('path');
+
+                // Try to construct the topic file path using working directory
+                const dataPath = path.join(process.cwd(), 'data');
+                const topicFilePath = path.join(dataPath, 'local', topic.name, 'topic.json');
+
+                console.log('[DocumentationProvider] Attempting direct file read from:', topicFilePath);
+                const topicFileContent = await fs.readFile(topicFilePath, 'utf8');
+                latestTopic = JSON.parse(topicFileContent);
+                console.log('[DocumentationProvider] Direct file read successful');
+            } catch (error) {
+                console.error('[DocumentationProvider] Direct file read failed:', error);
+            }
+        }
+
+        console.log('[DocumentationProvider] Latest topic data:', {
+            name: latestTopic?.name,
+            description: latestTopic?.description,
+            documentationLength: latestTopic?.documentation?.length,
+            documentationPreview: latestTopic?.documentation?.substring(0, 100)
+        });
+
+        if (!latestTopic || !latestTopic.documentation) {
             vscode.window.showWarningMessage(`主題 "${topic.name}" 沒有說明文檔`);
             return;
         }
@@ -81,7 +118,7 @@ export class DocumentationProvider {
         } else {
             this._panel = vscode.window.createWebviewPanel(
                 DocumentationProvider.viewType,
-                `📖 ${topic.name} 主題 - 學習指南`,
+                `📖 ${latestTopic.name} 主題 - 說明文件`,
                 column,
                 {
                     enableScripts: true,
@@ -104,8 +141,8 @@ export class DocumentationProvider {
             );
         }
 
-        // Load and display topic documentation
-        await this._updateTopicWebview(topic);
+        // Load and display topic documentation with latest data
+        await this._updateTopicWebview(latestTopic);
     }
 
     private _onPanelDisposed() {
@@ -418,7 +455,7 @@ export class DocumentationProvider {
                 <div class="code-block-header">
                     <span class="language-label">${language.toUpperCase() || 'CODE'}</span>
                     <div class="code-actions">
-                        <button class="code-action-btn insert-code-btn" data-code-id="${codeId}" data-raw-code="${this._escapeHtml(JSON.stringify(trimmedCode))}" title="插入程式碼">➕ 插入</button>
+                        <button class="code-action-btn insert-code-btn" data-code-id="${codeId}" data-raw-code="${this._escapeHtml(JSON.stringify(trimmedCode))}" title="插入程式碼">＋ 插入</button>
                         <button class="code-action-btn copy-code-btn" data-code-id="${codeId}" data-raw-code="${this._escapeHtml(JSON.stringify(trimmedCode))}" title="複製程式碼">📋 複製</button>
                     </div>
                 </div>
