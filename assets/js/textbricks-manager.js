@@ -2,7 +2,10 @@
 
 (function() {
     const vscode = acquireVsCodeApi();
-    
+
+    // 使用共享工具函數（從 utils.js）
+    const { escapeHtml, renderMarkdown, formatDate, showLoading } = window.TextBricksUtils || {};
+
     // State
     let currentData = {
         // 傳統數據
@@ -2188,23 +2191,10 @@ ${escapeHtml(template.code)}
     }
 
     // Utility functions
-    function showLoading(show) {
-        const loading = document.getElementById('loading');
-        if (show) {
-            loading.classList.remove('hidden');
-        } else {
-            loading.classList.add('hidden');
-        }
-    }
+    // showLoading, escapeHtml, renderMarkdown 現在從 TextBricksUtils 導入
 
-    function escapeHtml(text) {
-        if (typeof text !== 'string') return '';
-        const div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
-    }
-
-    function renderMarkdown(text) {
+    // 保留原有的 renderMarkdown 實現作為內部函數（如果與 utils 不同）
+    function renderMarkdownLocal(text) {
         if (!text) return '';
 
         // Simple markdown rendering - convert common markdown syntax to HTML

@@ -632,10 +632,6 @@ export class DocumentationProvider {
                 <span class="label">簡介：</span>
                 <span class="value">${this._escapeHtml(topic.description)}</span>
             </div>
-            <div class="info-item">
-                <span class="label">建立時間：</span>
-                <span class="value">${topic.createdAt ? new Date(topic.createdAt).toLocaleDateString('zh-TW') : '未知'}</span>
-            </div>
         </div>
 
         <div class="documentation-content">

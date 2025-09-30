@@ -6,31 +6,15 @@ export interface Language {
   icon?: string;
 }
 
-export interface Topic {
-  id: string;
-  name: string;
-  displayName?: string; // 顯示名稱，如果不設定就用 name
-  description: string; // 簡短描述 (1-2句話)
-  documentation?: string; // 詳細說明文件 (Markdown content, local file path, or URL)
-
-  // 資料夾配置
-  templates?: string; // 模板資料夾名稱，預設 "templates"
-  links?: string; // 連結資料夾名稱，預設 "links"
-  subtopics?: string[]; // 子主題名稱陣列
-
-  // 顯示設定
-  display?: {
-    icon?: string; // 主題圖標
-    color?: string; // 主題顏色 (hex)
-    order?: number; // 排序權重
-    collapsed?: boolean; // 預設收合狀態
-    showInNavigation?: boolean; // 導航顯示
-    cardStyle?: string; // 卡片樣式
-  };
-
-  createdAt?: Date;
-  updatedAt?: Date;
-}
+/**
+ * Topic 類型別名
+ *
+ * @deprecated 請使用 TopicConfig（從 '@textbricks/shared' 的 models/Topic.ts 導入）
+ * 此別名保留用於向後兼容，將在未來版本中移除
+ *
+ * Phase 4 重構：統一使用 TopicConfig 作為主要的主題模型
+ */
+export type Topic = import('./Topic').TopicConfig;
 
 export interface Template {
   id: string;

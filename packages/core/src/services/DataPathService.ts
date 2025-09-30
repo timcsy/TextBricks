@@ -16,12 +16,33 @@ import {
 import { IPlatform } from '../interfaces/IPlatform';
 
 export class DataPathService {
+    private static instance: DataPathService | null = null;
+
     private platform: IPlatform;
     private currentDataPath: string | null = null;
     private config: DataLocationConfig | null = null;
 
-    constructor(platform: IPlatform) {
+    private constructor(platform: IPlatform) {
         this.platform = platform;
+    }
+
+    /**
+     * 獲取 DataPathService 單例
+     * @param platform - 平台介面
+     * @returns DataPathService 實例
+     */
+    static getInstance(platform: IPlatform): DataPathService {
+        if (!DataPathService.instance) {
+            DataPathService.instance = new DataPathService(platform);
+        }
+        return DataPathService.instance;
+    }
+
+    /**
+     * 重置單例（主要用於測試）
+     */
+    static resetInstance(): void {
+        DataPathService.instance = null;
     }
 
     /**

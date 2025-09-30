@@ -443,7 +443,10 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
         const languages = this.templateEngine.getLanguages();
         
         // Get CSS and JS URIs
+        const variablesUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'assets', 'css', 'common', 'variables.css'));
+        const componentsUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'assets', 'css', 'common', 'components.css'));
         const styleUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'assets', 'css', 'style.css'));
+        const utilsUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'assets', 'js', 'common', 'utils.js'));
         const scriptUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'assets', 'js', 'main.js'));
 
         const nonce = this.getNonce();
@@ -454,6 +457,8 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource} 'unsafe-inline'; script-src 'nonce-${nonce}'; img-src ${webview.cspSource} data:;">
+    <link href="${variablesUri}" rel="stylesheet">
+    <link href="${componentsUri}" rel="stylesheet">
     <link href="${styleUri}" rel="stylesheet">
     <title>TextBricks Templates</title>
 </head>
@@ -480,6 +485,7 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
         ${this._generateTopicsHtml(topics)}
     </div>
 
+    <script nonce="${nonce}" src="${utilsUri}"></script>
     <script nonce="${nonce}" src="${scriptUri}"></script>
 </body>
 </html>`;

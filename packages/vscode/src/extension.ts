@@ -24,7 +24,7 @@ export async function activate(context: vscode.ExtensionContext) {
         await platform.start();
 
         // 初始化資料路徑服務
-        const dataPathService = new DataPathService(platform);
+        const dataPathService = DataPathService.getInstance(platform);
 
         // 嘗試自動初始化資料位置
         const isInitialized = await dataPathService.autoInitialize();

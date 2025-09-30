@@ -2,6 +2,9 @@
 
 (function() {
     const vscode = acquireVsCodeApi();
+
+    // 使用共享工具函數（從 utils.js）
+    const { escapeHtml, renderMarkdown, formatDate, showSimpleTooltip } = window.TextBricksUtils || {};
     
     // Track drag state
     let isDragging = false;
@@ -1396,11 +1399,7 @@
     }
 
 
-    function escapeHtml(text) {
-        const div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
-    }
+    // escapeHtml 現在從 TextBricksUtils 導入
 
     // Utility functions for simple tooltips (different from template tooltips)
     function showSimpleTooltip(element, message) {

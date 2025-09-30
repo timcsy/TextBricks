@@ -33,7 +33,7 @@ export class TextBricksManagerProvider {
         private readonly webviewProvider?: WebviewProvider
     ) {
         this.platform = new VSCodePlatform(context);
-        this.dataPathService = new DataPathService(this.platform);
+        this.dataPathService = DataPathService.getInstance(this.platform);
         this.scopeManager = new ScopeManager(this.platform);
         this.topicManager = new TopicManager(this.platform, this.dataPathService);
 
@@ -1084,8 +1084,17 @@ export class TextBricksManagerProvider {
     }
 
     private _getHtmlForWebview(webview: vscode.Webview): string {
+        const variablesUri = webview.asWebviewUri(
+            vscode.Uri.joinPath(this._extensionUri, 'assets', 'css', 'common', 'variables.css')
+        );
+        const componentsUri = webview.asWebviewUri(
+            vscode.Uri.joinPath(this._extensionUri, 'assets', 'css', 'common', 'components.css')
+        );
         const styleUri = webview.asWebviewUri(
             vscode.Uri.joinPath(this._extensionUri, 'assets', 'css', 'textbricks-manager.css')
+        );
+        const utilsUri = webview.asWebviewUri(
+            vscode.Uri.joinPath(this._extensionUri, 'assets', 'js', 'common', 'utils.js')
         );
         const scriptUri = webview.asWebviewUri(
             vscode.Uri.joinPath(this._extensionUri, 'assets', 'js', 'textbricks-manager.js')
@@ -1099,6 +1108,8 @@ export class TextBricksManagerProvider {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource} 'unsafe-inline'; script-src 'nonce-${nonce}' 'unsafe-inline'; img-src ${webview.cspSource} data:;">
+    <link href="${variablesUri}" rel="stylesheet">
+    <link href="${componentsUri}" rel="stylesheet">
     <link href="${styleUri}" rel="stylesheet">
     <title>TextBricks Manager</title>
 </head>
@@ -1602,6 +1613,7 @@ export class TextBricksManagerProvider {
         </div>
     </div>
 
+    <script nonce="${nonce}" src="${utilsUri}"></script>
     <script nonce="${nonce}" src="${scriptUri}"></script>
 </body>
 </html>`;

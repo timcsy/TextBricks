@@ -1,0 +1,75 @@
+/**
+ * TextBricks UI 設計系統 - CSS 變數
+ * 統一的設計令牌和主題變數
+ */
+
+:root {
+    /* ========== 顏色系統 ========== */
+
+    /* 背景 */
+    --tb-bg-primary: var(--vscode-editor-background);
+    --tb-bg-secondary: var(--vscode-sideBar-background);
+    --tb-bg-tertiary: var(--vscode-panel-background);
+    --tb-bg-hover: var(--vscode-list-hoverBackground);
+    --tb-bg-active: var(--vscode-list-activeSelectionBackground);
+
+    /* 邊框 */
+    --tb-border-color: var(--vscode-panel-border);
+    --tb-border-color-light: var(--vscode-widget-border);
+
+    /* 文字 */
+    --tb-text-primary: var(--vscode-editor-foreground);
+    --tb-text-secondary: var(--vscode-descriptionForeground);
+    --tb-text-disabled: var(--vscode-disabledForeground);
+    --tb-text-link: var(--vscode-textLink-foreground);
+
+    /* 語義化顏色 */
+    --tb-color-info: var(--vscode-textLink-foreground);
+    --tb-color-success: #4CAF50;
+    --tb-color-warning: #FFC107;
+    --tb-color-error: var(--vscode-errorForeground, #F44336);
+
+    /* 按鈕 */
+    --tb-button-bg: var(--vscode-button-background);
+    --tb-button-fg: var(--vscode-button-foreground);
+    --tb-button-hover-bg: var(--vscode-button-hoverBackground);
+    --tb-button-secondary-bg: var(--vscode-button-secondaryBackground);
+    --tb-button-secondary-fg: var(--vscode-button-secondaryForeground);
+
+    /* ========== 間距系統 ========== */
+    --tb-spacing-xs: 4px;
+    --tb-spacing-sm: 8px;
+    --tb-spacing-md: 12px;
+    --tb-spacing-lg: 16px;
+    --tb-spacing-xl: 24px;
+    --tb-spacing-2xl: 32px;
+
+    /* ========== 字體系統 ========== */
+    --tb-font-family: var(--vscode-font-family);
+    --tb-font-size-xs: 11px;
+    --tb-font-size-sm: 12px;
+    --tb-font-size-md: 13px;
+    --tb-font-size-lg: 14px;
+    --tb-font-size-xl: 16px;
+
+    --tb-font-mono: var(--vscode-editor-font-family, 'Consolas', 'Courier New', monospace);
+
+    /* ========== 圓角系統 ========== */
+    --tb-radius-sm: 3px;
+    --tb-radius-md: 6px;
+    --tb-radius-lg: 8px;
+
+    /* ========== 陰影系統 ========== */
+    --tb-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
+    --tb-shadow-md: 0 2px 8px rgba(0, 0, 0, 0.15);
+    --tb-shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.2);
+
+    /* ========== 動畫系統 ========== */
+    --tb-transition-fast: 0.15s ease;
+    --tb-transition-base: 0.2s ease;
+    --tb-transition-slow: 0.3s ease;
+
+    --tb-easing-standard: cubic-bezier(0.4, 0.0, 0.2, 1);
+    --tb-easing-decelerate: cubic-bezier(0.0, 0.0, 0.2, 1);
+    --tb-easing-accelerate: cubic-bezier(0.4, 0.0, 1, 1);
+}

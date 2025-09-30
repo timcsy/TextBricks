@@ -27,7 +27,7 @@ export class CommandService {
         this.importExportManager = new ImportExportManager(this.platform);
         this.searchManager = new SearchManager(this.platform);
         this.validationManager = new ValidationManager(this.platform);
-        this.dataPathService = new DataPathService(this.platform);
+        this.dataPathService = DataPathService.getInstance(this.platform);
 
         // 初始化 DataPathService
         this.dataPathService.initialize().catch(error => {

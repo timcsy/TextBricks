@@ -44,7 +44,19 @@
 - ✅ 零破壞性變更，向後兼容
 - ✅ 為多平台擴展奠定基礎
 
-### 🎯 當前開發 - v0.3.0 階層式主題系統重構
+### 🎯 當前開發 - v0.3.0 階層式主題系統重構 + 全面代碼重構
+
+**⚠️ 重要：當前處於重構期 (2025-09-30 ~ 2025-10-31)**
+
+**狀態**：🚧 **按照 REFACTORING.md 計劃執行重構**
+
+詳細重構計劃請參考 **[REFACTORING.md](./REFACTORING.md)**
+
+**重構目標**：
+- 🏗️ **核心架構重構** - 消除重複邏輯，整合已建立的 Manager
+- 🎨 **UI 層統一** - 建立共享組件系統，統一樣式和邏輯
+- 📊 **代碼量優化** - 預計減少 ~2,550 行代碼 (-16%)
+- 🔧 **可維護性提升** - 單一職責、清晰架構、易於擴展
 
 **目標架構**：完全平台無關的階層式主題系統
 
@@ -69,6 +81,7 @@
 - 📁 **平台無關儲存** - 使用系統標準目錄 + scope.json + topic.json
 - 🗂️ **階層式主題導航** - topic 資料夾結構，支援麵包屑導航
 - 🔧 **簡化設計** - 直接切換新格式，無需複雜遷移
+- 🎯 **架構清理** - 整合 Manager、消除重複、提升可維護性
 
 ## 🚀 功能現狀
 
@@ -230,17 +243,34 @@
 
 ## 📅 時間規劃
 
-### 2025 Q3-Q4 (當前 - v0.3.0)
+### 2025 Q3-Q4 (當前 - v0.3.0 重構期)
 - ✅ VS Code 架構重構完成 (v0.2.5)
 - ✅ TextBricks Manager 修復和資源路徑統一
 - ✅ 模板插入縮排問題修復
-- 🎯 **v0.3.0 階層式主題系統重構**
+- 🚧 **v0.3.0 全面重構** (2025-09-30 ~ 2025-10-31)
+  - **Week 1** (10/01-10/07): 核心整合 P0 + 基礎工具
+    - 整合 TopicManager 到 Engine
+    - 提取 TemplateRepository
+    - 共享工具函數庫
+  - **Week 2** (10/08-10/14): 模型統一 + CSS 重構
+    - 統一 Topic 模型
+    - DataPathService 單例化
+    - CSS 組件系統建立
+  - **Week 3** (10/15-10/21): 服務提取 + 卡片模板
+    - 提取 RecommendationService
+    - 清理空目錄和整合 Manager
+    - 卡片渲染模板系統
+  - **Week 4** (10/22-10/31): 測試與發布
+    - 事件系統統一 (可選)
+    - 完整測試與文檔
+    - v0.3.0 正式發布
+- 🎯 **v0.3.0 核心功能**
   - 新儲存方式 (系統目錄 + scope.json + topic.json)
   - 階層式主題導航和麵包屑
   - 直接切換新格式，改善開發體驗
 
 ### 2026 Q1
-- 🚀 **v0.3.0 完整發佈**
+- 🚀 **v0.3.0 完整發佈和穩定**
 - 🎯 智慧化功能開發 - 上下文感知、機器學習推薦
 - 🌐 更多語言支援 - Java, Go, Rust, Swift, TypeScript
 - 📚 文檔和學習體系建立 - 互動式教學、程式碼解釋
@@ -258,6 +288,117 @@
 ## 🔄 AI Agents 變更日誌
 
 > 📝 **重要**：AI 助手在進行重大變更時，請更新此部分以便後續追蹤
+
+### 2025-09-30 - UI Phase 1: 共享工具函數庫 (已完成)
+- **執行者**：Claude Code
+- **完成時間**：~30 分鐘
+- **變更**：
+  - ✅ **UI Phase 1.1-1.3**: 創建並整合共享工具函數
+    - 新增 `utils.js` (338 行) - 20+ 個工具函數
+    - 更新 main.js 和 textbricks-manager.js 使用共享工具
+    - 刪除重複的 escapeHtml、showLoading、renderMarkdown
+  - ✅ **UI Phase 1.4**: 更新 Providers 引入 utils.js
+    - WebviewProvider 和 TextBricksManagerProvider 添加 utilsUri
+    - 確保載入順序正確
+- **成果指標**：
+  - 新增共享工具: +338 行
+  - 刪除重複代碼: ~18 行
+  - 工具函數: 20+ 個（HTML、日期、UI、數據、字符串、數組處理）
+  - TypeScript 編譯: ✅ 成功
+- **技術決策**：
+  - 使用 `window.TextBricksUtils` 全局掛載策略
+  - 保留向後兼容性（解構賦值 fallback）
+  - 漸進式遷移策略
+- **檔案變更**：
+  - 新增 `assets/js/common/utils.js`
+  - 修改 WebviewProvider.ts、TextBricksManagerProvider.ts
+  - 修改 main.js、textbricks-manager.js
+  - 更新 `REFACTORING.md` - UI Phase 1 完整記錄
+- **下一步**：UI Phase 2（CSS 組件系統）或繼續核心架構重構
+
+### 2025-09-30 - Phase 2: 提取 TemplateRepository (已完成)
+- **執行者**：Claude Code
+- **完成時間**：~1.5 小時
+- **變更**：
+  - ✅ **Phase 2.1**: 創建 TemplateRepository 類別
+    - 新增 `TemplateRepository.ts` (370 行) - 完整的 CRUD 和查詢功能
+    - 實現 `create`, `update`, `delete`, `findById`, `findByTopic`, `findByLanguage`, `getAll`, `search`, `getMostUsed`
+    - 與 TopicManager 整合，支援降級方案
+  - ✅ **Phase 2.2-2.3**: 重構 Engine 模板操作
+    - 簡化 CRUD 方法：119 行 → 17 行 (-102 行)
+    - 刪除 `loadTemplatesFromFileSystem()` (63 行)
+    - 簡化 `loadCardsFromFileSystem()` 使用 Repository
+  - ✅ **Phase 2.4**: 編譯驗證通過
+- **成果指標**：
+  - TextBricksEngine: 1,189 → 1,046 行 (-143 行)
+  - 累計減少: 1,203 → 1,046 行 (-157 行，-13%)
+  - 新增 TemplateRepository: +370 行
+  - TypeScript 編譯: ✅ 成功
+- **技術決策**：
+  - metadata 欄位設計：usage, createdAt 等放在 metadata 物件內
+  - TopicManager 整合：可選依賴，優先使用，否則降級掃描
+  - ID 生成策略：title-timestamp-random 格式
+- **檔案變更**：
+  - 新增 `packages/core/src/repositories/TemplateRepository.ts`
+  - 修改 `packages/core/src/core/TextBricksEngine.ts`
+  - 更新 `REFACTORING.md` - Phase 2 完整記錄
+- **下一步**：Phase 3 - 創建 RecommendationService（可選）或 Phase 4 - 統一 Topic 模型
+
+### 2025-09-30 - Phase 1: 整合 TopicManager 到 Engine (已完成)
+- **執行者**：Claude Code
+- **完成時間**：~2 小時
+- **變更**：
+  - ✅ **Phase 1.1**: 重構 TextBricksEngine 依賴注入
+    - 新增 `topicManager`, `scopeManager`, `dataPathService` 私有欄位
+    - 修改 constructor 支援可選的依賴注入參數
+  - ✅ **Phase 1.2**: 刪除重複的載入邏輯
+    - 刪除 `loadTopicsRecursively()`, `loadTemplatesFromTopic()`, `loadCardsFromTopic()`, `getLanguageExtension()`
+    - 共刪除 246 行重複代碼
+  - ✅ **Phase 1.3**: 實現 buildFromManagers 方法
+    - 使用 TopicManager 載入主題階層
+    - 從模板中提取語言資訊（技術決策：語言儲存在模板中，非根主題）
+    - 實作臨時的載入方法（待 Phase 2 優化）
+  - ✅ **Phase 1.4**: 編譯驗證通過
+- **成果指標**：
+  - TextBricksEngine: 1203 行 → 1189 行
+  - 刪除重複代碼: 246 行
+  - TypeScript 編譯: ✅ 成功
+- **技術決策**：
+  - 語言資訊從模板提取，而非從根主題推導
+  - DataPathService 使用普通實例化（非 singleton）
+  - 新增臨時載入方法，待 Phase 2 移除
+- **檔案變更**：
+  - `packages/core/src/core/TextBricksEngine.ts` - 構造函數、刪除舊方法、新增 buildFromManagers
+  - `REFACTORING.md` - 新增執行進度記錄章節
+- **下一步**：Phase 2 - 創建 TemplateRepository ✅ 已完成
+
+### 2025-09-30 - v0.3.0 重構計劃制定
+- **執行者**：Claude Code
+- **變更**：
+  - 📋 **深度 Code Review**：全面分析核心架構和 UI 層重複邏輯
+  - 📄 **重構計劃文檔**：創建完整的 REFACTORING.md (4000+ 行)
+  - 🎯 **問題識別**：
+    - 核心問題：TextBricksEngine (1203 行) 與 TopicManager/ScopeManager 未整合
+    - 重複邏輯：~500 行主題載入邏輯、~300 行 CRUD 操作
+    - UI 重複：escapeHtml 等工具函數、CSS 組件、卡片渲染邏輯
+  - 🏗️ **重構設計**：
+    - **核心架構** (6 個 Phase)：整合 Manager、提取 Repository、統一模型
+    - **UI 層** (5 個 Phase)：共享工具、CSS 組件、卡片模板、事件系統
+    - **時程規劃**：4 週完整重構計劃 (10/01-10/31)
+  - 📊 **預期成果**：
+    - 代碼減少：~2,550 行 (-16%)
+    - TextBricksEngine：1203 → ~400 行 (-66%)
+    - 架構清晰度大幅提升
+- **文檔更新**：
+  - ✅ 創建 `REFACTORING.md` - 完整重構計劃和驗收標準
+  - ✅ 更新 `AGENTS.md` - 標註重構期和參考 REFACTORING.md
+  - ✅ 時間規劃調整 - 詳細的週次計劃
+- **影響範圍**：
+  - 📁 核心：TextBricksEngine, TopicManager, ScopeManager, TemplateRepository (新)
+  - 🎨 UI：共享工具、CSS 組件系統、卡片模板
+  - 📝 模型：統一 Topic/TopicConfig 定義
+- **狀態**：重構計劃完成，準備執行 Week 1 P0 項目
+- **下一步**：按照 REFACTORING.md 執行 Phase 1 (整合 TopicManager)
 
 ### 2025-09-30 - 主題顯示名稱統一修復 + 資料路徑管理系統實現
 - **執行者**：Claude Code
@@ -573,6 +714,165 @@
 - **狀態**：創新功能規劃完成，進入 Phase 2 開發流程
 - **下一步**：開始快取式階層導航系統設計
 
+### 2025-09-30 - 🎉 v0.3.0 重構完成總結
+- **執行者**：Claude Code
+- **完成日期**：2025-09-30
+- **重構範圍**：核心架構 + UI 層（8 個主要階段）
+- **成果總覽**：
+  - 📊 **代碼優化**：
+    - TextBricksEngine: 1,203 → 1,027 行 (-14.6%, -176 行)
+    - 新增結構化代碼: +1,294 行（Repository, Service, UI 組件）
+    - 消除重複邏輯: ~500 行
+  - 🏗️ **架構改進**：
+    - 完成依賴注入模式（5 個服務）
+    - 建立 Repository 層（TemplateRepository）
+    - 提取推薦服務（RecommendationService）
+    - 統一模型定義（Topic → TopicConfig）
+    - DataPathService 單例化
+  - 🎨 **UI 系統**：
+    - 共享工具函數庫（338 行）
+    - CSS 組件系統（479 行，8 大設計系統）
+    - 統一設計語言
+  - 🧹 **代碼清理**：
+    - 刪除 4 個空目錄
+    - 清理重複代碼
+- **完成階段**：
+  - ✅ Phase 1-6: 核心架構重構（P0 + P1）
+  - ✅ UI Phase 1-2: UI 層重構（P0）
+- **可維護性提升**：
+  - ✅ 單一職責原則
+  - ✅ 依賴注入與可測試性
+  - ✅ 模組化與可重用性
+  - ✅ 清晰的層次結構
+- **狀態**：核心重構完成，進入穩定期
+- **下一步**：測試重構成果，準備 v0.3.0 發布
+
+### 2025-09-30 - Phase 6: 清理與整合 (核心架構重構) ✅
+- **執行者**：Claude Code
+- **變更**：
+  - 🧹 **清理空目錄**：刪除 4 個未使用的空目錄
+  - ✅ **架構確認**：確認所有新架構組件已整合
+  - 🔍 **狀態檢查**：驗證 Engine 正確使用所有服務
+- **技術細節**：
+  - 🗑️ **刪除目錄**:
+    - packages/core/src/data/
+    - packages/core/src/migration/
+    - packages/core/src/hierarchical/
+    - packages/core/src/storage/
+  - ✅ **已整合服務**:
+    - TopicManager, TemplateRepository
+    - RecommendationService, DataPathService
+    - ScopeManager
+- **成果**：
+  - ✅ 代碼庫更整潔
+  - ✅ 架構整合完成
+  - ✅ 編譯通過無錯誤
+- **狀態**：Phase 6 完成，核心重構全部完成
+- **下一步**：重構總結與發布準備
+
+### 2025-09-30 - Phase 3: 提取 RecommendationService (核心架構重構) ✅
+- **執行者**：Claude Code
+- **變更**：
+  - 🎯 **服務提取**：將推薦演算法提取為獨立的 RecommendationService
+  - 🔧 **可配置性**：支援自定義推薦參數（權重、衰減等）
+  - 📉 **簡化 Engine**：getRecommendedTemplates() 從 22 行簡化為 3 行
+- **技術細節**：
+  - 📝 **RecommendationService.ts** (107 行):
+    - RecommendationConfig 介面定義
+    - getRecommendedTemplates() 方法
+    - calculateScore() 私有方法（使用次數、最近使用、時間衰減）
+    - updateConfig() 動態配置更新
+  - 🔄 **TextBricksEngine.ts**:
+    - 加入 RecommendationService 依賴注入
+    - 簡化 getRecommendedTemplates() 方法
+    - 保留 updatePopularity()（被 SearchManager 使用）
+  - 📦 **core/index.ts**: 導出 RecommendationService
+- **成果**：
+  - ✅ 推薦演算法獨立可配置
+  - ✅ 提升可測試性
+  - ✅ Engine 減少 ~19 行
+  - ✅ 編譯通過無錯誤
+- **影響範圍**：3 個檔案（1 新增，2 修改）
+- **狀態**：Phase 3 完成
+- **下一步**：Phase 6 - 清理與整合 (可選) 或總結重構成果
+
+### 2025-09-30 - UI Phase 2: CSS 組件系統 (UI 層重構) ✅
+- **執行者**：Claude Code
+- **變更**：
+  - 🎨 **設計系統**：創建統一的 CSS 變數系統和組件庫
+  - 🧩 **組件庫**：建立可重用的 UI 組件樣式（卡片、按鈕、Modal 等）
+  - 📦 **模組化**：將 CSS 拆分為 variables + components + page-specific
+- **技術細節**：
+  - 📝 **variables.css** (81 行):
+    - 8 大設計系統：顏色、間距、字體、圓角、陰影、動畫
+    - 整合 VSCode 主題變數
+    - 語義化命名 (tb-* 前綴)
+  - 🎨 **components.css** (398 行):
+    - 卡片組件 (.tb-card)
+    - 按鈕組件 (.tb-btn 及變體)
+    - Modal、輸入框、標籤、載入動畫
+    - 工具類樣式
+  - 🔄 **整合 Provider**:
+    - WebviewProvider.ts: 加入 variables + components CSS
+    - TextBricksManagerProvider.ts: 同樣加入
+    - 確保載入順序：variables → components → style
+- **成果**：
+  - ✅ 建立統一設計系統
+  - ✅ 創建 479 行可重用組件
+  - ✅ 為未來 UI 重構奠定基礎
+  - ✅ 編譯通過無錯誤
+- **影響範圍**：4 個檔案（2 新增，2 修改）
+- **狀態**：UI Phase 2 完成
+- **下一步**：UI Phase 3 - Card 模板 或繼續核心重構
+
+### 2025-09-30 - Phase 5: DataPathService Singleton化 (核心架構重構) ✅
+- **執行者**：Claude Code
+- **變更**：
+  - 🔒 **單例模式**：DataPathService 改為單例模式
+  - 🏗️ **狀態一致性**：確保全局只有一個 DataPathService 實例
+  - 🔧 **更新創建點**：5 處從 `new DataPathService()` 改為 `getInstance()`
+- **技術細節**：
+  - 📝 **DataPathService.ts**:
+    - 構造函數改為 private
+    - 加入 static instance 屬性
+    - 實現 getInstance(platform) 靜態方法
+    - 實現 resetInstance() 用於測試
+  - 🔄 **更新檔案**:
+    - extension.ts:27
+    - CommandService.ts:30
+    - TextBricksManagerProvider.ts:36
+    - TopicManager.ts:29
+    - TextBricksEngine.ts:55
+- **成果**：
+  - ✅ 避免多次實例化
+  - ✅ 確保配置和狀態全局一致
+  - ✅ 保留測試重置功能
+  - ✅ 編譯通過無錯誤
+- **影響範圍**：6 個檔案，6 處修改
+- **狀態**：Phase 5 完成
+- **下一步**：UI Phase 2 - CSS 組件系統
+
+### 2025-09-30 - Phase 4: 統一 Topic 模型 (核心架構重構) ✅
+- **執行者**：Claude Code
+- **變更**：
+  - 🔄 **模型統一**：將 `Topic` 介面轉換為 `TopicConfig` 的類型別名
+  - 🏗️ **架構簡化**：消除兩套 Topic 模型並存的問題
+  - 🔧 **類型修正**：修正 TextBricksEngine 和 DocumentationProvider 中的 4 處類型錯誤
+- **技術細節**：
+  - 📝 **Template.ts**: Topic 改為 TopicConfig 的 type alias，加入 @deprecated 標記
+  - 🔧 **TextBricksEngine.ts**:
+    - getTopicObjects: 加入完整 TopicDisplayConfig (icon, color, order, collapsed)
+    - createTopic/updateTopic: 移除 createdAt/updatedAt 時間戳欄位
+    - ensureTopicExists: 提供完整 TopicConfig 必要欄位
+  - 🎨 **DocumentationProvider.ts**: 移除 createdAt 顯示
+- **成果**：
+  - ✅ 統一使用 TopicConfig 作為主要模型
+  - ✅ 保持向後兼容（Topic 別名）
+  - ✅ 編譯通過無錯誤
+- **影響範圍**：3 個檔案，6 處修改
+- **狀態**：Phase 4 完成
+- **下一步**：Phase 5 - DataPathService Singleton化
+
 ### 2025-09-05 - 時間規劃校正：調整為實際時間線
 - **執行者**：Claude Code
 - **變更**：
@@ -754,18 +1054,33 @@
 - ✅ **階層準備**：為語言作為主題根節點的架構做好準備
 
 ### 🚀 繼續工作時的重點
-1. **標籤式推薦系統完成**，推薦/最愛雙標籤界面和收藏功能
-2. **智慧推薦演算法**，基於使用次數的個人化推薦
-3. **說明文件整合完成**，自動顯示文件圖示並支援一鍵查看
-4. **v0.3.0 架構同步**，topic.json 階層結構和新資料格式
-5. **側邊欄功能完善**，瀏覽歷史、麵包屑、標籤系統全面實現
-6. **用戶體驗大幅提升**，個人化、便捷性、學習指引全面改進
+
+**⚠️ 當前處於重構期 (2025-09-30 ~ 2025-10-31)**
+
+**主要任務**：按照 [REFACTORING.md](./REFACTORING.md) 執行重構計劃
+
+**Week 1 優先級** (2025-10-01 ~ 2025-10-07):
+1. ✅ **Phase 1: 整合 TopicManager** - 移除 TextBricksEngine 重複載入邏輯
+2. ✅ **Phase 2: 提取 TemplateRepository** - 獨立模板 CRUD 操作
+3. ✅ **UI Phase 1: 共享工具函數** - 統一 escapeHtml 等函數
+
+**已完成功能** (暫停新功能開發):
+- ✅ 標籤式推薦系統完成，推薦/最愛雙標籤界面和收藏功能
+- ✅ 智慧推薦演算法，基於使用次數的個人化推薦
+- ✅ 說明文件整合完成，自動顯示文件圖示並支援一鍵查看
+- ✅ v0.3.0 架構同步，topic.json 階層結構和新資料格式
+- ✅ 側邊欄功能完善，瀏覽歷史、麵包屑、標籤系統全面實現
+
+**重構完成後** (2025-11-01+):
+- 🚀 繼續 v0.3.0 其他核心功能開發
+- 🎯 新功能開發基於更清晰的架構
+- 📊 享受重構帶來的開發效率提升
 
 ---
 
 **文件狀態**：🟢 最新
-**最後更新**：2025-09-27 (標籤式推薦系統和收藏功能實現)
-**當前版本**：v0.2.5+ (標籤式推薦和收藏功能版)
-**專案狀態**：✅ 側邊欄功能全面完善，用戶體驗大幅提升
-**發佈狀態**：🎯 新功能開發完成，準備整合測試和版本發佈
-**下一步**：🚀 根據用戶反饋優化或繼續 v0.3.0 其他核心功能開發
+**最後更新**：2025-09-30 (v0.3.0 重構計劃制定)
+**當前版本**：v0.2.5+ (進入重構期)
+**專案狀態**：🚧 **重構進行中** - 按照 REFACTORING.md 執行
+**發佈狀態**：🎯 重構期間暫停新功能，專注於架構優化
+**下一步**：🔧 執行 REFACTORING.md Week 1 計劃

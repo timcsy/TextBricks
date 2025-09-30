@@ -26,7 +26,7 @@ export class TopicManager {
     constructor(platform: IPlatform, dataPathService?: DataPathService, scopeId: string = 'local') {
         this.platform = platform;
         this.scopeId = scopeId;
-        this.dataPathService = dataPathService || new DataPathService(platform);
+        this.dataPathService = dataPathService || DataPathService.getInstance(platform);
     }
 
     // ==================== 初始化和載入 ====================

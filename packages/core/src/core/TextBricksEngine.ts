@@ -14,6 +14,11 @@ import {
 } from '@textbricks/shared';
 import { FormattingEngine } from './FormattingEngine';
 import { IPlatform } from '../interfaces/IPlatform';
+import { TopicManager } from '../managers/TopicManager';
+import { ScopeManager } from '../managers/ScopeManager';
+import { DataPathService } from '../services/DataPathService';
+import { TemplateRepository } from '../repositories/TemplateRepository';
+import { RecommendationService } from '../services/RecommendationService';
 
 interface TemplateData {
     languages: Language[];
@@ -31,9 +36,30 @@ export class TextBricksEngine {
     private formattingEngine: FormattingEngine;
     private platform: IPlatform;
 
-    constructor(platform: IPlatform) {
+    // 新增的管理器和 Repository
+    private topicManager: TopicManager;
+    private scopeManager: ScopeManager;
+    private dataPathService: DataPathService;
+    private templateRepository: TemplateRepository;
+    private recommendationService: RecommendationService;
+
+    constructor(
+        platform: IPlatform,
+        dataPathService?: DataPathService,
+        topicManager?: TopicManager,
+        scopeManager?: ScopeManager,
+        templateRepository?: TemplateRepository,
+        recommendationService?: RecommendationService
+    ) {
         this.platform = platform;
         this.formattingEngine = new FormattingEngine();
+
+        // 使用注入的服務或獲取單例
+        this.dataPathService = dataPathService || DataPathService.getInstance(platform);
+        this.topicManager = topicManager || new TopicManager(platform, this.dataPathService);
+        this.scopeManager = scopeManager || new ScopeManager(platform);
+        this.templateRepository = templateRepository || new TemplateRepository(platform, this.dataPathService, this.topicManager);
+        this.recommendationService = recommendationService || new RecommendationService(platform);
     }
 
     // === 初始化 ===
@@ -171,8 +197,7 @@ export class TextBricksEngine {
 
     private async loadFromNewDataStructure(): Promise<string | null> {
         try {
-            const { join } = await import('path');
-            const { readdir, readFile, stat } = await import('fs/promises');
+            const { stat } = await import('fs/promises');
 
             // 使用動態資料目錄
             if (!this.dataDirectory) {
@@ -191,36 +216,14 @@ export class TextBricksEngine {
                 return null; // 資料目錄不存在
             }
 
-            // 直接使用提供的資料目錄作為 localScopePath
-            const localScopePath = this.dataDirectory;
-            try {
-                await stat(localScopePath);
-            } catch {
-                return null; // local scope 不存在
-            }
-
-            // 收集所有主題
-            const topics: Topic[] = [];
-            const templates: ExtendedTemplate[] = [];
-            const languages: Language[] = [];
-            const cards: ExtendedCard[] = [];
-
-            // 遞迴載入所有主題
-            await this.loadTopicsRecursively(localScopePath, topics, templates, languages, cards);
+            // 使用管理器載入資料並構建內部結構
+            const templateData = await this.buildFromManagers();
 
             console.log(`[TextBricksEngine] Loaded data summary:`);
-            console.log(`  - Topics: ${topics.length}`);
-            console.log(`  - Templates: ${templates.length}`);
-            console.log(`  - Languages: ${languages.length}`);
-            console.log(`  - Cards: ${cards.length}`);
-
-            // 建構返回的資料結構
-            const templateData = {
-                languages: languages,
-                topics: topics,
-                templates: templates,
-                cards: cards
-            };
+            console.log(`  - Topics: ${templateData.topics.length}`);
+            console.log(`  - Languages: ${templateData.languages.length}`);
+            console.log(`  - Templates: ${templateData.templates.length}`);
+            console.log(`  - Cards: ${templateData.cards.length}`);
 
             return JSON.stringify(templateData, null, 2);
         } catch (error) {
@@ -229,125 +232,77 @@ export class TextBricksEngine {
         }
     }
 
-    private async loadTopicsRecursively(dirPath: string, topics: Topic[], templates: ExtendedTemplate[], languages: Language[], cards: ExtendedCard[]): Promise<void> {
-        try {
-            const { join } = await import('path');
-            const { readdir, readFile, stat } = await import('fs/promises');
+    /**
+     * 從管理器構建資料結構
+     * Phase 2: 使用 TemplateRepository 載入模板
+     */
+    private async buildFromManagers(): Promise<{
+        languages: Language[];
+        topics: any[];
+        templates: ExtendedTemplate[];
+        cards: ExtendedCard[];
+    }> {
+        // 1. 使用 TopicManager 載入主題階層
+        await this.topicManager.initialize();
+        const allTopics = this.topicManager.getAllTopics();
 
-            console.log('[TextBricksEngine] loadTopicsRecursively scanning directory:', dirPath);
-            const items = await readdir(dirPath);
+        console.log(`[TextBricksEngine] TopicManager loaded ${allTopics.length} topics`);
 
-            for (const item of items) {
-                const itemPath = join(dirPath, item);
-                const itemStat = await stat(itemPath);
+        // 2. 使用 TemplateRepository 載入模板
+        await this.templateRepository.initialize();
+        const templates = this.templateRepository.getAll();
 
-                if (itemStat.isDirectory()) {
-                    // 檢查是否有 topic.json
-                    const topicJsonPath = join(itemPath, 'topic.json');
-                    try {
-                        console.log('[TextBricksEngine] Reading topic file:', topicJsonPath);
-                        const topicContent = await readFile(topicJsonPath, 'utf8');
-                        const topic: Topic = JSON.parse(topicContent);
-                        console.log('[TextBricksEngine] Loaded topic:', {
-                            name: topic.name,
-                            description: topic.description,
-                            documentationLength: topic.documentation?.length,
-                            documentationPreview: topic.documentation?.substring(0, 100)
-                        });
-                        topics.push(topic);
+        // 3. 從模板中提取語言列表（語言資訊儲存在模板中）
+        const languageMap = new Map<string, Language>();
 
-                        // 檢查是否應該添加為語言 (基於路徑推測)
-                        const pathSegments = itemPath.split(/[/\\]/);
-                        const isLanguageLevel = pathSegments[pathSegments.length - 2] === 'local'; // 直接在 local 下的為語言
-
-                        if (isLanguageLevel && !languages.find(lang => lang.id === topic.name)) {
-                            // 添加為語言
-                            languages.push({
-                                id: topic.name,
-                                name: topic.name,
-                                displayName: topic.displayName || topic.name,
-                                extension: this.getLanguageExtension(topic.name),
-                                icon: "file-text"
-                            });
-                        }
-
-                        // 載入該主題下的模板檔案和卡片
-                        await this.loadTemplatesFromTopic(itemPath, topic, templates);
-                        await this.loadCardsFromTopic(itemPath, topic, cards);
-
-                    } catch {
-                        // 沒有 topic.json，繼續遞迴搜索
-                    }
-
-                    // 遞迴處理子目錄
-                    await this.loadTopicsRecursively(itemPath, topics, templates, languages, cards);
-                }
+        for (const template of templates) {
+            if (template.language && !languageMap.has(template.language)) {
+                languageMap.set(template.language, {
+                    id: template.language,
+                    name: template.language,
+                    displayName: this.formatLanguageDisplayName(template.language),
+                    extension: this.inferLanguageExtension(template.language),
+                    icon: "file-text"
+                });
             }
-        } catch (error) {
-            console.error('Error in loadTopicsRecursively:', error);
         }
+
+        const languages = Array.from(languageMap.values());
+        console.log(`[TextBricksEngine] Extracted ${languages.length} languages from ${templates.length} templates`);
+
+        // 4. Cards - Phase 2 將從 TopicManager 和 TemplateRepository 構建
+        const cards = await this.loadCardsFromFileSystem();
+
+        return {
+            languages,
+            topics: allTopics,
+            templates,
+            cards
+        };
     }
 
-    private async loadTemplatesFromTopic(topicPath: string, topic: Topic, templates: ExtendedTemplate[]): Promise<void> {
-        try {
-            const { join } = await import('path');
-            const { readdir, readFile, stat } = await import('fs/promises');
-
-            // 獲取模板資料夾名稱，預設為 "templates"
-            const templatesFolderName = topic.templates || 'templates';
-            const templatesPath = join(topicPath, templatesFolderName);
-
-            // 檢查模板資料夾是否存在
-            try {
-                await stat(templatesPath);
-            } catch {
-                // 模板資料夾不存在，跳過
-                return;
-            }
-
-            // 從路徑推斷語言和主題路徑
-            const pathSegments = topicPath.split(/[/\\]/);
-            const localIndex = pathSegments.findIndex(segment => segment === 'local');
-            const language = localIndex >= 0 && localIndex + 1 < pathSegments.length ? pathSegments[localIndex + 1] : '';
-
-            // 建構完整的主題路徑 (從 local 之後的所有路徑段)
-            const topicPathSegments = localIndex >= 0 ? pathSegments.slice(localIndex + 1) : [];
-            const fullTopicPath = topicPathSegments.join('/');
-
-            // 讀取模板資料夾中的所有檔案
-            const templateFiles = await readdir(templatesPath);
-
-            for (const templateFile of templateFiles) {
-                if (templateFile.endsWith('.json')) {
-                    try {
-                        const templateFilePath = join(templatesPath, templateFile);
-                        const templateContent = await readFile(templateFilePath, 'utf8');
-                        const template = JSON.parse(templateContent);
-
-                        // 確保模板有必需的屬性，從路徑推斷語言和主題
-                        const extendedTemplate: ExtendedTemplate = {
-                            id: template.id,
-                            title: template.title,
-                            description: template.description,
-                            language: language,
-                            topic: fullTopicPath,
-                            code: template.code,
-                            documentation: template.documentation
-                        };
-
-                        templates.push(extendedTemplate);
-                    } catch (error) {
-                        console.error(`Error loading template ${templateFile}:`, error);
-                    }
-                }
-            }
-        } catch (error) {
-            console.error('Error in loadTemplatesFromTopic:', error);
-        }
+    /**
+     * 格式化語言顯示名稱
+     */
+    private formatLanguageDisplayName(languageId: string): string {
+        const displayNames: Record<string, string> = {
+            'c': 'C',
+            'cpp': 'C++',
+            'python': 'Python',
+            'javascript': 'JavaScript',
+            'java': 'Java',
+            'arduino': 'Arduino',
+            'esp32': 'ESP32'
+        };
+        return displayNames[languageId.toLowerCase()] ||
+               languageId.charAt(0).toUpperCase() + languageId.slice(1);
     }
 
-    private getLanguageExtension(languageName: string): string {
-        const extensions: { [key: string]: string } = {
+    /**
+     * 根據語言 ID 推導副檔名
+     */
+    private inferLanguageExtension(languageId: string): string {
+        const extensions: Record<string, string> = {
             'c': '.c',
             'cpp': '.cpp',
             'python': '.py',
@@ -356,128 +311,98 @@ export class TextBricksEngine {
             'arduino': '.ino',
             'esp32': '.ino'
         };
-        return extensions[languageName.toLowerCase()] || '.txt';
+        return extensions[languageId.toLowerCase()] || '.txt';
     }
 
-    private async loadCardsFromTopic(topicPath: string, topic: Topic, cards: ExtendedCard[]): Promise<void> {
-        try {
-            const { join } = await import('path');
-            const { readdir, readFile, stat } = await import('fs/promises');
 
-            // 從路徑推斷語言和主題路徑
-            const pathSegments = topicPath.split(/[/\\]/);
-            const localIndex = pathSegments.findIndex(segment => segment === 'local');
-            const language = localIndex >= 0 && localIndex + 1 < pathSegments.length ? pathSegments[localIndex + 1] : '';
-            const topicPathSegments = localIndex >= 0 ? pathSegments.slice(localIndex + 1) : [];
-            const fullTopicPath = topicPathSegments.join('/');
+    /**
+     * 從檔案系統載入卡片
+     * Phase 2: 使用 TemplateRepository 構建模板卡片
+     */
+    private async loadCardsFromFileSystem(): Promise<ExtendedCard[]> {
+        const { join } = await import('path');
+        const { readdir, readFile, stat } = await import('fs/promises');
+        const cards: ExtendedCard[] = [];
 
-            // 1. 載入子主題卡片（從子資料夾推斷）
-            const items = await readdir(topicPath);
-            for (const item of items) {
-                const itemPath = join(topicPath, item);
-                const itemStat = await stat(itemPath);
-
-                if (itemStat.isDirectory() && !['templates', 'links'].includes(item)) {
-                    // 檢查是否有 topic.json，如果有就是子主題
-                    const subTopicJsonPath = join(itemPath, 'topic.json');
-                    try {
-                        await stat(subTopicJsonPath);
-
-                        // 讀取 topic.json 以獲取正確的 displayName 和描述
-                        const topicJsonContent = await readFile(subTopicJsonPath, 'utf8');
-                        const topicData = JSON.parse(topicJsonContent);
-
-                        // 這是一個子主題，建立 topic 卡片
-                        const subTopicCard: ExtendedCard = {
-                            type: 'topic',
-                            id: `${fullTopicPath}/${item}`,
-                            title: topicData.displayName || topicData.name || item,
-                            description: topicData.description || `進入 ${topicData.displayName || item} 主題`,
-                            language: language,
-                            topic: fullTopicPath,
-                            target: `${fullTopicPath}/${item}` // 用於導航
-                        };
-                        cards.push(subTopicCard);
-                    } catch (error) {
-                        console.error(`Error loading subtopic ${item}:`, error);
-                        // 不是子主題或讀取失敗，跳過
-                    }
-                }
-            }
-
-            // 2. 載入連結卡片
-            const linksFolderName = topic.links || 'links';
-            const linksPath = join(topicPath, linksFolderName);
-
-            try {
-                await stat(linksPath);
-                const linkFiles = await readdir(linksPath);
-
-                for (const linkFile of linkFiles) {
-                    if (linkFile.endsWith('.json')) {
-                        try {
-                            const linkFilePath = join(linksPath, linkFile);
-                            const linkContent = await readFile(linkFilePath, 'utf8');
-                            const linkData = JSON.parse(linkContent);
-
-                            const linkCard: ExtendedCard = {
-                                type: 'link',
-                                id: linkData.id,
-                                title: linkData.title,
-                                description: linkData.description,
-                                language: language,
-                                topic: fullTopicPath,
-                                target: linkData.target
-                            };
-                            cards.push(linkCard);
-                        } catch (error) {
-                            console.error(`Error loading link ${linkFile}:`, error);
-                        }
-                    }
-                }
-            } catch {
-                // links 資料夾不存在，跳過
-            }
-
-            // 3. 載入模板卡片
-            const templatesFolderName = topic.templates || 'templates';
-            const templatesPath = join(topicPath, templatesFolderName);
-
-            try {
-                await stat(templatesPath);
-                const templateFiles = await readdir(templatesPath);
-
-                for (const templateFile of templateFiles) {
-                    if (templateFile.endsWith('.json')) {
-                        try {
-                            const templateFilePath = join(templatesPath, templateFile);
-                            const templateContent = await readFile(templateFilePath, 'utf8');
-                            const template = JSON.parse(templateContent);
-
-                            const templateCard: ExtendedCard = {
-                                type: 'template',
-                                id: template.id,
-                                title: template.title,
-                                description: template.description,
-                                language: language,
-                                topic: fullTopicPath,
-                                code: template.code,
-                                documentation: template.documentation
-                            };
-                            cards.push(templateCard);
-                        } catch (error) {
-                            console.error(`Error loading template card ${templateFile}:`, error);
-                        }
-                    }
-                }
-            } catch {
-                // templates 資料夾不存在，跳過
-            }
-
-        } catch (error) {
-            console.error('Error in loadCardsFromTopic:', error);
+        if (!this.dataDirectory) {
+            return cards;
         }
+
+        try {
+            const allTopics = this.topicManager.getAllTopics();
+
+            for (const topic of allTopics) {
+                const topicPath = join(this.dataDirectory, topic.id);
+                const pathParts = topic.id.split('/');
+                const language = pathParts[0] || '';
+
+                // 1. 載入子主題作為 topic 卡片
+                const subtopics = this.topicManager.getSubtopics(topic.id);
+                for (const subtopic of subtopics) {
+                    cards.push({
+                        type: 'topic',
+                        id: subtopic.id,
+                        title: subtopic.displayName || subtopic.name,
+                        description: subtopic.description || `進入 ${subtopic.displayName || subtopic.name} 主題`,
+                        language: language,
+                        topic: topic.id,
+                        target: subtopic.id
+                    });
+                }
+
+                // 2. 載入連結卡片
+                const linksPath = join(topicPath, 'links');
+                try {
+                    await stat(linksPath);
+                    const linkFiles = await readdir(linksPath);
+
+                    for (const file of linkFiles) {
+                        if (file.endsWith('.json')) {
+                            try {
+                                const filePath = join(linksPath, file);
+                                const content = await readFile(filePath, 'utf8');
+                                const link = JSON.parse(content);
+
+                                cards.push({
+                                    type: 'link',
+                                    id: link.id,
+                                    title: link.title,
+                                    description: link.description,
+                                    language: language,
+                                    topic: topic.id,
+                                    target: link.target
+                                });
+                            } catch (error) {
+                                console.warn(`Failed to load link ${file}:`, error);
+                            }
+                        }
+                    }
+                } catch {
+                    // links 資料夾不存在，跳過
+                }
+
+                // 3. 從 TemplateRepository 載入模板作為 template 卡片
+                const topicTemplates = this.templateRepository.findByTopic(topic.id);
+                for (const template of topicTemplates) {
+                    cards.push({
+                        type: 'template',
+                        id: template.id,
+                        title: template.title,
+                        description: template.description,
+                        language: template.language,
+                        topic: topic.id,
+                        code: template.code,
+                        documentation: template.documentation
+                    });
+                }
+            }
+        } catch (error) {
+            console.error('Error loading cards from filesystem:', error);
+        }
+
+        return cards;
     }
+
 
     private async loadFromLegacyTemplatesJson(): Promise<string | null> {
         try {
@@ -606,8 +531,15 @@ export class TextBricksEngine {
                     result.push({
                         id: topicName.toLowerCase().replace(/\s+/g, '-'),
                         name: topicName,
+                        displayName: topicName,
                         description: `${topicName} 相關模板`,
+                        templates: topicName.toLowerCase().replace(/\s+/g, '-'),
+                        links: `${topicName.toLowerCase().replace(/\s+/g, '-')}-links`,
                         display: {
+                            icon: 'folder',
+                            color: '#666666',
+                            order: 999,
+                            collapsed: false,
                             showInNavigation: true
                         }
                     });
@@ -641,106 +573,28 @@ export class TextBricksEngine {
     }
 
     // === 模板 CRUD 操作 ===
+    // Phase 2: 委託給 TemplateRepository
 
     async createTemplate(template: Omit<ExtendedTemplate, 'id'>): Promise<ExtendedTemplate> {
-        const newTemplate: ExtendedTemplate = {
-            ...template,
-            id: this.generateTemplateId(),
-            metadata: {
-                ...template.metadata,
-                createdAt: new Date(),
-                updatedAt: new Date(),
-                version: '1.0.0',
-                usage: 0,
-                popularity: 0
-            }
-        };
-
-        const data = await this.loadTemplateData();
-        data.templates.push(newTemplate);
-        await this.saveTemplateData(data);
-        await this.loadTemplates();
-
+        const newTemplate = await this.templateRepository.create(template);
+        await this.loadTemplates(); // 重新載入快取
         return newTemplate;
     }
 
     async updateTemplate(templateId: string, updates: Partial<ExtendedTemplate>): Promise<ExtendedTemplate | null> {
-        const existingTemplate = this.getTemplateById(templateId);
-        if (!existingTemplate) {
-            return null;
+        const updated = await this.templateRepository.update(templateId, updates);
+        if (updated) {
+            await this.loadTemplates(); // 重新載入快取
         }
-
-        const updatedTemplate: ExtendedTemplate = {
-            ...existingTemplate,
-            ...updates,
-            id: templateId,
-            metadata: {
-                ...existingTemplate.metadata,
-                ...updates.metadata,
-                updatedAt: new Date()
-            }
-        };
-
-        // 更新文件系統中的模板文件
-        await this.updateTemplateFile(updatedTemplate);
-
-        const data = await this.loadTemplateData();
-        const templateIndex = data.templates.findIndex(t => t.id === templateId);
-        if (templateIndex !== -1) {
-            data.templates[templateIndex] = updatedTemplate;
-        }
-
-        // 同時更新對應的卡片數據
-        if (data.cards) {
-            console.log(`[TextBricksEngine] Looking for card with ID: ${templateId}, total cards: ${data.cards.length}`);
-
-            // 列出所有卡片的ID和類型用於調試
-            data.cards.forEach((card, index) => {
-                if (card.type === 'template') {
-                    console.log(`[TextBricksEngine] Card ${index}: ID=${card.id}, type=${card.type}, title=${card.title}`);
-                }
-            });
-
-            const cardIndex = data.cards.findIndex(c => c.id === templateId && c.type === 'template');
-            if (cardIndex !== -1) {
-                console.log(`[TextBricksEngine] Found card at index ${cardIndex}, updating description from "${data.cards[cardIndex].description}" to "${updatedTemplate.description}"`);
-
-                data.cards[cardIndex] = {
-                    ...data.cards[cardIndex],
-                    title: updatedTemplate.title,
-                    description: updatedTemplate.description,
-                    code: updatedTemplate.code,
-                    documentation: updatedTemplate.documentation
-                };
-                console.log(`[TextBricksEngine] Updated card data for template ${templateId}`);
-            } else {
-                console.warn(`[TextBricksEngine] Could not find card for template ID: ${templateId}`);
-            }
-        } else {
-            console.warn(`[TextBricksEngine] No cards data available`);
-        }
-
-        // 先清除緩存，確保下次載入時從文件系統重新讀取
-        await this.invalidateCache();
-
-        // 重新從文件系統載入最新數據
-        await this.loadTemplates();
-
-        return updatedTemplate;
+        return updated;
     }
 
     async deleteTemplate(templateId: string): Promise<boolean> {
-        const template = this.getTemplateById(templateId);
-        if (!template) {
-            return false;
+        const success = await this.templateRepository.delete(templateId);
+        if (success) {
+            await this.loadTemplates(); // 重新載入快取
         }
-
-        const data = await this.loadTemplateData();
-        data.templates = data.templates.filter(t => t.id !== templateId);
-        await this.saveTemplateData(data);
-        await this.loadTemplates();
-
-        return true;
+        return success;
     }
 
 
@@ -795,12 +649,10 @@ export class TextBricksEngine {
         return this.topics.find(topic => topic.id === id);
     }
 
-    async createTopic(topic: Omit<Topic, 'id' | 'createdAt' | 'updatedAt'>): Promise<Topic> {
+    async createTopic(topic: Omit<Topic, 'id'>): Promise<Topic> {
         const newTopic: Topic = {
             ...topic,
-            id: this.generateTopicId(),
-            createdAt: new Date(),
-            updatedAt: new Date()
+            id: this.generateTopicId()
         };
 
         const data = await this.loadTemplateData();
@@ -823,8 +675,7 @@ export class TextBricksEngine {
         const updatedTopic: Topic = {
             ...existingTopic,
             ...updates,
-            id: topicId,
-            updatedAt: new Date()
+            id: topicId
         };
 
         const data = await this.loadTemplateData();
@@ -868,7 +719,17 @@ export class TextBricksEngine {
         // 如果不存在，創建新主題
         topic = await this.createTopic({
             name: topicName,
-            description: `自動生成的主題：${topicName}`
+            displayName: topicName,
+            description: `自動生成的主題：${topicName}`,
+            templates: topicName.toLowerCase().replace(/\s+/g, '-'),
+            links: `${topicName.toLowerCase().replace(/\s+/g, '-')}-links`,
+            display: {
+                icon: 'folder',
+                color: '#666666',
+                order: 999,
+                collapsed: false,
+                showInNavigation: true
+            }
         });
 
         return topic;
@@ -1017,28 +878,13 @@ export class TextBricksEngine {
         }
     }
 
+    /**
+     * 獲取推薦模板
+     * @param limit - 返回數量限制
+     * @returns 推薦的模板列表
+     */
     getRecommendedTemplates(limit: number = 6): ExtendedTemplate[] {
-        const templatesWithScore = this.templates.map(template => {
-            const usage = template.metadata?.usage || 0;
-            const lastUsedAt = template.metadata?.lastUsedAt ? new Date(template.metadata.lastUsedAt) : null;
-            
-            let score = usage * 10;
-            
-            if (lastUsedAt) {
-                const daysSinceLastUse = (Date.now() - lastUsedAt.getTime()) / (1000 * 60 * 60 * 24);
-                if (daysSinceLastUse <= 7) {
-                    score += 50 * (7 - daysSinceLastUse) / 7;
-                } else if (daysSinceLastUse <= 30) {
-                    score += 20 * (30 - daysSinceLastUse) / 30;
-                }
-            }
-            
-            return { ...template, score } as ExtendedTemplate & { score: number };
-        });
-        
-        return templatesWithScore
-            .sort((a, b) => b.score - a.score)
-            .slice(0, limit);
+        return this.recommendationService.getRecommendedTemplates(this.templates, limit);
     }
 
     // === 向後兼容 ===
