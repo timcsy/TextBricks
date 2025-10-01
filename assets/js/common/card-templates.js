@@ -3,6 +3,8 @@
  * 統一的卡片 HTML 生成邏輯
  */
 
+console.log('[TextBricks] Loading card-templates.js');
+
 const CardTemplates = {
     /**
      * 渲染模板卡片

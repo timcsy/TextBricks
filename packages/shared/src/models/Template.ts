@@ -33,7 +33,8 @@ export interface Card {
   title: string;
   description: string;
   language: string;
-  topic: string;
+  topic: string;  // 根主題 ID（用於分組）
+  originalTopic?: string;  // 原始主題 ID（可能是子主題）
 
   // template 類型專用
   code?: string;

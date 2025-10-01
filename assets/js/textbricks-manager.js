@@ -3880,6 +3880,7 @@ ${description}
         // 先輸出當前主題的詳細信息，以便調試
         console.log(`Processing topic: "${topicName}" (ID: "${topicId}")`);
         console.log(`Topic node:`, topicNode.topic);
+        console.log(`Topic node has loadedLinks?`, !!topicNode.topic.loadedLinks, topicNode.topic.loadedLinks);
 
         // 基於主題名稱和可能的路徑格式來匹配模板
         // 不做 dash 到 slash 的轉換，而是基於實際的對應關係

@@ -156,10 +156,12 @@ export class TopicManager {
 
             // 將連結添加到主題配置中
             (topicConfig as any).loadedLinks = links;
+            console.log(`[TopicManager] Loaded ${links.length} links for topic ${topicConfig.id}:`, links.map(l => l.title));
 
         } catch (error) {
             // 連結目錄不存在或無法讀取，忽略
             (topicConfig as any).loadedLinks = [];
+            console.log(`[TopicManager] No links directory for topic ${topicConfig.id}`);
         }
     }
 

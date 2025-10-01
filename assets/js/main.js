@@ -5,12 +5,13 @@
 
     // 使用共享工具函數（從 utils.js）
     // 確保 TextBricksUtils 已載入
+    console.log('[TextBricks] main.js starting, TextBricksUtils available:', !!window.TextBricksUtils);
     const utils = window.TextBricksUtils || {};
     const escapeHtml = utils.escapeHtml || (text => text);
     const renderMarkdown = utils.renderMarkdown || (text => text);
     const formatDate = utils.formatDate || (date => String(date));
     const showSimpleTooltip = utils.showSimpleTooltip || (() => {});
-    
+
     // Track drag state
     let isDragging = false;
     let draggedTemplateId = null;
@@ -948,8 +949,8 @@
         const descriptionElement = templateCard.querySelector('.card-description, .template-description');
         const languageElement = templateCard.querySelector('.language-tag');
 
-        if (!titleElement || !descriptionElement || !languageElement) {
-            console.error('Missing template card elements:', {
+        if (!titleElement || !descriptionElement) {
+            console.error('Missing required template card elements:', {
                 title: !!titleElement,
                 description: !!descriptionElement,
                 language: !!languageElement,
@@ -960,7 +961,7 @@
 
         const title = titleElement.textContent;
         const description = descriptionElement.textContent;
-        const languageTag = languageElement.textContent;
+        const languageTag = languageElement ? languageElement.textContent : '';
         
         // Check if template has documentation
         const hasDocumentation = templateCard.dataset.hasDocumentation === 'true';
@@ -986,7 +987,7 @@
                 <pre><code>${escapeHtml(templateCode)}</code></pre>
             </div>
             <div class="tooltip-footer">
-                <span class="language-tag">${languageTag}</span>
+                ${languageTag ? `<span class="language-tag">${languageTag}</span>` : ''}
                 <span class="tooltip-hint">可選取文字複製 • 可滾動查看</span>
             </div>
         `;
@@ -1404,39 +1405,7 @@
     }
 
 
-    // escapeHtml 現在從 TextBricksUtils 導入
-
-    // Utility functions for simple tooltips (different from template tooltips)
-    function showSimpleTooltip(element, message) {
-        // Create simple tooltip element
-        const tooltip = document.createElement('div');
-        tooltip.textContent = message;
-        tooltip.style.cssText = `
-            position: absolute;
-            background: var(--vscode-editorHoverWidget-background);
-            color: var(--vscode-editorHoverWidget-foreground);
-            border: 1px solid var(--vscode-editorHoverWidget-border);
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 11px;
-            z-index: 1000;
-            pointer-events: none;
-        `;
-        
-        // Position tooltip
-        const rect = element.getBoundingClientRect();
-        tooltip.style.left = (rect.left + rect.width / 2) + 'px';
-        tooltip.style.top = (rect.top - 30) + 'px';
-        
-        document.body.appendChild(tooltip);
-        
-        // Remove tooltip after delay
-        setTimeout(() => {
-            if (document.body.contains(tooltip)) {
-                document.body.removeChild(tooltip);
-            }
-        }, 2000);
-    }
+    // escapeHtml 和 showSimpleTooltip 現在從 TextBricksUtils 導入
 
     // Handle keyboard shortcuts
     document.addEventListener('keydown', function(event) {

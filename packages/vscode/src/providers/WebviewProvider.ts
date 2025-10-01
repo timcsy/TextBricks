@@ -99,11 +99,23 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
             return items;
         }
 
+        // 獲取當前主題的所有子主題
+        const allCards = this.templateEngine.getAllCards();
+        const subtopicIds = new Set<string>();
+
+        // 收集當前主題的直接子主題 ID
+        allCards
+            .filter(card => card.type === 'topic' && card.topic === this._currentTopicPath)
+            .forEach(card => {
+                if (card.target) {
+                    subtopicIds.add(card.target);
+                }
+            });
+
         // 顯示當前主題及其子主題的項目
         return items.filter(item => {
             if (!item.topic) return false;
-            return item.topic === this._currentTopicPath ||
-                   item.topic.startsWith(this._currentTopicPath + '/');
+            return item.topic === this._currentTopicPath || subtopicIds.has(item.topic);
         });
     }
 
@@ -197,11 +209,23 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
             // At root level, show all favorite items
             return allFavoriteItems;
         } else {
+            // 獲取當前主題的所有子主題
+            const allCards = this.templateEngine.getAllCards();
+            const subtopicIds = new Set<string>();
+
+            // 收集當前主題的直接子主題 ID
+            allCards
+                .filter(card => card.type === 'topic' && card.topic === this._currentTopicPath)
+                .forEach(card => {
+                    if (card.target) {
+                        subtopicIds.add(card.target);
+                    }
+                });
+
             // When in a specific topic, only show favorites under current topic
             return allFavoriteItems.filter(item => {
                 if (!item.topic) return true; // Main topics have empty topic, show them at root
-                return item.topic === this._currentTopicPath ||
-                       item.topic.startsWith(this._currentTopicPath + '/');
+                return item.topic === this._currentTopicPath || subtopicIds.has(item.topic);
             });
         }
     }
@@ -496,8 +520,6 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
     }
 
     private _generateBreadcrumbHtml(): string {
-        const allCards = this.templateEngine.getAllCards();
-
         // Start with the root "local" item (clickable to go home)
         let breadcrumbHtml = this._currentTopicPath
             ? '<span class="breadcrumb-item clickable" data-navigate-path="">local</span>'
@@ -505,40 +527,43 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
 
         // If we have a current topic path, build the breadcrumb trail
         if (this._currentTopicPath) {
-            const pathParts = this._currentTopicPath.split('/');
-            let currentPath = '';
+            // 獲取所有主題配置，構建從根到當前主題的完整路徑
+            const allTopics = this.templateEngine.getAllTopicConfigs?.() || [];
+            const currentTopic = allTopics.find(t => t.id === this._currentTopicPath);
 
-            pathParts.forEach((part, index) => {
-                currentPath = index === 0 ? part : `${currentPath}/${part}`;
-                const isLast = index === pathParts.length - 1;
+            if (currentTopic) {
+                // 構建主題層級路徑（從根到當前）
+                const topicPath: Array<{id: string, displayName: string}> = [];
+                let topic = currentTopic;
 
-                // Get display name for this topic - try multiple sources
-                let displayName = part; // fallback
+                while (topic) {
+                    topicPath.unshift({
+                        id: topic.id,
+                        displayName: topic.displayName || topic.name
+                    });
 
-                // 1. Try managed topic
-                const managedTopic = this.templateEngine.getTopicByName?.(currentPath);
-                if (managedTopic?.displayName) {
-                    displayName = managedTopic.displayName;
-                } else {
-                    // 2. Try to find from topic cards
-                    const matchingTopicCard = allCards.find(card =>
-                        card.type === 'topic' && (card.target === currentPath || card.id === currentPath)
-                    );
-                    if (matchingTopicCard) {
-                        displayName = matchingTopicCard.title;
+                    if (topic.parentId) {
+                        topic = allTopics.find(t => t.id === topic.parentId) || null;
+                    } else {
+                        topic = null;
                     }
                 }
 
-                breadcrumbHtml += ` <span class="breadcrumb-separator">></span> `;
+                // 生成麵包屑 HTML
+                topicPath.forEach((pathItem, index) => {
+                    const isLast = index === topicPath.length - 1;
 
-                if (isLast) {
-                    // Last item is not clickable (current page)
-                    breadcrumbHtml += `<span class="breadcrumb-item active">${displayName}</span>`;
-                } else {
-                    // Previous items are clickable
-                    breadcrumbHtml += `<span class="breadcrumb-item clickable" data-navigate-path="${currentPath}">${displayName}</span>`;
-                }
-            });
+                    breadcrumbHtml += ` <span class="breadcrumb-separator">></span> `;
+
+                    if (isLast) {
+                        // Last item is not clickable (current page)
+                        breadcrumbHtml += `<span class="breadcrumb-item active">${pathItem.displayName}</span>`;
+                    } else {
+                        // Previous items are clickable
+                        breadcrumbHtml += `<span class="breadcrumb-item clickable" data-navigate-path="${pathItem.id}">${pathItem.displayName}</span>`;
+                    }
+                });
+            }
         }
 
         return breadcrumbHtml;
@@ -778,8 +803,8 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
                 <p class="card-description">${this._escapeHtml(template.description)}</p>
                 <div class="card-footer">
                     <span class="card-type-label">模板</span>
-                    ${usageCount > 0 ? `<span class="usage-count" style="opacity: 0.6;">已使用 ${usageCount} 次</span>` : ''}
-                    <span class="language-tag">${this._getLanguageTagName(template.language)}</span>
+                    ${usageCount > 0 ? `<span class="usage-count" style="opacity: 0.6;">已使用 ${usageCount} 次</span>` : '<span></span>'}
+                    ${template.language ? `<span class="language-tag">${this._getLanguageTagName(template.language)}</span>` : '<span></span>'}
                 </div>
             </div>
         `;
@@ -796,31 +821,45 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
         }
 
         // Otherwise show top-level topics (原有的邏輯)
-        // 按照主要主題（語言級別）分組
-        const cardsByMainTopic = new Map<string, ExtendedCard[]>();
+        // 首頁只顯示頂層主題（無 parentId 的主題）的直接內容
+        const rootTopics = this.templateEngine.getRootTopics?.() || [];
+        const rootTopicIds = new Set(rootTopics.map(t => t.id));
 
-        allCards.forEach(card => {
-            // 取主題路徑的第一部分作為主要主題
-            const mainTopic = card.topic.split('/')[0];
+        console.log('[WebviewProvider] Root topics:', Array.from(rootTopicIds));
+
+        // 只保留屬於頂層主題的卡片
+        const topLevelCards = allCards.filter(card => rootTopicIds.has(card.topic));
+
+        // 按主題分組
+        const cardsByMainTopic = new Map<string, ExtendedCard[]>();
+        topLevelCards.forEach(card => {
+            const mainTopic = card.topic;
             if (!cardsByMainTopic.has(mainTopic)) {
                 cardsByMainTopic.set(mainTopic, []);
             }
             cardsByMainTopic.get(mainTopic)!.push(card);
         });
 
-        // 為每個主要主題生成 HTML
+        console.log('[WebviewProvider] Topics:', Array.from(cardsByMainTopic.keys()));
+
+        // 為每個頂層主題生成 HTML
         return Array.from(cardsByMainTopic.entries()).map(([mainTopicName, allCardsInTopic]) => {
             if (allCardsInTopic.length === 0) {
                 return ''; // Don't show empty topics
             }
 
-            // 分離出屬於當前主要主題層級的卡片和子主題的卡片
-            const currentLevelCards = allCardsInTopic.filter(card => card.topic === mainTopicName);
+            // 所有卡片都是當前層級的（已經過濾過了）
+            const currentLevelCards = allCardsInTopic;
 
             // 將當前層級的卡片依類型分組
             const topicCards = currentLevelCards.filter(card => card.type === 'topic');
             const templateCards = currentLevelCards.filter(card => card.type === 'template');
             const linkCards = currentLevelCards.filter(card => card.type === 'link');
+
+            console.log(`[WebviewProvider] Topic "${mainTopicName}": currentLevel=${currentLevelCards.length}, topics=${topicCards.length}, templates=${templateCards.length}, links=${linkCards.length}`);
+            if (currentLevelCards.length > 0 && templateCards.length === 0) {
+                console.log(`[WebviewProvider] WARNING: No template cards found in "${mainTopicName}"! Card types:`, currentLevelCards.map(c => ({ id: c.id, type: c.type })));
+            }
 
             const cardsHtml = [
                 ...topicCards.map(card => this._generateTopicCardHtml(card)),
@@ -943,7 +982,7 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
                 <p class="template-description">${this._escapeHtml(template.description)}</p>
                 <div class="template-footer">
                     <span></span>
-                    <span class="language-tag">${this._getLanguageTagName(template.language)}</span>
+                    ${template.language ? `<span class="language-tag">${this._getLanguageTagName(template.language)}</span>` : '<span></span>'}
                 </div>
             </div>
         `;
@@ -964,287 +1003,105 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
     }
 
     private _generateSpecificTopicHtml(allCards: ExtendedCard[], topicPath: string): string {
-        // Get all cards that belong to or are children of the current topic path
+        // Get all cards that belong to the current topic path
         const currentPathCards = allCards.filter(card => card.topic === topicPath);
-        const childPathCards = allCards.filter(card =>
-            card.topic.startsWith(topicPath + '/') &&
-            card.topic.split('/').length === topicPath.split('/').length + 1
-        );
-
-        // Group child cards by their topics (these become sub-topic groups)
-        const childCardsByTopic = new Map<string, ExtendedCard[]>();
-        childPathCards.forEach(card => {
-            if (!childCardsByTopic.has(card.topic)) {
-                childCardsByTopic.set(card.topic, []);
-            }
-            childCardsByTopic.get(card.topic)!.push(card);
-        });
 
         // Separate current level cards by type
         const currentTopicCards = currentPathCards.filter(card => card.type === 'topic');
         const currentTemplateCards = currentPathCards.filter(card => card.type === 'template');
         const currentLinkCards = currentPathCards.filter(card => card.type === 'link');
 
-        // Filter out topic cards that have corresponding child topic groups
-        const childTopicPaths = Array.from(childCardsByTopic.keys());
-        const filteredTopicCards = currentTopicCards.filter(card => {
-            const cardTargetPath = card.target || card.id;
-            return !childTopicPaths.includes(cardTargetPath);
-        });
+        let html = '';
 
-        // Generate HTML for current level template and link cards
-        const currentLevelCardsHtml = [
-            ...currentTemplateCards.map(card => this._generateTemplateCardFromCard(card)),
-            ...currentLinkCards.map(card => this._generateLinkCardHtml(card))
-        ].join('');
+        // 如果有子主題，將它們當作頂層主題顯示（展開顯示子主題的內容）
+        if (currentTopicCards.length > 0) {
+            html = currentTopicCards.map(topicCard => {
+                // 獲取子主題的所有卡片
+                const subtopicCards = allCards.filter(card => card.topic === topicCard.target);
+                const subtopicTemplates = subtopicCards.filter(card => card.type === 'template');
+                const subtopicLinks = subtopicCards.filter(card => card.type === 'link');
+                const subtopicSubtopics = subtopicCards.filter(card => card.type === 'topic');
 
-        // Generate HTML for remaining topic cards (those without child groups)
-        const remainingTopicCardsHtml = filteredTopicCards.map(card => this._generateTopicCardHtml(card)).join('');
+                const cardsHtml = [
+                    ...subtopicSubtopics.map(card => this._generateTopicCardHtml(card)),
+                    ...subtopicTemplates.map(card => this._generateTemplateCardFromCard(card)),
+                    ...subtopicLinks.map(card => this._generateLinkCardHtml(card))
+                ].join('');
 
-        // Generate HTML for each child topic group
-        const childTopicGroupsHtml = Array.from(childCardsByTopic.entries()).map(([childTopicPath, childCards]) => {
-            const childTopicName = childTopicPath.split('/').pop() || childTopicPath;
-            const managedChildTopic = this.templateEngine.getTopicByName?.(childTopicName);
+                // 獲取子主題資訊
+                const allTopics = this.templateEngine.getAllTopicConfigs?.() || [];
+                const managedTopic = allTopics.find(t => t.id === topicCard.target);
+                const topicDisplayName = topicCard.title;
+                const topicDescription = topicCard.description;
 
-            // Separate child cards by type
-            const childTopicCards = childCards.filter(card => card.type === 'topic');
-            const childTemplateCards = childCards.filter(card => card.type === 'template');
-            const childLinkCards = childCards.filter(card => card.type === 'link');
+                const topicCount = subtopicSubtopics.length;
+                const templateCount = subtopicTemplates.length;
+                const linkCount = subtopicLinks.length;
+                const countText = this._generateCardCountText(topicCount, templateCount, linkCount);
 
-            const childCardsHtml = [
-                ...childTopicCards.map(card => this._generateTopicCardHtml(card)),
-                ...childTemplateCards.map(card => this._generateTemplateCardFromCard(card)),
-                ...childLinkCards.map(card => this._generateLinkCardHtml(card))
-            ].join('');
-
-            if (!childCardsHtml) return '';
-
-            const childTopicDescription = managedChildTopic?.description || `${managedChildTopic?.displayName || childTopicName} 相關內容`;
-            const hasDocumentation = managedChildTopic && managedChildTopic.documentation && managedChildTopic.documentation.trim().length > 0;
-
-
-            const childTopicColor = managedChildTopic?.display?.color;
-            const childTopicColorStyles = childTopicColor ?
-                `data-topic-color style="--topic-color: ${childTopicColor}; --topic-color-light: ${childTopicColor}20; --topic-color-medium: ${childTopicColor}80;"` : '';
-
-            const countText = this._generateSubTopicCountText(childTemplateCards.length, childLinkCards.length);
-
-
-            return `
-                <div class="topic-group main-topic" data-topic="${childTopicName}" ${childTopicColorStyles}>
-                    <div class="topic-header">
-                        <div class="topic-title-row">
-                            <h3 class="topic-title">
-                                <span class="topic-toggle"></span>
-                                ${managedChildTopic?.display?.icon ? `<span class="topic-icon">${managedChildTopic.display.icon}</span>` : ''}
-                                ${managedChildTopic?.displayName || childTopicName}
-                            </h3>
-                            <div class="topic-actions">
-                                <button class="action-btn favorite-btn"
-                                        data-item-id="${childTopicPath}"
-                                        title="${this._isFavorite(childTopicPath) ? '取消收藏' : '加入收藏'}">
-                                    <span class="icon">${this._isFavorite(childTopicPath) ? '❤️' : '♡'}</span>
-                                </button>
-                                ${hasDocumentation ? `
-                                    <button class="topic-doc-btn"
-                                            data-topic-name="${childTopicName}"
-                                            title="查看 ${managedChildTopic?.displayName || childTopicName} 的詳細說明文件">
-                                        📖
-                                    </button>
-                                ` : ''}
-                                <button class="action-btn navigate-btn topic-navigate-btn"
-                                        data-topic-path="${childTopicPath}"
-                                        title="進入 ${managedChildTopic?.displayName || childTopicName} 主題">
-                                    <span class="icon">></span>
-                                </button>
-                            </div>
-                        </div>
-                        <p class="topic-description">${this._escapeHtml(childTopicDescription)}</p>
-                        <p class="topic-count">${countText}</p>
-                    </div>
-                    <div class="templates-grid">
-                        ${childCardsHtml}
-                    </div>
-                </div>
-            `;
-        }).filter(html => html).join('');
-
-        // Generate HTML for current level topic cards (these should be treated as sub-topics)
-        const currentTopicCardsHtml = currentTopicCards.map(card => {
-            const managedTopic = this.templateEngine.getTopicByName?.(card.target || card.id);
-            const displayName = managedTopic?.displayName || card.title;
-            const description = managedTopic?.description || card.description;
-            const hasDocumentation = managedTopic && managedTopic.documentation && managedTopic.documentation.trim().length > 0;
-
-            const topicColor = managedTopic?.display?.color;
-            const topicColorStyles = topicColor ?
-                `data-topic-color style="--topic-color: ${topicColor}; --topic-color-light: ${topicColor}20; --topic-color-medium: ${topicColor}80;"` : '';
-
-            // Get templates and links count for this sub-topic
-            const subTopicPath = card.target || card.id;
-            const subTopicCards = allCards.filter(c => c.topic === subTopicPath);
-            const subTemplateCount = subTopicCards.filter(c => c.type === 'template').length;
-            const subLinkCount = subTopicCards.filter(c => c.type === 'link').length;
-            const subTopicCount = subTopicCards.filter(c => c.type === 'topic').length;
-
-            // Check for topic links (links that point to other topics)
-            const subTopicLinkCount = subTopicCards.filter(c =>
-                c.type === 'link' && c.target && !c.target.startsWith('http')
-            ).length;
-
-            const countText = this._generateSubTopicCountText(subTemplateCount, subLinkCount, subTopicCount);
-            const hasSubTopics = subTopicCount > 0 || subTopicLinkCount > 0;
-
-            const subCardsHtml = subTopicCards.map(subCard => {
-                if (subCard.type === 'template') return this._generateTemplateCardFromCard(subCard);
-                if (subCard.type === 'link') return this._generateLinkCardHtml(subCard);
-                if (subCard.type === 'topic') return this._generateTopicCardHtml(subCard);
-                return '';
-            }).join('');
-
-            return `
-                <div class="topic-group main-topic" data-topic="${card.target || card.id}" ${topicColorStyles}>
-                    <div class="topic-header">
-                        <div class="topic-title-row">
-                            <h3 class="topic-title">
-                                <span class="topic-toggle"></span>
-                                ${managedTopic?.display?.icon ? `<span class="topic-icon">${managedTopic.display.icon}</span>` : '<span class="topic-icon">📁</span>'}
-                                ${displayName}
-                            </h3>
-                            <div class="topic-actions">
-                                <button class="action-btn favorite-btn"
-                                        data-item-id="${subTopicPath}"
-                                        title="${this._isFavorite(subTopicPath) ? '取消收藏' : '加入收藏'}">
-                                    <span class="icon">${this._isFavorite(subTopicPath) ? '❤️' : '♡'}</span>
-                                </button>
-                                ${hasDocumentation ? `
-                                    <button class="topic-doc-btn"
-                                            data-topic-name="${subTopicPath}"
-                                            title="查看 ${displayName} 的詳細說明文件">
-                                        📖
-                                    </button>
-                                ` : ''}
-                                ${hasSubTopics ? `
-                                    <button class="action-btn navigate-btn topic-navigate-btn"
-                                            data-topic-path="${subTopicPath}"
-                                            title="進入 ${displayName} 主題">
-                                        <span class="icon">></span>
-                                    </button>
-                                ` : ''}
-                            </div>
-                        </div>
-                        <p class="topic-description">${this._escapeHtml(description)}</p>
-                        <p class="topic-count">${countText}</p>
-                    </div>
-                    <div class="templates-grid">
-                        ${subCardsHtml}
-                    </div>
-                </div>
-            `;
-        }).join('');
-
-        // Generate HTML for current level link cards (topic links should be navigatable)
-        const currentLinkCardsHtml = currentLinkCards.map(card => {
-            // Check if this is a topic link (target points to a topic path)
-            const isTopicLink = card.target && !card.target.startsWith('http');
-
-            if (isTopicLink) {
-                const managedTopic = this.templateEngine.getTopicByName?.(card.target);
-                const displayName = managedTopic?.displayName || card.title;
-                const description = managedTopic?.description || card.description;
                 const hasDocumentation = managedTopic && managedTopic.documentation && managedTopic.documentation.trim().length > 0;
 
-                const topicColor = managedTopic?.display?.color;
-                const topicColorStyles = topicColor ?
-                    `data-topic-color style="--topic-color: ${topicColor}; --topic-color-light: ${topicColor}20; --topic-color-medium: ${topicColor}80;"` : '';
-
-                // Get content count for this topic link
-                const targetTopicCards = allCards.filter(c => c.topic === card.target);
-                const targetTemplateCount = targetTopicCards.filter(c => c.type === 'template').length;
-                const targetLinkCount = targetTopicCards.filter(c => c.type === 'link').length;
-                const targetTopicCount = targetTopicCards.filter(c => c.type === 'topic').length;
-
-                // Check for topic links in target topic
-                const targetTopicLinkCount = targetTopicCards.filter(c =>
-                    c.type === 'link' && c.target && !c.target.startsWith('http')
-                ).length;
-
-                const countText = this._generateSubTopicCountText(targetTemplateCount, targetLinkCount, targetTopicCount);
-                const hasTargetSubTopics = targetTopicCount > 0 || targetTopicLinkCount > 0;
-
-                const targetCardsHtml = targetTopicCards.map(targetCard => {
-                    if (targetCard.type === 'template') return this._generateTemplateCardFromCard(targetCard);
-                    if (targetCard.type === 'link') return this._generateLinkCardHtml(targetCard);
-                    if (targetCard.type === 'topic') return this._generateTopicCardHtml(targetCard);
-                    return '';
-                }).join('');
+                console.log(`[WebviewProvider] Subtopic "${topicCard.target}": managedTopic found=${!!managedTopic}, hasDocumentation=${hasDocumentation}`, managedTopic?.documentation?.substring(0, 50));
+                const hasNavigableContent = subtopicSubtopics.length > 0 || subtopicLinks.some(card => card.target && !card.target.startsWith('http'));
 
                 return `
-                    <div class="topic-group main-topic" data-topic="${card.target}" ${topicColorStyles}>
+                    <div class="topic-group main-topic" data-topic="${topicCard.target}">
                         <div class="topic-header">
                             <div class="topic-title-row">
                                 <h3 class="topic-title">
                                     <span class="topic-toggle"></span>
-                                    <span class="topic-icon">🔗</span>
-                                    ${displayName}
+                                    ${managedTopic?.display?.icon ? `<span class="topic-icon">${managedTopic.display.icon}</span>` : '<span class="topic-icon">📁</span>'}
+                                    ${topicDisplayName}
                                 </h3>
                                 <div class="topic-actions">
                                     <button class="action-btn favorite-btn"
-                                            data-item-id="${card.target}"
-                                            title="${this._isFavorite(card.target) ? '取消收藏' : '加入收藏'}">
-                                        <span class="icon">${this._isFavorite(card.target) ? '❤️' : '♡'}</span>
+                                            data-item-id="${topicCard.target}"
+                                            title="${this._isFavorite(topicCard.target || '') ? '取消收藏' : '加入收藏'}">
+                                        <span class="icon">${this._isFavorite(topicCard.target || '') ? '❤️' : '♡'}</span>
                                     </button>
                                     ${hasDocumentation ? `
                                         <button class="topic-doc-btn"
-                                                data-topic-name="${card.target}"
-                                                title="查看 ${displayName} 的詳細說明文件">
+                                                data-topic-name="${managedTopic?.name || topicCard.target}"
+                                                title="查看詳細說明文件">
                                             📖
                                         </button>
                                     ` : ''}
-                                    ${hasTargetSubTopics ? `
+                                    ${hasNavigableContent ? `
                                         <button class="action-btn navigate-btn topic-navigate-btn"
-                                                data-topic-path="${card.target}"
-                                                title="進入 ${displayName} 主題">
+                                                data-topic-path="${topicCard.target}"
+                                                title="進入 ${topicDisplayName} 主題">
                                             <span class="icon">></span>
                                         </button>
                                     ` : ''}
                                 </div>
                             </div>
-                            <p class="topic-description">${this._escapeHtml(description)}</p>
+                            <p class="topic-description">${this._escapeHtml(topicDescription)}</p>
                             <p class="topic-count">${countText}</p>
                         </div>
                         <div class="templates-grid">
-                            ${targetCardsHtml}
+                            ${cardsHtml || '<p class="no-content">此主題暫無內容</p>'}
                         </div>
                     </div>
                 `;
-            } else {
-                // Regular link card (non-navigatable)
-                return this._generateLinkCardHtml(card);
-            }
-        }).filter(html => html).join('');
+            }).join('');
+        }
 
-        // This section has been replaced by the new organization logic above
+        // 如果當前層級有剩餘的模板或連結（不屬於子主題的），集中顯示
+        if (currentTemplateCards.length > 0 || currentLinkCards.length > 0) {
+            const allTopics = this.templateEngine.getAllTopicConfigs?.() || [];
+            const managedTopic = allTopics.find(t => t.id === topicPath);
+            const topicDisplayName = managedTopic?.displayName || topicPath;
 
-        // Wrap current level cards in a topic group container if they exist
-        let currentLevelContainer = '';
-        if (currentLevelCardsHtml) {
-            // Get current topic info for the container
-            const managedTopic = this.templateEngine.getTopicByName?.(topicPath.split('/').pop() || topicPath);
-            const topicDisplayName = managedTopic?.displayName || topicPath.split('/').pop() || topicPath;
+            const templatesHtml = currentTemplateCards.map(card => this._generateTemplateCardFromCard(card)).join('');
+            const linksHtml = currentLinkCards.map(card => this._generateLinkCardHtml(card)).join('');
 
             const templateCount = currentTemplateCards.length;
             const linkCount = currentLinkCards.length;
-            let countText = '';
-            if (templateCount > 0 && linkCount > 0) {
-                countText = `${templateCount} 個模板、${linkCount} 個連結`;
-            } else if (templateCount > 0) {
-                countText = `${templateCount} 個模板`;
-            } else if (linkCount > 0) {
-                countText = `${linkCount} 個連結`;
-            }
+            const countText = this._generateCardCountText(0, templateCount, linkCount);
 
-            currentLevelContainer = `
+            const hasDocumentation = managedTopic && managedTopic.documentation && managedTopic.documentation.trim().length > 0;
+
+            html += `
                 <div class="topic-group main-topic" data-topic="${topicPath}">
                     <div class="topic-header">
                         <div class="topic-title-row">
@@ -1253,37 +1110,42 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
                                 ${managedTopic?.display?.icon ? `<span class="topic-icon">${managedTopic.display.icon}</span>` : '<span class="topic-icon">📁</span>'}
                                 ${topicDisplayName}
                             </h3>
+                            <div class="topic-actions">
+                                <button class="action-btn favorite-btn"
+                                        data-item-id="${topicPath}"
+                                        title="${this._isFavorite(topicPath) ? '取消收藏' : '加入收藏'}">
+                                    <span class="icon">${this._isFavorite(topicPath) ? '❤️' : '♡'}</span>
+                                </button>
+                                ${hasDocumentation ? `
+                                    <button class="topic-doc-btn"
+                                            data-topic-name="${managedTopic?.name || topicPath}"
+                                            title="查看詳細說明文件">
+                                        📖
+                                    </button>
+                                ` : ''}
+                            </div>
                         </div>
-                        <p class="topic-description">${managedTopic?.description || `${topicDisplayName} 相關內容`}</p>
+                        <p class="topic-description">${managedTopic?.description || `${topicDisplayName} 的其他內容`}</p>
                         <p class="topic-count">${countText}</p>
                     </div>
                     <div class="templates-grid">
-                        ${currentLevelCardsHtml}
+                        ${templatesHtml}
+                        ${linksHtml}
                     </div>
                 </div>
             `;
         }
 
-
-        // Organize content in logical order: child topic groups first, then current level content, then remaining topics
-        const result = childTopicGroupsHtml + currentLevelContainer + remainingTopicCardsHtml;
-
-        if (!result.trim()) {
-            return '<div class="topic-group"><p>沒有找到相關內容</p></div>';
-        }
-
-        return result;
+        return html || '<div class="topic-group"><p>沒有找到相關內容</p></div>';
     }
 
     private _generateTopicCardHtml(card: ExtendedCard): string {
         // Check for documentation from both the card and the managed topic
-        const topicPath = card.target || card.id;
+        const topicId = card.target || card.id;
 
-        // Extract topic name from path - for c/advanced, we need "advanced"
-        const topicName = topicPath.split('/').pop() || topicPath;
-
-        // Find the managed topic using the topic name
-        let managedTopic = this.templateEngine.getTopicByName?.(topicName);
+        // 使用 TopicManager 直接查找主題配置（通過 ID）
+        const allTopics = this.templateEngine.getAllTopicConfigs?.() || [];
+        const managedTopic = allTopics.find(t => t.id === topicId);
 
         const hasDocumentation = (card.documentation && card.documentation.trim().length > 0) ||
                                  (managedTopic && managedTopic.documentation && managedTopic.documentation.trim().length > 0);
@@ -1306,7 +1168,7 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
                         </button>
                         ${hasDocumentation ? `
                             <button class="action-btn doc-btn"
-                                    data-topic-name="${topicName}"
+                                    data-topic-name="${managedTopic?.name || topicId}"
                                     title="查看說明文件">
                                 <span class="icon">📖</span>
                             </button>
@@ -1319,7 +1181,7 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
                 <p class="card-description">${this._escapeHtml(card.description)}</p>
                 <div class="card-footer">
                     <span class="card-type-label">主題</span>
-                    <span class="language-tag">${this._getLanguageTagName(card.language)}</span>
+                    ${card.language ? `<span class="language-tag">${this._getLanguageTagName(card.language)}</span>` : ''}
                 </div>
             </div>
         `;
@@ -1330,17 +1192,26 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
         const isTopicLink = card.target && !card.target.startsWith('http');
 
         // Check if this link points to a template
-        const isTemplateLink = card.target && (card.target.includes('/templates/') || card.target.includes('templates/'));
+        // First check by path pattern, then try direct template ID lookup
+        const allTemplates = this.templateEngine.getAllTemplates();
+        let targetTemplate = null;
+        let isTemplateLink = false;
 
-        if (isTemplateLink) {
-            // Extract template ID from target path
-            const templateId = card.target.split('/').pop();
-            // Try to find the actual template data
-            const allTemplates = this.templateEngine.getAllTemplates();
-            const targetTemplate = allTemplates.find(t => t.id === templateId);
+        if (card.target) {
+            // Check if target includes 'templates/' path
+            if (card.target.includes('/templates/') || card.target.includes('templates/')) {
+                const templateId = card.target.split('/').pop();
+                targetTemplate = allTemplates.find(t => t.id === templateId);
+                isTemplateLink = !!targetTemplate;
+            } else {
+                // Try direct template ID lookup
+                targetTemplate = allTemplates.find(t => t.id === card.target);
+                isTemplateLink = !!targetTemplate;
+            }
+        }
 
-            if (targetTemplate) {
-                // Display as template card with link context
+        if (isTemplateLink && targetTemplate) {
+            // Display as template card with link context
                 const isRecommended = this._isTemplateRecommended(targetTemplate.id);
                 const templateClass = isRecommended ? 'template-card recommended-template' : 'template-card';
                 const templateHasDocumentation = targetTemplate.documentation && targetTemplate.documentation.trim().length > 0;
@@ -1376,12 +1247,11 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
                         <p class="card-description">${this._escapeHtml(card.description || targetTemplate.description)}</p>
                         <div class="card-footer">
                             <span class="card-type-label">模板連結</span>
-                            ${isRecommended && usageCount > 0 ? `<span class="usage-count" style="opacity: 0.6;">已使用 ${usageCount} 次</span>` : ''}
-                            <span class="language-tag">${this._getLanguageTagName(targetTemplate.language)}</span>
+                            ${isRecommended && usageCount > 0 ? `<span class="usage-count" style="opacity: 0.6;">已使用 ${usageCount} 次</span>` : '<span></span>'}
+                            ${targetTemplate.language ? `<span class="language-tag">${this._getLanguageTagName(targetTemplate.language)}</span>` : '<span></span>'}
                         </div>
                     </div>
                 `;
-            }
         }
 
         // Regular link display (for non-template links or when template not found)
@@ -1415,7 +1285,7 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
                 <p class="card-description">${this._escapeHtml(card.description)}</p>
                 <div class="card-footer">
                     <span class="card-type-label">主題連結</span>
-                    <span class="language-tag">${this._getLanguageTagName(card.language)}</span>
+                    ${card.language ? `<span class="language-tag">${this._getLanguageTagName(card.language)}</span>` : ''}
                 </div>
             </div>
         `;
@@ -1458,8 +1328,8 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
                 <p class="card-description">${this._escapeHtml(card.description)}</p>
                 <div class="card-footer">
                     <span class="card-type-label">模板</span>
-                    ${isRecommended && usageCount > 0 ? `<span class="usage-count" style="opacity: 0.6;">已使用 ${usageCount} 次</span>` : ''}
-                    <span class="language-tag">${this._getLanguageTagName(card.language)}</span>
+                    ${isRecommended && usageCount > 0 ? `<span class="usage-count" style="opacity: 0.6;">已使用 ${usageCount} 次</span>` : '<span></span>'}
+                    ${card.language ? `<span class="language-tag">${this._getLanguageTagName(card.language)}</span>` : '<span></span>'}
                 </div>
             </div>
         `;

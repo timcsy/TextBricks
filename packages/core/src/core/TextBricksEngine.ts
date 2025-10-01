@@ -10,7 +10,8 @@ import {
     TemplateImportData,
     Topic,
     Card,
-    ExtendedCard
+    ExtendedCard,
+    TopicConfig
 } from '@textbricks/shared';
 import { FormattingEngine } from './FormattingEngine';
 import { IPlatform } from '../interfaces/IPlatform';
@@ -114,18 +115,8 @@ export class TextBricksEngine {
     }
 
     private async saveTemplateData(data: TemplateData): Promise<void> {
-        try {
-            const CURRENT_DATA_VERSION = '0.2.5-with-new-topic-format';
-            const jsonData = JSON.stringify(data, null, 2);
-
-            // 保存到內存存儲
-            await this.platform.storage.set('templates.json', jsonData);
-            await this.platform.storage.set('templates.version', CURRENT_DATA_VERSION);
-
-            console.log('[TextBricksEngine] Template data saved to storage');
-        } catch (error) {
-            throw new Error(`Failed to save template data: ${error}`);
-        }
+        // 不再保存到緩存，直接從檔案系統讀取
+        console.log('[TextBricksEngine] Cache disabled, data loaded from filesystem');
     }
 
     /**
@@ -145,28 +136,10 @@ export class TextBricksEngine {
 
     private async loadTemplateData(): Promise<TemplateData> {
         try {
-            const CURRENT_DATA_VERSION = '0.2.5-with-new-topic-format';
-
-            // 檢查 storage 中的資料版本
-            const storedVersion = await this.platform.storage.get<string>('templates.version');
-            const storageData = await this.platform.storage.get<string>('templates.json');
-
-            // 如果版本匹配且資料有效，使用 storage 中的資料
-            if (storageData && storedVersion === CURRENT_DATA_VERSION) {
-                const data = JSON.parse(storageData);
-                if (data.templates && data.templates.length > 0 && data.templates[0].topic) {
-                    return data;
-                }
-            }
-
-            // 從檔案系統載入預設資料
+            // 直接從檔案系統載入，不使用緩存
             const rawData = await this.loadFromFileSystem();
             if (rawData) {
-                const data = JSON.parse(rawData);
-                // 儲存新資料和版本標記到 storage
-                await this.platform.storage.set('templates.json', rawData);
-                await this.platform.storage.set('templates.version', CURRENT_DATA_VERSION);
-                return data;
+                return JSON.parse(rawData);
             }
 
             // 返回默認結構
@@ -251,6 +224,7 @@ export class TextBricksEngine {
         // 2. 使用 TemplateRepository 載入模板
         await this.templateRepository.initialize();
         const templates = this.templateRepository.getAll();
+        console.log(`[TextBricksEngine] TemplateRepository loaded ${templates.length} templates`);
 
         // 3. 從模板中提取語言列表（語言資訊儲存在模板中）
         const languageMap = new Map<string, Language>();
@@ -316,6 +290,29 @@ export class TextBricksEngine {
 
 
     /**
+     * 找到主題的根主題 ID（用於首頁分組）
+     */
+    private findRootTopicId(topic: TopicConfig, allTopics: TopicConfig[]): string {
+        // 如果沒有父主題，自己就是根主題
+        if (!topic.parentId) {
+            return topic.id;
+        }
+
+        // 遞迴找到根主題
+        let currentTopic = topic;
+        while (currentTopic.parentId) {
+            const parentTopic = allTopics.find(t => t.id === currentTopic.parentId);
+            if (!parentTopic) {
+                // 找不到父主題，返回當前主題 ID
+                return currentTopic.id;
+            }
+            currentTopic = parentTopic;
+        }
+
+        return currentTopic.id;
+    }
+
+    /**
      * 從檔案系統載入卡片
      * Phase 2: 使用 TemplateRepository 構建模板卡片
      */
@@ -332,9 +329,15 @@ export class TextBricksEngine {
             const allTopics = this.topicManager.getAllTopics();
 
             for (const topic of allTopics) {
-                const topicPath = join(this.dataDirectory, topic.id);
-                const pathParts = topic.id.split('/');
+                // 使用 topic.path 構建文件系統路徑，而不是 topic.id
+                const topicPath = topic.path && topic.path.length > 0
+                    ? join(this.dataDirectory, ...topic.path)
+                    : join(this.dataDirectory, topic.id);
+                const pathParts = topic.path || topic.id.split('/');
                 const language = pathParts[0] || '';
+
+                // 找到根主題 ID（用於首頁分組顯示）
+                const rootTopicId = this.findRootTopicId(topic, allTopics);
 
                 // 1. 載入子主題作為 topic 卡片
                 const subtopics = this.topicManager.getSubtopics(topic.id);
@@ -345,7 +348,7 @@ export class TextBricksEngine {
                         title: subtopic.displayName || subtopic.name,
                         description: subtopic.description || `進入 ${subtopic.displayName || subtopic.name} 主題`,
                         language: language,
-                        topic: topic.id,
+                        topic: topic.id,  // 使用原始主題 ID
                         target: subtopic.id
                     });
                 }
@@ -355,6 +358,7 @@ export class TextBricksEngine {
                 try {
                     await stat(linksPath);
                     const linkFiles = await readdir(linksPath);
+                    console.log(`[TextBricksEngine] Loading links for topic "${topic.id}": found ${linkFiles.length} files in ${linksPath}`);
 
                     for (const file of linkFiles) {
                         if (file.endsWith('.json')) {
@@ -369,9 +373,10 @@ export class TextBricksEngine {
                                     title: link.title,
                                     description: link.description,
                                     language: language,
-                                    topic: topic.id,
+                                    topic: topic.id,  // 使用原始主題 ID
                                     target: link.target
                                 });
+                                console.log(`[TextBricksEngine] Loaded link "${link.title}" (id: ${link.id}) for topic "${topic.id}"`);
                             } catch (error) {
                                 console.warn(`Failed to load link ${file}:`, error);
                             }
@@ -379,10 +384,13 @@ export class TextBricksEngine {
                     }
                 } catch {
                     // links 資料夾不存在，跳過
+                    console.log(`[TextBricksEngine] No links directory for topic "${topic.id}"`);
                 }
 
                 // 3. 從 TemplateRepository 載入模板作為 template 卡片
                 const topicTemplates = this.templateRepository.findByTopic(topic.id);
+                console.log(`[TextBricksEngine] Loading templates for topic "${topic.id}": found ${topicTemplates.length} templates`);
+
                 for (const template of topicTemplates) {
                     cards.push({
                         type: 'template',
@@ -390,7 +398,7 @@ export class TextBricksEngine {
                         title: template.title,
                         description: template.description,
                         language: template.language,
-                        topic: topic.id,
+                        topic: topic.id,  // 使用原始主題 ID
                         code: template.code,
                         documentation: template.documentation
                     });
@@ -469,6 +477,14 @@ export class TextBricksEngine {
     // 卡片相關查詢方法
     getAllCards(): ExtendedCard[] {
         return [...this.cards];
+    }
+
+    getAllTopicConfigs(): TopicConfig[] {
+        return this.topicManager.getAllTopics();
+    }
+
+    getRootTopics(): TopicConfig[] {
+        return this.topicManager.getRootTopics();
     }
 
     getCardsByTopic(topic: string): ExtendedCard[] {

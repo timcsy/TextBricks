@@ -3,6 +3,8 @@
  * 簡化事件處理，提升性能
  */
 
+console.log('[TextBricks] Loading event-delegator.js');
+
 const EventDelegator = {
     /**
      * 事件處理器映射表

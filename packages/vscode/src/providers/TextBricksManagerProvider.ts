@@ -308,8 +308,16 @@ export class TextBricksManagerProvider {
 
                 try {
                     const rawHierarchy = this.topicManager.getHierarchy();
+                    console.log('[ManagerProvider] Raw hierarchy roots:', rawHierarchy?.roots?.length);
+                    if (rawHierarchy?.roots?.[0]) {
+                        console.log('[ManagerProvider] First root topic:', rawHierarchy.roots[0].topic.id, 'loadedLinks:', (rawHierarchy.roots[0].topic as any).loadedLinks?.length);
+                    }
                     // 清理循環引用：移除 parent 屬性，保留結構
                     topicHierarchy = this.cleanCircularReferences(rawHierarchy);
+                    console.log('[ManagerProvider] Cleaned hierarchy roots:', topicHierarchy?.roots?.length);
+                    if (topicHierarchy?.roots?.[0]) {
+                        console.log('[ManagerProvider] First cleaned root topic:', topicHierarchy.roots[0].topic.id, 'loadedLinks:', (topicHierarchy.roots[0].topic as any).loadedLinks?.length);
+                    }
                     topicStats = this.cleanCircularReferences(this.topicManager.getStatistics());
                 } catch (topicError) {
                     console.warn('TopicManager error:', topicError);

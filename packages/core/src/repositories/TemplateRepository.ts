@@ -212,24 +212,32 @@ export class TemplateRepository {
 
         this.templates.clear();
 
-        const dataPath = await this.dataPathService.getDataPath();
-        if (!dataPath) {
-            console.warn('[TemplateRepository] No data path configured');
+        // 使用 getScopePath 而不是 getDataPath，因為模板存儲在 scope 目錄下
+        const scopePath = await this.dataPathService.getScopePath('local');
+        if (!scopePath) {
+            console.warn('[TemplateRepository] No scope path configured');
             return;
         }
+        console.log(`[TemplateRepository] Using scope path: ${scopePath}`);
 
         try {
             // 如果有 TopicManager，使用它獲取主題列表
             if (this.topicManager && typeof this.topicManager.getAllTopics === 'function') {
                 const topics = this.topicManager.getAllTopics();
+                console.log(`[TemplateRepository] Scanning ${topics.length} topics for templates`);
 
                 for (const topic of topics) {
-                    const topicPath = join(dataPath, topic.id);
+                    // 使用 topic.path 而不是 topic.id 來構建檔案路徑
+                    // topic.id 可能是 "c-basic"，但檔案路徑是 "c/basic"
+                    const topicPath = topic.path
+                        ? join(scopePath, ...topic.path)
+                        : join(scopePath, topic.id);
                     const templatesPath = join(topicPath, 'templates');
 
                     try {
                         await stat(templatesPath);
                         const files = await readdir(templatesPath);
+                        console.log(`[TemplateRepository] Found ${files.length} files in ${templatesPath}`);
 
                         for (const file of files) {
                             if (file.endsWith('.json')) {
@@ -238,28 +246,27 @@ export class TemplateRepository {
                                     const content = await readFile(filePath, 'utf8');
                                     const template: ExtendedTemplate = JSON.parse(content);
 
-                                    // 確保有語言和主題資訊
-                                    if (!template.language) {
-                                        const pathParts = topic.id.split('/');
-                                        template.language = pathParts[0] || '';
-                                    }
+                                    // 確保有主題資訊
+                                    // language 欄位應該在模板 JSON 中明確定義，不自動推斷
                                     if (!template.topic) {
                                         template.topic = topic.id;
                                     }
 
                                     this.templates.set(template.id, template);
+                                    console.log(`[TemplateRepository] Loaded template: ${template.id} from ${topic.id}, language: ${template.language}`);
                                 } catch (error) {
-                                    console.warn(`Failed to load template ${file}:`, error);
+                                    console.warn(`[TemplateRepository] Failed to load template ${file}:`, error);
                                 }
                             }
                         }
-                    } catch {
+                    } catch (error) {
                         // templates 資料夾不存在，跳過
+                        console.log(`[TemplateRepository] No templates folder at ${templatesPath}: ${error}`);
                     }
                 }
             } else {
                 // 降級方案：遞迴掃描目錄
-                await this.scanDirectoryRecursively(dataPath);
+                await this.scanDirectoryRecursively(scopePath);
             }
 
             console.log(`[TemplateRepository] Loaded ${this.templates.size} templates`);

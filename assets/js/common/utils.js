@@ -5,6 +5,8 @@
  * 避免在 main.js 和 textbricks-manager.js 中重複定義
  */
 
+console.log('[TextBricks] Loading utils.js');
+
 const TextBricksUtils = {
     // ========== HTML 處理 ==========
 

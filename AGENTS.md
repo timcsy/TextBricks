@@ -289,6 +289,59 @@
 
 > 📝 **重要**：AI 助手在進行重大變更時，請更新此部分以便後續追蹤
 
+### 2025-10-01 - 主視窗主題層級與連結顯示修復 (已完成)
+- **執行者**：Claude Code (Sonnet 4.5)
+- **完成時間**：~90 分鐘（多次迭代）
+- **問題**：
+  1. 主視窗首頁顯示 5 個主題組（c-advanced、c-basic 等）而非 3 個頂層主題（C、Python、JavaScript）
+  2. 麵包屑導航路徑不完整（缺少父主題）
+  3. 子主題（如 c-basic）下的連結卡片未顯示
+  4. 主題文檔按鈕在某些情況下缺失
+- **根本原因**：
+  - **卡片分組錯誤**：使用根主題 ID 作為 `card.topic` 導致所有內容顯示在頂層
+  - **路徑概念混淆**：主題 ID 使用 `-`（c-basic），文件路徑使用 `/`（c/basic），代碼混用兩者
+  - **連結載入失敗**：`getAllCards()` 使用 `topic.id` 構建路徑，導致找不到子主題的 links 目錄
+- **修復方案**：
+  1. **卡片分組**：恢復使用原始 `topic.id`，在 WebviewProvider 端按根主題過濾
+  2. **麵包屑導航**：使用 `parentId` 遞迴構建完整路徑
+  3. **連結載入**：改用 `topic.path` 數組構建文件系統路徑
+  4. **文檔按鈕**：統一使用 `getAllTopicConfigs()` 直接查找主題配置
+- **檔案變更**：
+  - 修改 `packages/core/src/core/TextBricksEngine.ts`:
+    - 移除存儲緩存機制（loadTemplateData/saveTemplateData）
+    - 恢復卡片使用原始 `topic.id` 而非根主題 ID
+    - 修復連結載入：使用 `topic.path` 構建正確的文件系統路徑
+    - 添加連結載入日誌（+3 console.log）
+  - 修改 `packages/vscode/src/providers/WebviewProvider.ts`:
+    - 首頁過濾：只顯示根主題的卡片（+getRootTopics）
+    - 重構麵包屑：使用 `parentId` 遞迴構建完整路徑（~50 行）
+    - 修復子主題過濾：動態收集子主題 ID
+    - 修復主題卡片文檔按鈕：使用 `getAllTopicConfigs()` 直接查找
+    - 修復模板連結識別：支援直接模板 ID 查找
+    - 添加剩餘模板主題標題的文檔和收藏按鈕
+  - 修改 `packages/core/src/managers/TopicManager.ts`:
+    - 添加連結載入日誌（+2 console.log）
+  - 修改數據文件：
+    - `/c/advanced/topic.json` - 添加 `parentId: "c"`
+    - `/c/basic/topic.json` - 添加 `parentId: "c"`
+    - `/c/links/advanced-pointer.json` - 修正 target 為 "c-advanced"
+    - `/c/links/c-test-link.json` - 修正 target 為 "c-variables"
+  - 修改前端 JavaScript：
+    - `assets/js/main.js` - 語言標籤變為可選（防止 console error）
+- **成果**：
+  - ✅ 首頁正確顯示 3 個頂層主題（C、Python、JavaScript）
+  - ✅ 子主題正確嵌套在父主題下（點擊 C 語言後顯示基礎語法、進階技巧）
+  - ✅ 麵包屑顯示完整路徑（local > C 語言 > 基礎語法）
+  - ✅ 子主題下的連結正確顯示（基礎語法下顯示 "Python 基礎" 連結）
+  - ✅ 所有主題標題都有文檔和收藏按鈕
+  - ✅ 連結正確識別模板 ID 和主題 ID
+- **關鍵學習**：
+  - **術語統一**：避免「側邊欄」歧義，明確區分「主視窗」（WebviewProvider）和「管理介面」（TextBricksManagerProvider）
+  - **ID vs Path**：主題 ID（`c-basic`）用於邏輯標識，主題 Path（`['c', 'basic']`）用於文件系統定位
+  - **調試策略**：從後端到前端逐層添加日誌，快速定位數據傳遞問題
+- **Token 使用**：~127,000 tokens
+- **狀態**：✅ **主視窗部分完成，準備進入管理介面修復**
+
 ### 2025-10-01 - UI Phase 5: 模板分離基礎設施 (部分完成)
 - **執行者**：Claude Code
 - **完成時間**：~20 分鐘
