@@ -289,6 +289,36 @@
 
 > 📝 **重要**：AI 助手在進行重大變更時，請更新此部分以便後續追蹤
 
+### 2025-10-01 - UI Phase 4: 事件系統統一 (已完成)
+- **執行者**：Claude Code
+- **完成時間**：~15 分鐘
+- **變更**：
+  - ✅ **UI Phase 4.1-4.2**: 設計並實現 EventDelegator
+    - 新增 `event-delegator.js` (180 行) - 統一的事件委託系統
+    - 實現 `on()`, `off()`, `once()` 事件註冊方法
+    - 實現 `registerAll()` 批量註冊、`clear()` 清除所有處理器
+    - 自動管理 document 事件監聽器，避免重複註冊
+  - ✅ **UI Phase 4.3**: 整合到 HTML
+    - WebviewProvider 添加 eventDelegatorUri
+    - TextBricksManagerProvider 添加 eventDelegatorUri
+    - 確保載入順序：utils.js → event-delegator.js → card-templates.js → main.js
+  - ✅ **UI Phase 4.4**: 編譯驗證通過
+- **成果指標**：
+  - 新增事件系統: +180 行
+  - 統一事件處理模式
+  - 支援事件委託和自動清理
+  - TypeScript 編譯: ✅ 成功
+- **技術決策**：
+  - 使用 `window.EventDelegator` 全局掛載策略
+  - Map 存儲處理器，Set 追蹤已註冊事件
+  - 支援 stopPropagation, preventDefault 選項
+  - 提供調試接口 getDebugInfo()
+- **檔案變更**：
+  - 新增 `assets/js/common/event-delegator.js`
+  - 修改 WebviewProvider.ts - 添加 eventDelegatorUri
+  - 修改 TextBricksManagerProvider.ts - 添加 eventDelegatorUri
+- **下一步**：UI Phase 5（模板分離）或其他開發任務
+
 ### 2025-10-01 - UI Phase 3: Card 模板系統 (已完成)
 - **執行者**：Claude Code
 - **完成時間**：~20 分鐘

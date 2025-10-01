@@ -2887,7 +2887,144 @@ CardTemplates.link({
 
 #### 下一步
 
-- [ ] UI Phase 4: 事件系統統一（可選）
+- [x] UI Phase 4: 事件系統統一
+- [ ] UI Phase 5: 模板分離（可選）
+
+---
+
+### ✅ UI Phase 4: 事件系統統一 (已完成)
+
+**完成日期**: 2025-10-01
+**執行時間**: ~15 分鐘
+
+#### 完成項目
+
+✅ **UI Phase 4.1-4.2**: 設計並實現 EventDelegator
+- 新增 `assets/js/common/event-delegator.js` (180 行)
+- 實現統一的事件委託系統
+- 自動管理 document 事件監聽器
+
+✅ **UI Phase 4.3**: 整合到 HTML
+- 修改 WebviewProvider.ts 添加 eventDelegatorUri
+- 修改 TextBricksManagerProvider.ts 添加 eventDelegatorUri
+- 確保載入順序：utils.js → event-delegator.js → card-templates.js → main.js
+
+✅ **UI Phase 4.4**: 編譯驗證通過
+- TypeScript 編譯成功
+- 事件系統可用
+
+#### 成果指標
+
+| 指標 | 變化 | 狀態 |
+|------|------|------|
+| 新增事件系統 | +180 行 | ✅ |
+| 統一事件處理模式 | Map + Set | ✅ |
+| TypeScript 編譯 | ✅ | ✅ |
+
+#### EventDelegator 功能
+
+**核心方法**：
+```javascript
+// on(selector, eventType, handler, options)
+EventDelegator.on('.btn', 'click', (event, target) => {
+    console.log('Button clicked:', target);
+}, { stopPropagation: true });
+
+// off(selector, eventType, handler)
+EventDelegator.off('.btn', 'click', handler);
+
+// once(selector, eventType, handler, options)
+EventDelegator.once('.modal', 'click', (event, target) => {
+    console.log('Modal clicked once');
+});
+```
+
+**輔助方法**：
+- `registerAll(registrations)` - 批量註冊事件
+- `clear()` - 清除所有處理器
+- `getDebugInfo()` - 獲取調試信息
+
+**特性**：
+- 自動事件委託（使用 `closest()` 查找目標）
+- 避免重複註冊事件監聽器
+- 支援 `stopPropagation` 和 `preventDefault` 選項
+- 錯誤處理和日誌記錄
+- 內存管理（Map 和 Set 數據結構）
+
+#### 技術決策記錄
+
+1. **全局掛載**: 使用 `window.EventDelegator` 與其他工具保持一致
+
+2. **數據結構**:
+   - Map 存儲處理器（key: `eventType:selector`）
+   - Set 追蹤已註冊的事件類型
+
+3. **性能優化**:
+   - 單一 document 監聽器處理所有同類型事件
+   - 使用 `closest()` 進行高效的選擇器匹配
+
+4. **錯誤處理**: try-catch 包裹處理器執行，避免單個錯誤影響其他處理器
+
+5. **調試支持**: 提供 `getDebugInfo()` 查看所有註冊的處理器
+
+#### 使用範例
+
+```javascript
+// 基本使用
+EventDelegator.on('.template-card', 'click', (event, target) => {
+    const templateId = target.dataset.templateId;
+    copyTemplate(templateId);
+});
+
+// 批量註冊
+EventDelegator.registerAll([
+    {
+        selector: '.action-btn',
+        event: 'click',
+        handler: handleButtonClick,
+        options: { stopPropagation: true }
+    },
+    {
+        selector: '.preview-btn',
+        event: 'mouseenter',
+        handler: showTooltip,
+        options: { capture: true }
+    }
+]);
+
+// 一次性事件
+EventDelegator.once('.modal-close', 'click', closeModal);
+
+// 調試
+console.log(EventDelegator.getDebugInfo());
+// {
+//   totalHandlers: 15,
+//   registeredEvents: ['click', 'mouseenter', 'mouseleave'],
+//   handlers: [...]
+// }
+```
+
+#### 檔案變更
+
+```
+新增:
+  assets/js/common/event-delegator.js (180 行)
+    - EventDelegator 對象
+    - on(), off(), once() 註冊方法
+    - registerAll(), clear() 輔助方法
+    - 內部事件管理邏輯
+
+修改:
+  packages/vscode/src/providers/WebviewProvider.ts
+    - 新增 eventDelegatorUri 並加入 HTML
+
+  packages/vscode/src/providers/TextBricksManagerProvider.ts
+    - 新增 eventDelegatorUri 並加入 HTML
+```
+
+#### 下一步
+
+- [ ] 將現有事件處理遷移到 EventDelegator（可選）
 - [ ] UI Phase 5: 模板分離（可選）
 
 ---
@@ -3064,14 +3201,15 @@ npm run build
 - ✅ UI Phase 1: 共享工具函數庫 (+338 行)
 - ✅ UI Phase 2: CSS 組件系統 (+479 行)
 - ✅ UI Phase 3: Card 模板系統 (+223 行)
+- ✅ UI Phase 4: 事件系統統一 (+180 行)
 
 ### 重構成果
 
 **代碼量變化**：
 - TextBricksEngine: 1,203 → 1,027 行 (-14.6%)
 - 新增服務: TemplateRepository (370), RecommendationService (107)
-- 新增 UI: utils.js (338), CSS 系統 (479), card-templates.js (223)
-- **淨變化**: +1,517 行結構化代碼，-176 行重複代碼
+- 新增 UI: utils.js (338), CSS 系統 (479), card-templates.js (223), event-delegator.js (180)
+- **淨變化**: +1,697 行結構化代碼，-176 行重複代碼
 
 **架構改進**：
 - 🏗️ 單一職責原則：每個服務專注特定功能
@@ -3090,7 +3228,7 @@ npm run build
 
 **UI 層重構** (可選):
 - ✅ UI Phase 3: Card 模板系統 (已完成 2025-10-01)
-- UI Phase 4: 事件系統
+- ✅ UI Phase 4: 事件系統統一 (已完成 2025-10-01)
 - UI Phase 5: 模板分離
 
 ---
