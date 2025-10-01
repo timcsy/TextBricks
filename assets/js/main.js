@@ -4,7 +4,12 @@
     const vscode = acquireVsCodeApi();
 
     // 使用共享工具函數（從 utils.js）
-    const { escapeHtml, renderMarkdown, formatDate, showSimpleTooltip } = window.TextBricksUtils || {};
+    // 確保 TextBricksUtils 已載入
+    const utils = window.TextBricksUtils || {};
+    const escapeHtml = utils.escapeHtml || (text => text);
+    const renderMarkdown = utils.renderMarkdown || (text => text);
+    const formatDate = utils.formatDate || (date => String(date));
+    const showSimpleTooltip = utils.showSimpleTooltip || (() => {});
     
     // Track drag state
     let isDragging = false;
