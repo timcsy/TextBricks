@@ -28,7 +28,7 @@
   "main": "./dist/extension.js",
   "scripts": {
     "build": "tsc -b && npm run copy-data",
-    "copy-data": "mkdir -p dist/data dist/assets/css dist/assets/js dist/assets/icons && cp -r src/data/* dist/data/ 2>/dev/null || true && cp -r ../../data/* dist/data/ 2>/dev/null || true && cp -r ../../assets/css/* dist/assets/css/ && cp -r ../../assets/js/* dist/assets/js/ && cp -r ../../assets/icons/* dist/assets/icons/",
+    "copy-data": "mkdir -p dist/data dist/assets/css dist/assets/js dist/assets/icons dist/assets/templates && cp -r src/data/* dist/data/ 2>/dev/null || true && cp -r ../../data/* dist/data/ 2>/dev/null || true && cp -r ../../assets/css/* dist/assets/css/ && cp -r ../../assets/js/* dist/assets/js/ && cp -r ../../assets/icons/* dist/assets/icons/ && cp -r ../../assets/templates/* dist/assets/templates/ 2>/dev/null || true",
     "clean": "rm -rf dist",
     "test": "jest",
     "lint": "eslint src --ext ts",

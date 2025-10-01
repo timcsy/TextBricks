@@ -3025,7 +3025,171 @@ console.log(EventDelegator.getDebugInfo());
 #### 下一步
 
 - [ ] 將現有事件處理遷移到 EventDelegator（可選）
-- [ ] UI Phase 5: 模板分離（可選）
+- [x] UI Phase 5: 模板分離基礎設施
+
+---
+
+### ⚠️ UI Phase 5: 模板分離基礎設施 (部分完成)
+
+**完成日期**: 2025-10-01
+**執行時間**: ~20 分鐘
+**狀態**: 基礎設施完成，實際遷移待後續優化
+
+#### 完成項目
+
+✅ **UI Phase 5.1**: 設計模板分離架構
+- 規劃外部 HTML 模板文件結構
+- 設計 TemplateLoader 載入器接口
+
+✅ **UI Phase 5.2**: 創建 HTML 模板文件
+- 新增 `assets/templates/webview.html` - 主視圖模板框架
+- 新增 `assets/templates/manager.html` - 管理器視圖模板框架
+
+✅ **UI Phase 5.3**: 實現 TemplateLoader
+- 新增 `packages/vscode/src/utils/TemplateLoader.ts` (70 行)
+- 模板載入和緩存機制
+- 變量替換系統
+
+✅ **UI Phase 5.4**: 更新構建腳本
+- 修改 package.json copy-data 腳本
+- 自動複製模板文件到 dist/assets/templates/
+
+✅ **UI Phase 5.5**: 編譯驗證通過
+- TypeScript 編譯成功
+- 模板系統可用
+
+#### 成果指標
+
+| 指標 | 變化 | 狀態 |
+|------|------|------|
+| 新增 TemplateLoader | +70 行 | ✅ |
+| 新增 HTML 模板 | 2 文件 | ✅ |
+| 模板緩存機制 | Map | ✅ |
+| TypeScript 編譯 | ✅ | ✅ |
+| Providers 遷移 | - | ⬜ 待後續 |
+
+#### TemplateLoader 功能
+
+**核心方法**：
+```typescript
+// loadTemplate(templateName, variables)
+const html = await templateLoader.loadTemplate('webview.html', {
+    cspSource: webview.cspSource,
+    nonce: nonce,
+    variablesUri: variablesUri.toString(),
+    utilsUri: utilsUri.toString(),
+    // ...
+});
+```
+
+**特性**：
+- 模板緩存（Map 存儲）
+- 變量替換（{{variable}} 語法）
+- 異步載入
+- 錯誤處理
+
+**輔助方法**：
+- `clearCache()` - 清除所有緩存
+- `removeCacheEntry(name)` - 移除特定緩存
+
+#### 技術決策記錄
+
+1. **模板語法**: 使用簡單的 {{variable}} 格式，避免引入複雜模板引擎
+
+2. **緩存策略**: Map 緩存已載入的模板，提升性能
+
+3. **異步載入**: 使用 vscode.workspace.fs.readFile 異步讀取
+
+4. **向後兼容**: 保留現有 Provider 實現，新系統可選使用
+
+5. **構建集成**: 更新 copy-data 腳本自動複製模板文件
+
+#### 使用範例
+
+```typescript
+// 創建 TemplateLoader
+const templateLoader = new TemplateLoader(this._extensionUri);
+
+// 載入並渲染模板
+const html = await templateLoader.loadTemplate('webview.html', {
+    cspSource: webview.cspSource,
+    nonce: nonce,
+    variablesUri: variablesUri.toString(),
+    componentsUri: componentsUri.toString(),
+    styleUri: styleUri.toString(),
+    utilsUri: utilsUri.toString(),
+    eventDelegatorUri: eventDelegatorUri.toString(),
+    cardTemplatesUri: cardTemplatesUri.toString(),
+    scriptUri: scriptUri.toString(),
+    logoUri: logoUri.toString(),
+    navigationButtons: this._generateNavigationButtonsHtml(),
+    breadcrumb: this._generateBreadcrumbHtml(),
+    recommendedTemplates: this._generateRecommendedTemplatesHtml(),
+    topicsContent: this._generateTopicsHtml(topics)
+});
+
+// 清除緩存（開發模式）
+if (isDevelopment) {
+    templateLoader.clearCache();
+}
+```
+
+#### HTML 模板結構
+
+**webview.html**:
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- CSS links with {{variablesUri}}, {{componentsUri}}, {{styleUri}} -->
+</head>
+<body>
+    <div class="header">
+        <!-- {{navigationButtons}}, {{breadcrumb}} -->
+    </div>
+    <div class="container">
+        <!-- {{recommendedTemplates}}, {{topicsContent}} -->
+    </div>
+    <!-- Scripts with {{utilsUri}}, {{scriptUri}}, etc. -->
+</body>
+</html>
+```
+
+#### 檔案變更
+
+```
+新增:
+  assets/templates/webview.html
+    - 主視圖 HTML 模板框架
+    - 使用 {{variable}} 變量佔位符
+
+  assets/templates/manager.html
+    - 管理器視圖 HTML 模板框架
+
+  packages/vscode/src/utils/TemplateLoader.ts (70 行)
+    - TemplateLoader 類
+    - loadTemplate(), renderTemplate() 方法
+    - 緩存管理方法
+
+修改:
+  packages/vscode/package.json
+    - 更新 copy-data 腳本
+    - 添加 dist/assets/templates/ 複製
+```
+
+#### 未完成部分
+
+⬜ **Providers 遷移**（待後續優化）:
+- WebviewProvider 仍使用內嵌 HTML
+- TextBricksManagerProvider 仍使用內嵌 HTML
+- 建議：視需求決定是否遷移（當前實現已足夠）
+
+#### 下一步（可選）
+
+- [ ] 遷移 WebviewProvider 到使用 TemplateLoader
+- [ ] 遷移 TextBricksManagerProvider 到使用 TemplateLoader
+- [ ] 創建更多細粒度的模板片段
+- [ ] 或保持當前狀態（基礎設施已備，按需使用）
 
 ---
 
@@ -3202,6 +3366,7 @@ npm run build
 - ✅ UI Phase 2: CSS 組件系統 (+479 行)
 - ✅ UI Phase 3: Card 模板系統 (+223 行)
 - ✅ UI Phase 4: 事件系統統一 (+180 行)
+- ⚠️ UI Phase 5: 模板分離基礎設施 (+70 行 TemplateLoader, +2 模板文件)
 
 ### 重構成果
 
@@ -3209,7 +3374,8 @@ npm run build
 - TextBricksEngine: 1,203 → 1,027 行 (-14.6%)
 - 新增服務: TemplateRepository (370), RecommendationService (107)
 - 新增 UI: utils.js (338), CSS 系統 (479), card-templates.js (223), event-delegator.js (180)
-- **淨變化**: +1,697 行結構化代碼，-176 行重複代碼
+- 新增基礎設施: TemplateLoader (70), HTML 模板 (2 文件)
+- **淨變化**: +1,767 行結構化代碼，-176 行重複代碼
 
 **架構改進**：
 - 🏗️ 單一職責原則：每個服務專注特定功能
@@ -3229,10 +3395,13 @@ npm run build
 **UI 層重構** (可選):
 - ✅ UI Phase 3: Card 模板系統 (已完成 2025-10-01)
 - ✅ UI Phase 4: 事件系統統一 (已完成 2025-10-01)
-- UI Phase 5: 模板分離
+- ⚠️ UI Phase 5: 模板分離基礎設施 (部分完成 2025-10-01)
+  - ✅ TemplateLoader 工具類
+  - ✅ HTML 模板文件
+  - ⬜ Providers 遷移（待後續優化）
 
 ---
 
-**文檔版本**: 1.8 (重構完成)
+**文檔版本**: 1.9 (重構完成 + UI Phase 5 基礎)
 **最後更新**: 2025-09-30
 **維護者**: TextBricks Team
