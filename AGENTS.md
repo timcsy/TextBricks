@@ -289,6 +289,36 @@
 
 > 📝 **重要**：AI 助手在進行重大變更時，請更新此部分以便後續追蹤
 
+### 2025-10-01 - UI Phase 3: Card 模板系統 (已完成)
+- **執行者**：Claude Code
+- **完成時間**：~20 分鐘
+- **變更**：
+  - ✅ **UI Phase 3.1**: 設計 Card 模板系統
+    - 新增 `card-templates.js` (223 行) - 統一的卡片 HTML 生成邏輯
+    - 實現 `template()`, `topic()`, `link()` 卡片渲染方法
+    - 實現 `renderMany()` 批量渲染、`empty()` 空狀態
+    - 實現 `_renderActions()` 動作按鈕系統（preview, copy, insert, edit, delete, favorite）
+  - ✅ **UI Phase 3.2**: 整合到 HTML
+    - WebviewProvider 添加 cardTemplatesUri
+    - TextBricksManagerProvider 添加 cardTemplatesUri
+    - 確保 utils.js → card-templates.js → main.js 載入順序
+  - ✅ **UI Phase 3.3-3.4**: 編譯驗證通過
+- **成果指標**：
+  - 新增 Card 模板系統: +223 行
+  - 統一卡片生成邏輯（template/topic/link）
+  - 支援自定義動作按鈕組合
+  - TypeScript 編譯: ✅ 成功
+- **技術決策**：
+  - 使用 `window.CardTemplates` 全局掛載策略
+  - 依賴 TextBricksUtils.escapeHtml 安全性
+  - BEM 風格 CSS 類名（tb-card, tb-card__header）
+  - 使用 VSCode Codicons
+- **檔案變更**：
+  - 新增 `assets/js/common/card-templates.js`
+  - 修改 WebviewProvider.ts - 添加 cardTemplatesUri
+  - 修改 TextBricksManagerProvider.ts - 添加 cardTemplatesUri
+- **下一步**：UI Phase 4（事件系統統一）或其他重構任務
+
 ### 2025-09-30 - UI Phase 1: 共享工具函數庫 (已完成)
 - **執行者**：Claude Code
 - **完成時間**：~30 分鐘

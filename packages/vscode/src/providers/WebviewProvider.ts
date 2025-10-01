@@ -447,6 +447,7 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
         const componentsUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'assets', 'css', 'common', 'components.css'));
         const styleUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'assets', 'css', 'style.css'));
         const utilsUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'assets', 'js', 'common', 'utils.js'));
+        const cardTemplatesUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'assets', 'js', 'common', 'card-templates.js'));
         const scriptUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'assets', 'js', 'main.js'));
 
         const nonce = this.getNonce();
@@ -486,6 +487,7 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
     </div>
 
     <script nonce="${nonce}" src="${utilsUri}"></script>
+    <script nonce="${nonce}" src="${cardTemplatesUri}"></script>
     <script nonce="${nonce}" src="${scriptUri}"></script>
 </body>
 </html>`;

@@ -2790,6 +2790,108 @@ npm run build
 
 ---
 
+### ✅ UI Phase 3: Card 模板系統 (已完成)
+
+**完成日期**: 2025-10-01
+**執行時間**: ~20 分鐘
+
+#### 完成項目
+
+✅ **UI Phase 3.1**: 設計 Card 模板系統
+- 新增 `assets/js/common/card-templates.js` (223 行)
+- 實現統一的卡片 HTML 生成邏輯
+- 支援 template, topic, link 三種卡片類型
+
+✅ **UI Phase 3.2**: 整合到 HTML
+- 修改 WebviewProvider.ts 添加 cardTemplatesUri
+- 修改 TextBricksManagerProvider.ts 添加 cardTemplatesUri
+- 確保載入順序：utils.js → card-templates.js → main.js
+
+✅ **UI Phase 3.3-3.4**: 編譯驗證通過
+- TypeScript 編譯成功
+- 所有卡片模板函數可用
+
+#### 成果指標
+
+| 指標 | 變化 | 狀態 |
+|------|------|------|
+| 新增 Card 模板系統 | +223 行 | ✅ |
+| 統一卡片生成邏輯 | 3 種類型 | ✅ |
+| TypeScript 編譯 | ✅ | ✅ |
+
+#### Card 模板系統功能
+
+**核心方法**：
+```javascript
+// template(data) - 渲染模板卡片
+CardTemplates.template({
+    id, title, description,
+    languageTag, topicName,
+    isFavorite, actions
+});
+
+// topic(data) - 渲染主題卡片
+CardTemplates.topic({
+    id, title, description,
+    icon, count, isFavorite
+});
+
+// link(data) - 渲染連結卡片
+CardTemplates.link({
+    id, title, description,
+    target, languageTag
+});
+```
+
+**輔助方法**：
+- `renderMany(items, type)` - 批量渲染卡片
+- `empty(options)` - 空狀態 UI
+- `_renderActions(actions, id)` - 動作按鈕系統
+
+**支援的動作按鈕**：
+- `preview` - 預覽（👁️）
+- `copy` - 複製（📋）
+- `insert` - 插入（＋）
+- `edit` - 編輯（✏️）
+- `delete` - 刪除（🗑️）
+- `favorite` - 收藏（⭐）
+
+#### 技術決策記錄
+
+1. **全局掛載**: 使用 `window.CardTemplates` 與 TextBricksUtils 保持一致
+
+2. **安全性**: 依賴 `TextBricksUtils.escapeHtml` 進行 XSS 防護
+
+3. **CSS 類名**: 使用 BEM 風格（tb-card, tb-card__header, tb-card__body）
+
+4. **圖標系統**: 統一使用 VSCode Codicons（codicon-*）
+
+5. **模組化**: 支援瀏覽器和 Node.js 環境（module.exports）
+
+#### 檔案變更
+
+```
+新增:
+  assets/js/common/card-templates.js (223 行)
+    - CardTemplates 對象
+    - template(), topic(), link() 渲染方法
+    - renderMany(), empty() 輔助方法
+
+修改:
+  packages/vscode/src/providers/WebviewProvider.ts
+    - 新增 cardTemplatesUri 並加入 HTML
+
+  packages/vscode/src/providers/TextBricksManagerProvider.ts
+    - 新增 cardTemplatesUri 並加入 HTML
+```
+
+#### 下一步
+
+- [ ] UI Phase 4: 事件系統統一（可選）
+- [ ] UI Phase 5: 模板分離（可選）
+
+---
+
 ### Phase 3: 提取 RecommendationService (P1) ✅
 
 **完成時間**: 2025-09-30
@@ -2961,14 +3063,15 @@ npm run build
 **UI 層重構** (P0):
 - ✅ UI Phase 1: 共享工具函數庫 (+338 行)
 - ✅ UI Phase 2: CSS 組件系統 (+479 行)
+- ✅ UI Phase 3: Card 模板系統 (+223 行)
 
 ### 重構成果
 
 **代碼量變化**：
 - TextBricksEngine: 1,203 → 1,027 行 (-14.6%)
 - 新增服務: TemplateRepository (370), RecommendationService (107)
-- 新增 UI: utils.js (338), CSS 系統 (479)
-- **淨變化**: +426 行結構化代碼，-176 行重複代碼
+- 新增 UI: utils.js (338), CSS 系統 (479), card-templates.js (223)
+- **淨變化**: +1,517 行結構化代碼，-176 行重複代碼
 
 **架構改進**：
 - 🏗️ 單一職責原則：每個服務專注特定功能
@@ -2986,7 +3089,7 @@ npm run build
 ### 未完成任務
 
 **UI 層重構** (可選):
-- UI Phase 3: Card 模板
+- ✅ UI Phase 3: Card 模板系統 (已完成 2025-10-01)
 - UI Phase 4: 事件系統
 - UI Phase 5: 模板分離
 

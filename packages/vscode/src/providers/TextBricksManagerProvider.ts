@@ -1096,6 +1096,9 @@ export class TextBricksManagerProvider {
         const utilsUri = webview.asWebviewUri(
             vscode.Uri.joinPath(this._extensionUri, 'assets', 'js', 'common', 'utils.js')
         );
+        const cardTemplatesUri = webview.asWebviewUri(
+            vscode.Uri.joinPath(this._extensionUri, 'assets', 'js', 'common', 'card-templates.js')
+        );
         const scriptUri = webview.asWebviewUri(
             vscode.Uri.joinPath(this._extensionUri, 'assets', 'js', 'textbricks-manager.js')
         );
@@ -1614,6 +1617,7 @@ export class TextBricksManagerProvider {
     </div>
 
     <script nonce="${nonce}" src="${utilsUri}"></script>
+    <script nonce="${nonce}" src="${cardTemplatesUri}"></script>
     <script nonce="${nonce}" src="${scriptUri}"></script>
 </body>
 </html>`;
