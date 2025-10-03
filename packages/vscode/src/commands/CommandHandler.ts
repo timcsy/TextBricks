@@ -4,11 +4,11 @@ import { TextBricksEngine } from '@textbricks/core';
 export class CommandHandler {
     constructor(private templateEngine: TextBricksEngine) {}
 
-    async copyTemplate(templateId: string): Promise<void> {
-        const template = this.templateEngine.getTemplateById(templateId);
-        
+    async copyTemplate(templatePath: string): Promise<void> {
+        const template = this.templateEngine.getTemplateByPath(templatePath);
+
         if (!template) {
-            vscode.window.showErrorMessage(`Template with id '${templateId}' not found`);
+            vscode.window.showErrorMessage(`Template with path '${templatePath}' not found`);
             return;
         }
 
@@ -21,11 +21,11 @@ export class CommandHandler {
         }
     }
 
-    async insertTemplate(templateId: string): Promise<void> {
-        const template = this.templateEngine.getTemplateById(templateId);
-        
+    async insertTemplate(templatePath: string): Promise<void> {
+        const template = this.templateEngine.getTemplateByPath(templatePath);
+
         if (!template) {
-            vscode.window.showErrorMessage(`Template with id '${templateId}' not found`);
+            vscode.window.showErrorMessage(`Template with path '${templatePath}' not found`);
             return;
         }
 

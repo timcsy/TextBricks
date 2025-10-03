@@ -40,7 +40,7 @@
     "c/basic"
   ],
   "usage": {
-    "c/basic/templates/hello-world": 15,
+    "c/basic/templates/hello-world": 17,
     "python/templates/hello-world": 12,
     "javascript/templates/hello-world": 8,
     "c/basic/templates/variables": 10,

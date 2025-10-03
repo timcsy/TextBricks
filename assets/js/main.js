@@ -132,10 +132,10 @@
                 return;
             }
 
-            const templateId = templateCard.dataset.templateId;
-            if (templateId) {
+            const templatePath = templateCard.dataset.templatePath;
+            if (templatePath) {
                 // Single click - copy template
-                copyTemplate(templateId);
+                copyTemplate(templatePath);
 
                 // Visual feedback
                 templateCard.style.animation = 'none';
@@ -258,10 +258,10 @@
 
         if (!templateCard) return; // Not a template card button
 
-        const templateId = templateCard.dataset.templateId;
+        const templatePath = templateCard.dataset.templatePath;
 
         if (button.classList.contains('insert-btn')) {
-            insertTemplate(templateId);
+            insertTemplate(templatePath);
             // Visual feedback for insert button
             const icon = button.querySelector('.icon');
             const originalText = icon.textContent;
@@ -270,7 +270,7 @@
                 icon.textContent = originalText;
             }, 1000);
         } else if (button.classList.contains('doc-btn')) {
-            showDocumentation(templateId);
+            showDocumentation(templatePath);
             // Visual feedback for documentation button
             const icon = button.querySelector('.icon');
             const originalText = icon.textContent;
@@ -418,12 +418,12 @@
             return false;
         }
 
-        const templateId = templateCard.dataset.templateId;
+        const templatePath = templateCard.dataset.templatePath;
         const templateCode = templateCard.dataset.templateCode;
         
-        if (templateId && templateCode) {
+        if (templatePath && templateCode) {
             isDragging = true;
-            draggedTemplateId = templateId;
+            draggedTemplateId = templatePath;
             
             try {
                 // Set drag data with better browser compatibility
@@ -436,7 +436,7 @@
                     
                     try {
                         event.dataTransfer.setData('application/vscode-template', JSON.stringify({
-                            id: templateId,
+                            id: templatePath,
                             code: templateCode
                         }));
                     } catch (e) {
@@ -458,11 +458,11 @@
                 // Notify extension about drag start for smart indentation
                 vscode.postMessage({
                     type: 'dragTemplate',
-                    templateId: templateId,
+                    templatePath: templatePath,
                     text: templateCode
                 });
                 
-                console.log('Started dragging template:', templateId);
+                console.log('Started dragging template:', templatePath);
                 
             } catch (error) {
                 console.error('Drag start failed:', error);
@@ -506,51 +506,51 @@
         return dragImage;
     }
 
-    function copyTemplate(templateId) {
+    function copyTemplate(templatePath) {
         vscode.postMessage({
             type: 'copyTemplate',
-            templateId: templateId
+            templatePath: templatePath
         });
         
-        console.log('Copy template:', templateId);
+        console.log('Copy template:', templatePath);
     }
 
-    function insertTemplate(templateId) {
+    function insertTemplate(templatePath) {
         vscode.postMessage({
             type: 'insertTemplate',
-            templateId: templateId
+            templatePath: templatePath
         });
         
-        console.log('Insert template:', templateId);
+        console.log('Insert template:', templatePath);
     }
 
-    function insertCodeSnippet(code, templateId) {
+    function insertCodeSnippet(code, templatePath) {
         vscode.postMessage({
             type: 'insertCodeSnippet',
             code: code,
-            templateId: templateId
+            templatePath: templatePath
         });
         
-        console.log('Insert code snippet with template context:', code.substring(0, 50) + '...', 'from template:', templateId);
+        console.log('Insert code snippet with template context:', code.substring(0, 50) + '...', 'from template:', templatePath);
     }
 
-    function copyCodeSnippet(code, templateId) {
+    function copyCodeSnippet(code, templatePath) {
         vscode.postMessage({
             type: 'copyCodeSnippet',
             code: code,
-            templateId: templateId
+            templatePath: templatePath
         });
         
-        console.log('Copy code snippet with template context:', code.substring(0, 50) + '...', 'from template:', templateId);
+        console.log('Copy code snippet with template context:', code.substring(0, 50) + '...', 'from template:', templatePath);
     }
 
-    function showDocumentation(templateId) {
+    function showDocumentation(templatePath) {
         vscode.postMessage({
             type: 'showDocumentation',
-            templateId: templateId
+            templatePath: templatePath
         });
 
-        console.log('Show documentation for template:', templateId);
+        console.log('Show documentation for template:', templatePath);
     }
 
     function showTopicDocumentation(topicName) {
@@ -941,7 +941,7 @@
             forceHideTooltip();
         }
         
-        const templateId = templateCard.dataset.templateId;
+        const templatePath = templateCard.dataset.templatePath;
         const templateCode = templateCard.dataset.templateCode;
 
         // Safe element queries with null checks (support both CSS selector formats)
@@ -974,10 +974,10 @@
                 <div class="tooltip-title-wrapper">
                     <div class="tooltip-title">${escapeHtml(title)}</div>
                     <div class="tooltip-actions">
-                        ${hasDocumentation ? `<button class="tooltip-action-btn doc-btn" data-template-id="${templateId}" title="查看說明文檔">📖 說明</button>` : ''}
-                        <button class="tooltip-action-btn insert-all-btn" data-template-id="${templateId}">＋ 插入</button>
-                        <button class="tooltip-action-btn copy-all-btn" data-template-id="${templateId}">📋 複製</button>
-                        ${supportsDrag ? `<div class="tooltip-drag-handle" draggable="true" data-template-id="${templateId}" title="拖曳到編輯器">✋ 拖曳</div>` : ''}
+                        ${hasDocumentation ? `<button class="tooltip-action-btn doc-btn" data-template-path="${templatePath}" title="查看說明文檔">📖 說明</button>` : ''}
+                        <button class="tooltip-action-btn insert-all-btn" data-template-path="${templatePath}">＋ 插入</button>
+                        <button class="tooltip-action-btn copy-all-btn" data-template-path="${templatePath}">📋 複製</button>
+                        ${supportsDrag ? `<div class="tooltip-drag-handle" draggable="true" data-template-path="${templatePath}" title="拖曳到編輯器">✋ 拖曳</div>` : ''}
                     </div>
                 </div>
                 <button class="tooltip-close" title="關閉">✕</button>
@@ -1032,7 +1032,7 @@
         tooltip.style.top = top + 'px';
         
         // Add event listeners to tooltip
-        setupTooltipEventListeners(tooltip, templateId, templateCode);
+        setupTooltipEventListeners(tooltip, templatePath, templateCode);
         
         // Show tooltip with animation
         requestAnimationFrame(() => {
@@ -1041,7 +1041,7 @@
         
         currentTooltip = tooltip;
         
-        console.log('Show tooltip for:', templateId);
+        console.log('Show tooltip for:', templatePath);
     }
 
     function hideTooltip() {
@@ -1088,7 +1088,7 @@
     }
 
 
-    function setupTooltipEventListeners(tooltip, templateId, templateCode) {
+    function setupTooltipEventListeners(tooltip, templatePath, templateCode) {
         // Handle close button
         const closeBtn = tooltip.querySelector('.tooltip-close');
         closeBtn.addEventListener('click', (e) => {
@@ -1112,14 +1112,14 @@
         
         insertBtn.addEventListener('click', (e) => {
             e.stopPropagation();
-            const templateId = e.target.dataset.templateId;
+            const templatePath = e.target.dataset.templatePath;
             
             // Use stored selection or check current selection
             const selection = window.getSelection();
             const currentSelectedText = selection.toString().trim();
             const selectedText = storedSelection || currentSelectedText;
             
-            console.log(`[DEBUG] Insert button clicked for template: ${templateId}`);
+            console.log(`[DEBUG] Insert button clicked for template: ${templatePath}`);
             console.log(`[DEBUG] Stored selection: "${storedSelection}"`);
             console.log(`[DEBUG] Current selection: "${currentSelectedText}"`);
             console.log(`[DEBUG] Final selected text: "${selectedText}"`);
@@ -1127,12 +1127,12 @@
             
             if (selectedText && selectedText.length > 0) {
                 // Insert selected text
-                insertCodeSnippet(selectedText, templateId);
+                insertCodeSnippet(selectedText, templatePath);
                 console.log('[DEBUG] Inserting selected code snippet:', selectedText.substring(0, 50) + '...');
             } else {
                 // Insert entire template
-                insertTemplate(templateId);
-                console.log('[DEBUG] Inserting entire template:', templateId);
+                insertTemplate(templatePath);
+                console.log('[DEBUG] Inserting entire template:', templatePath);
             }
             
             // Clear stored selection
@@ -1160,14 +1160,14 @@
         
         copyBtn.addEventListener('click', (e) => {
             e.stopPropagation();
-            const templateId = e.target.dataset.templateId;
+            const templatePath = e.target.dataset.templatePath;
             
             // Use stored selection or check current selection
             const selection = window.getSelection();
             const currentSelectedText = selection.toString().trim();
             const selectedText = storedSelection || currentSelectedText;
             
-            console.log(`[DEBUG] Copy button clicked for template: ${templateId}`);
+            console.log(`[DEBUG] Copy button clicked for template: ${templatePath}`);
             console.log(`[DEBUG] Stored selection: "${storedSelection}"`);
             console.log(`[DEBUG] Current selection: "${currentSelectedText}"`);
             console.log(`[DEBUG] Final selected text: "${selectedText}"`);
@@ -1175,12 +1175,12 @@
             
             if (selectedText && selectedText.length > 0) {
                 // Copy selected text
-                copyCodeSnippet(selectedText, templateId);
+                copyCodeSnippet(selectedText, templatePath);
                 console.log('[DEBUG] Copying selected code snippet:', selectedText.substring(0, 50) + '...');
             } else {
                 // Copy entire template
-                copyTemplate(templateId);
-                console.log('[DEBUG] Copying entire template:', templateId);
+                copyTemplate(templatePath);
+                console.log('[DEBUG] Copying entire template:', templatePath);
             }
             
             // Clear stored selection
@@ -1200,8 +1200,8 @@
         if (docBtn) {
             docBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
-                const templateId = e.target.dataset.templateId;
-                showDocumentation(templateId);
+                const templatePath = e.target.dataset.templatePath;
+                showDocumentation(templatePath);
                 
                 // Visual feedback
                 const originalText = docBtn.textContent;
@@ -1219,9 +1219,9 @@
             const dragHandle = tooltip.querySelector('.tooltip-drag-handle');
             if (dragHandle) {
                 dragHandle.addEventListener('dragstart', (e) => {
-                    if (templateId && templateCode) {
+                    if (templatePath && templateCode) {
                         isDragging = true;
-                        draggedTemplateId = templateId;
+                        draggedTemplateId = templatePath;
                         
                         try {
                             // Set drag data with better browser compatibility
@@ -1231,7 +1231,7 @@
                             
                             try {
                                 e.dataTransfer.setData('application/vscode-template', JSON.stringify({
-                                    id: templateId,
+                                    id: templatePath,
                                     code: templateCode
                                 }));
                             } catch (err) {
@@ -1244,11 +1244,11 @@
                             // Notify extension about drag start for smart indentation
                             vscode.postMessage({
                                 type: 'dragTemplate',
-                                templateId: templateId,
+                                templatePath: templatePath,
                                 text: templateCode
                             });
                             
-                            console.log('Started dragging from tooltip drag handle:', templateId);
+                            console.log('Started dragging from tooltip drag handle:', templatePath);
                             
                         } catch (error) {
                             console.error('Tooltip drag failed:', error);
@@ -1295,44 +1295,44 @@
                 const selectedText = selection.toString();
                 
                 // Find the template ID - look for it in the tooltip or parent elements
-                let templateId = null;
+                let templatePath = null;
                 
                 // Debug: log the codeArea and its context
                 console.log('[DEBUG] codeArea:', codeArea);
                 console.log('[DEBUG] codeArea parent:', codeArea.parentElement);
                 console.log('[DEBUG] codeArea closest tooltip:', codeArea.closest('.tooltip'));
                 
-                // First try to find from parent elements with data-template-id
-                const parentWithTemplateId = codeArea.closest('[data-template-id]');
+                // First try to find from parent elements with data-template-path
+                const parentWithTemplateId = codeArea.closest('[data-template-path]');
                 if (parentWithTemplateId) {
-                    templateId = parentWithTemplateId.getAttribute('data-template-id');
-                    console.log('[DEBUG] Found templateId from parent:', templateId);
+                    templatePath = parentWithTemplateId.getAttribute('data-template-path');
+                    console.log('[DEBUG] Found templatePath from parent:', templatePath);
                 }
                 
-                // If not found, look in the tooltip for any element with data-template-id
-                if (!templateId) {
+                // If not found, look in the tooltip for any element with data-template-path
+                if (!templatePath) {
                     const tooltipElement = codeArea.closest('.template-tooltip');
                     console.log('[DEBUG] Found tooltip element:', tooltipElement);
                     if (tooltipElement) {
-                        const templateElements = tooltipElement.querySelectorAll('[data-template-id]');
+                        const templateElements = tooltipElement.querySelectorAll('[data-template-path]');
                         console.log('[DEBUG] Template elements in tooltip:', templateElements);
                         if (templateElements.length > 0) {
-                            templateId = templateElements[0].getAttribute('data-template-id');
-                            console.log('[DEBUG] Found templateId from tooltip:', templateId);
+                            templatePath = templateElements[0].getAttribute('data-template-path');
+                            console.log('[DEBUG] Found templatePath from tooltip:', templatePath);
                         }
                     }
                 }
                 
-                console.log('[DEBUG] Final templateId:', templateId);
+                console.log('[DEBUG] Final templatePath:', templatePath);
                 
                 // Send to extension for smart indentation processing
                 vscode.postMessage({
                     type: 'copyCodeSnippet',
                     code: selectedText,
-                    templateId: templateId
+                    templatePath: templatePath
                 });
                 
-                console.log('Copy selected code snippet with smart indentation:', selectedText.substring(0, 50) + '...', 'from template:', templateId);
+                console.log('Copy selected code snippet with smart indentation:', selectedText.substring(0, 50) + '...', 'from template:', templatePath);
             }
             // If no text is selected, let the default copy behavior happen
         });
@@ -1347,21 +1347,21 @@
                     const selectedText = selection.toString();
                     
                     // Find the template ID - look for it in the tooltip or parent elements
-                    let templateId = null;
+                    let templatePath = null;
                     
-                    // First try to find from parent elements with data-template-id
-                    const parentWithTemplateId = codeArea.closest('[data-template-id]');
+                    // First try to find from parent elements with data-template-path
+                    const parentWithTemplateId = codeArea.closest('[data-template-path]');
                     if (parentWithTemplateId) {
-                        templateId = parentWithTemplateId.getAttribute('data-template-id');
+                        templatePath = parentWithTemplateId.getAttribute('data-template-path');
                     }
                     
-                    // If not found, look in the tooltip for any element with data-template-id
-                    if (!templateId) {
+                    // If not found, look in the tooltip for any element with data-template-path
+                    if (!templatePath) {
                         const tooltipElement = codeArea.closest('.template-tooltip');
                         if (tooltipElement) {
-                            const templateElements = tooltipElement.querySelectorAll('[data-template-id]');
+                            const templateElements = tooltipElement.querySelectorAll('[data-template-path]');
                             if (templateElements.length > 0) {
-                                templateId = templateElements[0].getAttribute('data-template-id');
+                                templatePath = templateElements[0].getAttribute('data-template-path');
                             }
                         }
                     }
@@ -1370,10 +1370,10 @@
                     vscode.postMessage({
                         type: 'copyCodeSnippet',
                         code: selectedText,
-                        templateId: templateId
+                        templatePath: templatePath
                     });
                     
-                    console.log('Copy selected code snippet via keyboard:', selectedText.substring(0, 50) + '...', 'from template:', templateId);
+                    console.log('Copy selected code snippet via keyboard:', selectedText.substring(0, 50) + '...', 'from template:', templatePath);
                 }
                 // If no text is selected, let the default behavior happen
             }
@@ -1435,9 +1435,9 @@
             const focusedCard = document.querySelector('.template-card:focus');
             if (focusedCard) {
                 event.preventDefault();
-                const templateId = focusedCard.dataset.templateId;
-                if (templateId) {
-                    copyTemplate(templateId);
+                const templatePath = focusedCard.dataset.templatePath;
+                if (templatePath) {
+                    copyTemplate(templatePath);
                 }
             }
         }
@@ -1459,10 +1459,10 @@
             card.addEventListener('keydown', function(event) {
                 if (event.key === 'Enter' || event.key === ' ') {
                     event.preventDefault();
-                    const templateId = card.dataset.templateId;
-                    if (templateId) {
+                    const templatePath = card.dataset.templatePath;
+                    if (templatePath) {
                         // Only copy functionality - insert removed
-                        copyTemplate(templateId);
+                        copyTemplate(templatePath);
                     }
                 }
             });

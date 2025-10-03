@@ -267,22 +267,22 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
             message => {
                 switch (message.type) {
                     case 'copyTemplate':
-                        this.codeOperationService.copyTemplate(message.templateId);
+                        this.codeOperationService.copyTemplate(message.templatePath);
                         break;
                     case 'insertTemplate':
-                        this.codeOperationService.insertTemplate(message.templateId);
+                        this.codeOperationService.insertTemplate(message.templatePath);
                         break;
                     case 'copyCodeSnippet':
-                        this.codeOperationService.copyCodeSnippet(message.code, message.templateId);
+                        this.codeOperationService.copyCodeSnippet(message.code, message.templatePath);
                         break;
                     case 'insertCodeSnippet':
-                        this.codeOperationService.insertCodeSnippet(message.code, message.templateId);
+                        this.codeOperationService.insertCodeSnippet(message.code, message.templatePath);
                         break;
                     case 'dragTemplate':
-                        this._handleDragTemplate(message.templateId, message.text);
+                        this._handleDragTemplate(message.templatePath, message.text);
                         break;
                     case 'showDocumentation':
-                        this._showDocumentation(message.templateId);
+                        this._showDocumentation(message.templatePath);
                         break;
                     case 'showTopicDocumentation':
                         this._showTopicDocumentation(message.topicName);
@@ -350,15 +350,15 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
 
 
 
-    private async _handleDragTemplate(templateId: string, text: string) {
+    private async _handleDragTemplate(templatePath: string, text: string) {
         // This method is called during drag start - just log for now
-        console.log(`Dragging template ${templateId}: ${text.substring(0, 50)}...`);
+        console.log(`Dragging template ${templatePath}: ${text.substring(0, 50)}...`);
     }
 
 
-    private _showDocumentation(templateId: string) {
+    private _showDocumentation(templatePath: string) {
         if (this._documentationProvider) {
-            this._documentationProvider.showDocumentation(templateId);
+            this._documentationProvider.showDocumentation(templatePath);
         } else {
             vscode.window.showErrorMessage('說明文檔服務未初始化');
         }
@@ -777,7 +777,7 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
 
         return `
             <div class="template-card recommended-template ${type === 'favorite' ? 'favorite-template' : ''}"
-                 data-template-id="${templatePath}"
+                 data-template-path="${templatePath}"
                  data-template-code="${this._escapeHtml(template.code)}"
                  data-has-documentation="${hasDocumentation}"
                  data-card-type="template"
@@ -966,7 +966,7 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
 
         return `
             <div class="${templateClass}"
-                 data-template-id="${templatePath}"
+                 data-template-path="${templatePath}"
                  data-template-code="${this._escapeHtml(template.code)}"
                  data-has-documentation="${hasDocumentation}"
                  draggable="true">
@@ -1228,7 +1228,7 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
 
                 return `
                     <div class="${templateClass}"
-                         data-template-id="${templatePath}"
+                         data-template-path="${templatePath}"
                          data-template-code="${this._escapeHtml(targetTemplate.code)}"
                          data-has-documentation="${templateHasDocumentation}"
                          data-card-type="template"
@@ -1310,7 +1310,7 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
 
         return `
             <div class="${templateClass}"
-                 data-template-id="${cardPath}"
+                 data-template-path="${cardPath}"
                  data-template-code="${this._escapeHtml(card.code || '')}"
                  data-has-documentation="${hasDocumentation}"
                  data-card-type="template"

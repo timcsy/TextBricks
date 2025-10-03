@@ -461,18 +461,11 @@ export class TextBricksEngine {
 
     // === 查詢方法 ===
 
-    getTemplateById(id: string): ExtendedTemplate | undefined {
-        // 支援舊的 ID 查詢，將 ID 視為路徑
-        return this.templates.find(t => {
-            const templatePath = `${t.language}/templates/${t.name}`;
-            return templatePath === id || t.name === id;
-        });
-    }
-
     getTemplateByPath(path: string): ExtendedTemplate | undefined {
+        // 統一使用 topicPath/templates/name 格式 (例如: c/basic/templates/hello-world)
         return this.templates.find(t => {
-            const templatePath = `${t.language}/templates/${t.name}`;
-            return templatePath === path;
+            const templatePath = (t as any).topicPath ? `${(t as any).topicPath}/templates/${t.name}` : null;
+            return templatePath === path || t.name === path;
         });
     }
 

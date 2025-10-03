@@ -73,6 +73,13 @@ export async function activate(context: vscode.ExtensionContext) {
             textBricksEngine // 向後兼容
         );
         
+        const documentationProvider = new DocumentationProvider(
+            context.extensionUri,
+            textBricksEngine, // 使用新的引擎
+            documentationService,
+            codeOperationService
+        );
+
         const textBricksManagerProvider = new TextBricksManagerProvider(
             context.extensionUri,
             textBricksEngine, // 使用新的引擎
@@ -80,14 +87,8 @@ export async function activate(context: vscode.ExtensionContext) {
             scopeManager, // 傳遞共享的 scopeManager
             topicManager, // 傳遞共享的 topicManager
             dataPathService, // 傳遞共享的 dataPathService
-            webviewProvider // 傳遞 webviewProvider 用於同步更新
-        );
-        
-        const documentationProvider = new DocumentationProvider(
-            context.extensionUri, 
-            textBricksEngine, // 使用新的引擎
-            documentationService, 
-            codeOperationService
+            webviewProvider, // 傳遞 webviewProvider 用於同步更新
+            documentationProvider // 傳遞 documentationProvider 用於顯示文檔
         );
 
         // 註冊 WebView 視圖

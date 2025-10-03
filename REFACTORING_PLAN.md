@@ -292,9 +292,55 @@ assets/js/
      - 事件相關日誌（called, opened, closed）
    - 保留關鍵的錯誤處理和重要狀態日誌
 
+5. **激進清理 - 移除向後兼容和死代碼（2025-10-03）** ✅
+
+   **移除的向後兼容包裝函數：**
+   - ❌ `generateFullDisplayPathFromDataPath()` - 完全重複的別名函數
+
+   **移除的未使用函數（TypeScript 診斷發現）：**
+   - ❌ `getExistingTemplates()` - 未使用的包裝函數
+   - ❌ `getExistingLanguages()` - 未使用的包裝函數
+   - ❌ `renderMarkdownLocal()` - 未使用的本地渲染
+   - ❌ `findParentTopic()` - 未使用
+   - ❌ `moveTopic()` - 未使用
+   - ❌ `clearAllFavorites()` - 未使用
+   - ❌ `viewFavoriteItem()` - 未使用
+   - ❌ `handleLocationClick()` - 未使用
+
+   **合併的重複函數：**
+   - 合併 2 個 `findTopicByName()` 實現，保留功能更完整的版本
+   - 簡化 `findTopicByPath()`，移除冗餘的 console.log
+
+   **結果：**
+   - 從 5,548 行減少到 5,410 行
+   - **此階段減少：138 行 (-2.5%)**
+   - **累計減少：343 行 (-6.0%)**
+
+6. **事件監聽器簡化（2025-10-03）** ✅
+
+   **問題：** `setupEventListeners()` 函數長達 205 行，充滿重複的 getElementById 和 addEventListener
+
+   **優化措施：**
+   - 使用映射表統一管理按鈕事件綁定
+   - 合併相同類型的事件處理器
+   - 統一動態元素的事件委託模式
+   - 使用 forEach 和 Object.entries 簡化重複代碼
+
+   **具體改進：**
+   - 按鈕點擊事件：12 個重複代碼 → 1 個映射表
+   - 過濾器事件：8 個重複代碼 → 2 組 forEach
+   - Modal 事件：5 個重複代碼 → 1 個數組處理
+   - Location 管理：6 個重複代碼 → 1 個映射表
+   - 動態元素委託：使用統一的 handler 映射表
+
+   **結果：**
+   - 從 5,410 行減少到 5,340 行
+   - **此階段減少：70 行 (-1.3%)**
+   - **累計減少：413 行 (-7.2%)**
+
 **下一步優化方向：**
-- ⚪ 將更多同步調用轉為 async（需要重構調用鏈）
-- ⚪ 提取事件處理邏輯到獨立模組
+- ⚪ 繼續簡化長函數（openModal 130行，createDocumentationModal 125行）
+- ⚪ 提取表單生成邏輯到獨立模組
 - ⚪ 簡化表單生成邏輯
 - ⚪ main.js 重構（未開始）
 
@@ -365,8 +411,8 @@ window.TextBricksBridge = {
   - documentation.js: 442 行
   - common/: 762 行
 
-- **當前狀態：** 8,215 行
-  - textbricks-manager.js: 5,548 行 ✅ (-205 行, -3.6%)
+- **當前狀態：** 8,007 行
+  - textbricks-manager.js: 5,340 行 ✅ (-413 行, -7.2%)
   - services-bridge.js: 164 行 🆕
   - main.js: 1,505 行 (未重構)
   - documentation.js: 442 行 (未重構)
@@ -378,10 +424,18 @@ window.TextBricksBridge = {
 - **Services 總計：** 628 行
 
 **淨變化：**
-- JavaScript: -247 行 (-2.9%)
+- JavaScript: -455 行 (-5.4%)
 - TypeScript Services: +628 行
 - Bridge Layer: +164 行
-- **總計：** +545 行（但獲得了類型安全和更好的結構）
+- **總計：** +337 行（獲得類型安全、更好結構和更清晰代碼）
+
+**代碼質量提升：**
+- ✅ 移除 8+ 個未使用的死代碼函數
+- ✅ 合併重複的查找函數
+- ✅ 移除向後兼容的包裝函數
+- ✅ console.log 減少 48%
+- ✅ 事件監聽器設置簡化 70 行（使用映射表模式）
+- ✅ `setupEventListeners()` 從 205 行減少到 135 行 (-34%)
 
 **Bug 修復：**
 - ✅ 修復 `topicName` 未定義錯誤（導致內容管理頁面載入失敗）

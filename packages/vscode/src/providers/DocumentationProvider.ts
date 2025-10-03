@@ -18,14 +18,14 @@ export class DocumentationProvider {
         private readonly codeOperationService: CodeOperationService
     ) {}
 
-    public async showDocumentation(templateId: string) {
+    public async showDocumentation(templatePath: string) {
         // Force reload latest data to ensure we get the most current template documentation
         console.log('[DocumentationProvider] Force reloading data before showing template documentation');
         await this.templateEngine.forceReloadTemplates();
 
-        const template = this.templateEngine.getTemplateById(templateId);
+        const template = this.templateEngine.getTemplateByPath(templatePath);
         if (!template) {
-            vscode.window.showErrorMessage(`找不到模板 ID: ${templateId}`);
+            vscode.window.showErrorMessage(`找不到模板路徑: ${templatePath}`);
             return;
         }
 
@@ -368,7 +368,7 @@ export class DocumentationProvider {
                 <p>${docResult.error}</p>
             </div>`;
         } else {
-            contentHtml = this._markdownToHtml(docResult.content, template.name);
+            contentHtml = this.markdownToHtml(docResult.content, template.name);
         }
 
         return `<!DOCTYPE html>
@@ -432,7 +432,7 @@ export class DocumentationProvider {
 </html>`;
     }
 
-    private _markdownToHtml(markdown: string, identifier?: string): string {
+    public markdownToHtml(markdown: string, identifier?: string): string {
         // Simple markdown to HTML conversion
         // In a real implementation, you'd use a proper markdown parser like 'marked'
         let html = markdown;
@@ -450,7 +450,7 @@ export class DocumentationProvider {
             // Store the raw code in a data attribute to preserve formatting
             const rawCodeEscaped = this._escapeHtml(trimmedCode);
             const dataId = identifier || this._currentTemplate?.name || '';
-            return `<div class="code-block-container" data-template-id="${dataId}">
+            return `<div class="code-block-container" data-template-path="${dataId}">
                 <div class="code-block-header">
                     <span class="language-label">${language.toUpperCase() || 'CODE'}</span>
                     <div class="code-actions">
@@ -591,7 +591,7 @@ export class DocumentationProvider {
             </div>`;
         } else {
             // Convert markdown to HTML for topic documentation
-            contentHtml = this._markdownToHtml(docResult.content, topic.name);
+            contentHtml = this.markdownToHtml(docResult.content, topic.name);
         }
 
         return `<!DOCTYPE html>

@@ -26,6 +26,10 @@
         }
     };
 
+    // 初始化前端服務
+    const uiStateService = new UIStateService();
+    const treeBuilderService = new TreeBuilderService();
+
     // State
     let currentData = {
         // 傳統數據
@@ -113,188 +117,118 @@
             item.addEventListener('click', handleTabSwitch);
         });
 
-        // Toolbar buttons - check if elements exist first
-        const refreshBtn = document.getElementById('refresh-btn');
-        const importBtn = document.getElementById('import-btn');
-        const exportBtn = document.getElementById('export-btn');
+        // 統一的按鈕事件綁定映射表
+        const buttonHandlers = {
+            'refresh-btn': loadData,
+            'import-btn': importTemplates,
+            'export-btn': exportTemplates,
+            'create-template-btn': () => openModal('template'),
+            'create-topic-btn': () => openModal('topic'),
+            'create-link-btn': () => openModal('link'),
+            'create-language-btn': () => openModal('language'),
+            'create-scope-btn': () => openModal('scope'),
+            'export-scope-btn': exportScope,
+            'import-scope-btn': importScope,
+            'clear-stats-btn': clearUsageStats,
+            'json-import-btn': openJsonModal
+        };
 
-        if (refreshBtn) refreshBtn.addEventListener('click', loadData);
-        if (importBtn) importBtn.addEventListener('click', importTemplates);
-        if (exportBtn) exportBtn.addEventListener('click', exportTemplates);
+        // 批量綁定點擊事件
+        Object.entries(buttonHandlers).forEach(([id, handler]) => {
+            const btn = document.getElementById(id);
+            if (btn) btn.addEventListener('click', handler);
+        });
 
-        // Quick action buttons - check if elements exist first
-        const createTemplateBtn = document.getElementById('create-template-btn');
-        const createTopicBtn = document.getElementById('create-topic-btn');
-        const createLinkBtn = document.getElementById('create-link-btn');
-        const createLanguageBtn = document.getElementById('create-language-btn');
+        // Change events
+        const changeHandlers = {
+            'scope-selector': handleScopeSwitch
+        };
 
-        if (createTemplateBtn) createTemplateBtn.addEventListener('click', () => openModal('template'));
-        if (createTopicBtn) createTopicBtn.addEventListener('click', () => openModal('topic'));
-        if (createLinkBtn) createLinkBtn.addEventListener('click', () => openModal('link'));
-        if (createLanguageBtn) createLanguageBtn.addEventListener('click', () => openModal('language'));
+        Object.entries(changeHandlers).forEach(([id, handler]) => {
+            const el = document.getElementById(id);
+            if (el) el.addEventListener('change', handler);
+        });
 
-        // Scope management buttons
-        const scopeSelector = document.getElementById('scope-selector');
-        if (scopeSelector) {
-            scopeSelector.addEventListener('change', handleScopeSwitch);
-        }
-
-        const createScopeBtn = document.getElementById('create-scope-btn');
-        if (createScopeBtn) {
-            createScopeBtn.addEventListener('click', () => openModal('scope'));
-        }
-
-        const exportScopeBtn = document.getElementById('export-scope-btn');
-        if (exportScopeBtn) {
-            exportScopeBtn.addEventListener('click', exportScope);
-        }
-
-        const importScopeBtn = document.getElementById('import-scope-btn');
-        if (importScopeBtn) {
-            importScopeBtn.addEventListener('click', importScope);
-        }
-
-        const clearStatsBtn = document.getElementById('clear-stats-btn');
-        if (clearStatsBtn) {
-            clearStatsBtn.addEventListener('click', clearUsageStats);
-        }
-        
-        // JSON import button - check if exists first
-        const jsonImportBtn = document.getElementById('json-import-btn');
-        if (jsonImportBtn) {
-            jsonImportBtn.addEventListener('click', openJsonModal);
-        }
-
-        // Content management filters and search
-        const contentLangFilter = document.getElementById('content-filter-language');
-        const contentTopicFilter = document.getElementById('content-filter-topic');
+        // Filters - Content management
+        ['content-filter-language', 'content-filter-topic'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.addEventListener('change', updateContentFilters);
+        });
         const contentSearch = document.getElementById('search-content');
+        if (contentSearch) contentSearch.addEventListener('input', updateContentFilters);
 
-        if (contentLangFilter) {
-            contentLangFilter.addEventListener('change', updateContentFilters);
-        }
-        if (contentTopicFilter) {
-            contentTopicFilter.addEventListener('change', updateContentFilters);
-        }
-        if (contentSearch) {
-            contentSearch.addEventListener('input', updateContentFilters);
-        }
-
-        // Favorites filters
-        const favLangFilter = document.getElementById('favorites-filter-language');
-        const favTopicFilter = document.getElementById('favorites-filter-topic');
+        // Filters - Favorites
+        const updateFavIfActive = () => { if (currentTab === 'favorites') updateFavoritesList(); };
+        ['favorites-filter-language', 'favorites-filter-topic'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.addEventListener('change', updateFavIfActive);
+        });
         const favSearch = document.getElementById('search-favorites');
+        if (favSearch) favSearch.addEventListener('input', updateFavIfActive);
 
-        if (favLangFilter) {
-            favLangFilter.addEventListener('change', () => {
-                if (currentTab === 'favorites') updateFavoritesList();
-            });
-        }
-
-        if (favTopicFilter) {
-            favTopicFilter.addEventListener('change', () => {
-                if (currentTab === 'favorites') updateFavoritesList();
-            });
-        }
-
-        if (favSearch) {
-            favSearch.addEventListener('input', () => {
-                if (currentTab === 'favorites') updateFavoritesList();
-            });
-        }
-
-        // Modal
-        document.getElementById('modal-close').addEventListener('click', closeModal);
-        document.getElementById('modal-cancel').addEventListener('click', closeModal);
-        document.getElementById('modal-save').addEventListener('click', saveItem);
-        
-        // Close modal on backdrop click
-        document.getElementById('modal').addEventListener('click', (e) => {
-            if (e.target.id === 'modal') {
-                closeModal();
-            }
+        // Modal 事件
+        ['modal-close', 'modal-cancel'].forEach(id => {
+            document.getElementById(id)?.addEventListener('click', closeModal);
+        });
+        document.getElementById('modal-save')?.addEventListener('click', saveItem);
+        document.getElementById('modal')?.addEventListener('click', (e) => {
+            if (e.target.id === 'modal') closeModal();
         });
 
         // Settings/Data Location Management
-        const refreshLocationInfoBtn = document.getElementById('refresh-location-info-btn');
-        const openLocationBtn = document.getElementById('open-location-btn');
-        const validateCustomPathBtn = document.getElementById('validate-custom-path-btn');
+        const locationHandlers = {
+            'refresh-location-info-btn': refreshDataLocationInfo,
+            'open-location-btn': openDataLocation,
+            'validate-custom-path-btn': validateCustomPath,
+            'apply-custom-location-btn': applyCustomLocation,
+            'reset-to-system-default-btn': resetToSystemDefault
+        };
+        Object.entries(locationHandlers).forEach(([id, handler]) => {
+            document.getElementById(id)?.addEventListener('click', handler);
+        });
+
+        // Custom path input - enable/disable apply button
         const customPathInput = document.getElementById('custom-path-input');
         const applyCustomLocationBtn = document.getElementById('apply-custom-location-btn');
-        const resetToSystemDefaultBtn = document.getElementById('reset-to-system-default-btn');
-
-        if (refreshLocationInfoBtn) {
-            refreshLocationInfoBtn.addEventListener('click', refreshDataLocationInfo);
-        }
-        if (openLocationBtn) {
-            openLocationBtn.addEventListener('click', openDataLocation);
-        }
-        if (validateCustomPathBtn) {
-            validateCustomPathBtn.addEventListener('click', validateCustomPath);
-        }
-        if (customPathInput) {
+        if (customPathInput && applyCustomLocationBtn) {
             customPathInput.addEventListener('input', () => {
-                // Enable apply button only if path is not empty
-                if (applyCustomLocationBtn) {
-                    applyCustomLocationBtn.disabled = !customPathInput.value.trim();
-                }
+                applyCustomLocationBtn.disabled = !customPathInput.value.trim();
             });
-        }
-        if (applyCustomLocationBtn) {
-            applyCustomLocationBtn.addEventListener('click', applyCustomLocation);
-        }
-        if (resetToSystemDefaultBtn) {
-            resetToSystemDefaultBtn.addEventListener('click', resetToSystemDefault);
         }
 
-        // JSON Modal - check if elements exist first
-        const jsonModalClose = document.getElementById('json-modal-close');
-        const jsonModalCancel = document.getElementById('json-modal-cancel');
-        const jsonModalImport = document.getElementById('json-modal-import');
-        const jsonInput = document.getElementById('json-input');
-        const jsonModal = document.getElementById('json-modal');
-        
-        if (jsonModalClose) {
-            jsonModalClose.addEventListener('click', closeJsonModal);
-        }
-        if (jsonModalCancel) {
-            jsonModalCancel.addEventListener('click', closeJsonModal);
-        }
-        if (jsonModalImport) {
-            jsonModalImport.addEventListener('click', handleJsonImport);
-        }
-        if (jsonInput) {
-            jsonInput.addEventListener('input', validateJsonInput);
-        }
-        
-        // Documentation editing event delegation (since elements are dynamically created)
+        // JSON Modal
+        ['json-modal-close', 'json-modal-cancel'].forEach(id => {
+            document.getElementById(id)?.addEventListener('click', closeJsonModal);
+        });
+        document.getElementById('json-modal-import')?.addEventListener('click', handleJsonImport);
+        document.getElementById('json-input')?.addEventListener('input', validateJsonInput);
+        document.getElementById('json-modal')?.addEventListener('click', (e) => {
+            if (e.target.id === 'json-modal') closeJsonModal();
+        });
+
+        // 動態元素事件委託
         document.addEventListener('change', function(e) {
-            if (e.target.id === 'template-documentation-type') {
-                handleDocumentationTypeChange(e.target.value);
-            }
-            if (e.target.id === 'topic-documentation-type') {
-                handleTopicDocumentationTypeChange(e.target.value);
-            }
+            const changeHandlers = {
+                'template-documentation-type': () => handleDocumentationTypeChange(e.target.value),
+                'topic-documentation-type': () => handleTopicDocumentationTypeChange(e.target.value),
+                'template-topic': () => handleTopicSelectChange(e.target.value)
+            };
+            if (changeHandlers[e.target.id]) changeHandlers[e.target.id]();
         });
-        
+
         document.addEventListener('click', function(e) {
-            if (e.target.id === 'generate-doc-template') {
-                generateDocumentationTemplate();
-            } else if (e.target.id === 'preview-documentation') {
-                previewDocumentation();
-            } else if (e.target.id === 'generate-topic-doc-template') {
-                generateTopicDocumentationTemplate();
-            } else if (e.target.id === 'preview-topic-documentation') {
-                previewTopicDocumentation();
-            }
+            const clickHandlers = {
+                'generate-doc-template': generateDocumentationTemplate,
+                'preview-documentation': previewDocumentation,
+                'generate-topic-doc-template': generateTopicDocumentationTemplate,
+                'preview-topic-documentation': previewTopicDocumentation
+            };
+            if (clickHandlers[e.target.id]) clickHandlers[e.target.id]();
         });
-        if (jsonModal) {
-            jsonModal.addEventListener('click', (e) => {
-                if (e.target.id === 'json-modal') {
-                    closeJsonModal();
-                }
-            });
-        }
+
+        document.addEventListener('input', function(e) {
+            if (e.target.id === 'template-topic') handleTopicInputChange(e.target.value);
+        });
 
         // Event delegation for dynamic buttons
         document.addEventListener('click', handleButtonClick);
@@ -394,11 +328,17 @@
                 break;
             case 'view-documentation':
                 const docTemplatePath = button.dataset.templatePath;
-                showDocumentationModal(docTemplatePath);
+                const template = currentData.templates?.find(t => buildTemplatePath(t) === docTemplatePath);
+                if (template && template.documentation) {
+                    showDocumentationModal(template, 'template');
+                }
                 break;
             case 'view-topic-documentation':
                 const docTopicPath = button.dataset.topicPath;
-                showTopicDocumentationModal(docTopicPath);
+                const topic = findTopicByPath(docTopicPath);
+                if (topic && topic.documentation) {
+                    showDocumentationModal(topic, 'topic');
+                }
                 break;
             case 'edit-link':
                 const linkName = button.dataset.linkName;
@@ -446,6 +386,14 @@
 
                 // 更新當前 scope 引用
                 currentScope = currentData.scope.current;
+
+                // 更新 UIStateService 的數據
+                const topics = currentData.topics?.hierarchy?.roots?.map(r => r.topic) || [];
+                uiStateService.updateData(
+                    currentData.templates,
+                    topics,
+                    currentData.languages
+                );
 
                 showLoading(false);
                 updateScopeSelector();
@@ -662,17 +610,11 @@ ${escapeHtml(template.code)}
     }
 
     function getTopicsStatistics() {
-        if (!currentData.templates) return [];
-
-        const topicCounts = {};
-        currentData.templates.forEach(template => {
-            const topic = template.topic || '未知主題';
-            topicCounts[topic] = (topicCounts[topic] || 0) + 1;
-        });
-
-        return Object.entries(topicCounts)
+        // 使用 UIStateService 獲取統計
+        const stats = uiStateService.getStatistics();
+        return Object.entries(stats.templatesByTopic)
             .map(([topic, count]) => ({ topic, count }))
-            .sort((a, b) => b.count - a.count); // 按模板數量降序排列
+            .sort((a, b) => b.count - a.count);
     }
 
     function renderTopics() {
@@ -833,21 +775,17 @@ ${escapeHtml(template.code)}
     }
 
     function getFilteredTemplates() {
-        const languageFilter = document.getElementById('filter-language').value;
-        const searchText = document.getElementById('search-templates').value.toLowerCase();
+        const languageFilter = document.getElementById('filter-language')?.value;
+        const searchText = document.getElementById('search-templates')?.value;
 
-        return currentData.templates.filter(template => {
-            // Language filter
-            if (languageFilter && template.language !== languageFilter) return false;
-
-            // Search filter
-            if (searchText) {
-                const searchableText = (template.title + ' ' + template.description + ' ' + template.code + ' ' + (template.topic || '')).toLowerCase();
-                if (!searchableText.includes(searchText)) return false;
-            }
-            
-            return true;
+        // 更新 UIStateService 的過濾器
+        uiStateService.setFilter('content', {
+            language: languageFilter || undefined,
+            search: searchText || undefined
         });
+
+        // 使用 UIStateService 獲取過濾後的模板
+        return uiStateService.getFilteredTemplates('content');
     }
 
     function applyFilters() {
@@ -1644,8 +1582,8 @@ ${escapeHtml(template.code)}
         return html;
     }
 
-    // Render a topic node with its subtopics and templates
-    function renderTopicNode(topic, topicsMap, depth) {
+    // Render a topic node with its subtopics and templates (for topic browser)
+    function renderTopicTreeNode(topic, topicsMap, depth) {
         const indent = depth * 20;
         const hasChildren = topic.subtopics && topic.subtopics.length > 0;
 
@@ -1694,7 +1632,7 @@ ${escapeHtml(template.code)}
             topic.subtopics.forEach(subtopicName => {
                 const subtopic = findTopicByName(subtopicName, topicsMap);
                 if (subtopic) {
-                    html += renderTopicNode(subtopic, topicsMap, depth + 1);
+                    html += renderTopicTreeNode(subtopic, topicsMap, depth + 1);
                 }
             });
         }
@@ -1980,47 +1918,7 @@ ${escapeHtml(template.code)}
     }
 
     // Helper function to find topic by path array
-    function findTopicByPath(pathArray) {
-        if (!currentData || !currentData.topics || !currentData.topics.hierarchy) return null;
-
-        // Search in hierarchy for topic with matching path
-        const searchInNodes = (nodes, targetPath) => {
-            for (const node of nodes) {
-                if (node.topic && node.topic.path &&
-                    JSON.stringify(node.topic.path) === JSON.stringify(targetPath)) {
-                    return node.topic;
-                }
-                if (node.children && node.children.length > 0) {
-                    const found = searchInNodes(node.children, targetPath);
-                    if (found) return found;
-                }
-            }
-            return null;
-        };
-
-        return searchInNodes(currentData.topics.hierarchy.roots || [], pathArray);
-    }
-
-    /**
-     * 從數據路徑生成完整顯示路徑
-     * 例如: "c/basic" -> "C 語言/基礎語法"
-     * 這是 getDisplayPath 的別名，保持向後兼容
-     */
-    function generateFullDisplayPathFromDataPath(dataPath) {
-        return getDisplayPath(dataPath);
-    }
-
-    // Find topic by name in the topics map
-    function findTopicByName(name, topicsMap) {
-        if (topicsMap instanceof Map) {
-            for (let topic of topicsMap.values()) {
-                if (topic.name === name) {
-                    return topic;
-                }
-            }
-        }
-        return null;
-    }
+    // findTopicByPath() 更強大的版本在第 4481 行
 
     // Get templates for a specific topic
     function getTemplatesForTopic(topic) {
@@ -2108,13 +2006,6 @@ ${escapeHtml(template.code)}
                 window.closeTargetBrowser();
             });
         }
-    }
-
-    function getExistingTemplates() {
-        if (currentData && currentData.templates && Array.isArray(currentData.templates)) {
-            return currentData.templates;
-        }
-        return [];
     }
 
     function getLanguageForm(language) {
@@ -2251,32 +2142,6 @@ ${escapeHtml(template.code)}
         return Array.from(allTopics).sort();
     }
 
-    function getExistingLanguages() {
-        // Get languages from current data
-        if (currentData && currentData.languages && Array.isArray(currentData.languages)) {
-            return currentData.languages;
-        }
-
-        // Try to get languages from templates if available
-        if (currentData && currentData.templates && Array.isArray(currentData.templates)) {
-            const languagesFromTemplates = currentData.templates
-                .map(t => t.language)
-                .filter(lang => lang)
-                .map(lang => ({ name: lang, title: lang }));
-
-            // Remove duplicates
-            const uniqueLanguages = languagesFromTemplates.filter((lang, index, self) =>
-                index === self.findIndex(l => l.name === lang.name)
-            );
-
-            if (uniqueLanguages.length > 0) {
-                return uniqueLanguages;
-            }
-        }
-
-        // Return empty array if no data is available
-        return [];
-    }
 
     function getTemplateData() {
         const title = document.getElementById('template-title').value.trim();
@@ -2470,19 +2335,360 @@ ${escapeHtml(template.code)}
         }
     }
 
-    function deleteTopic(topicPath) {
-        vscode.postMessage({
-            type: 'deleteTopic',
-            topicPath: topicPath
-        });
-    }
+    // deleteTopic() 更完整的版本在第 4846 行
 
     function viewTopicDocumentation(topicPath) {
         const topic = findTopicByPath(topicPath);
         if (topic && topic.documentation) {
-            // 使用統一的文檔模態窗口
-            createDocumentationModal(topic.title || topic.name, topic.documentation);
+            showDocumentationModal(topic, 'topic');
         }
+    }
+
+    // 顯示文檔模態框（使用 DocumentationProvider 渲染）
+    function showDocumentationModal(item, itemType) {
+        const requestId = `doc_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+
+        // 監聽渲染結果
+        const messageHandler = (event) => {
+            const message = event.data;
+            if (message.type === 'documentationRendered' && message.requestId === requestId) {
+                // 移除監聽器
+                window.removeEventListener('message', messageHandler);
+
+                // 顯示模態框
+                displayDocumentationModal(message.html, message.title);
+            }
+        };
+        window.addEventListener('message', messageHandler);
+
+        // 發送渲染請求
+        if (itemType === 'template') {
+            vscode.postMessage({
+                type: 'renderTemplateDocumentation',
+                requestId: requestId,
+                template: item
+            });
+        } else if (itemType === 'topic') {
+            vscode.postMessage({
+                type: 'renderTopicDocumentation',
+                requestId: requestId,
+                topic: item
+            });
+        }
+    }
+
+    // 顯示已渲染的文檔模態框
+    function displayDocumentationModal(renderedHtml, title) {
+        // 移除已存在的模態框
+        const existingModal = document.getElementById('documentation-modal');
+        if (existingModal) {
+            existingModal.remove();
+        }
+
+        // 創建模態框
+        const modal = document.createElement('div');
+        modal.id = 'documentation-modal';
+        modal.className = 'modal';
+        modal.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        `;
+
+        modal.innerHTML = `
+            <style>
+                /* Documentation content styles - inline version */
+                .documentation-content {
+                    line-height: 1.7;
+                }
+                .documentation-content h1,
+                .documentation-content h2,
+                .documentation-content h3,
+                .documentation-content h4,
+                .documentation-content h5,
+                .documentation-content h6 {
+                    margin-top: 24px;
+                    margin-bottom: 12px;
+                    font-weight: 600;
+                    line-height: 1.3;
+                    color: var(--vscode-foreground) !important;
+                }
+                .documentation-content h1 {
+                    font-size: 28px;
+                    border-bottom: 2px solid var(--vscode-panel-border);
+                    padding-bottom: 8px;
+                }
+                .documentation-content h2 {
+                    font-size: 22px;
+                    border-bottom: 1px solid var(--vscode-panel-border);
+                    padding-bottom: 6px;
+                }
+                .documentation-content h3 {
+                    font-size: 18px;
+                }
+                .documentation-content h4 {
+                    font-size: 16px;
+                }
+                .documentation-content p {
+                    margin: 12px 0;
+                    color: var(--vscode-foreground);
+                }
+                .documentation-content a {
+                    color: var(--vscode-textLink-foreground);
+                    text-decoration: underline;
+                    cursor: pointer;
+                }
+                .documentation-content a:hover {
+                    color: var(--vscode-textLink-activeForeground);
+                }
+                .documentation-content ul,
+                .documentation-content ol {
+                    margin: 12px 0;
+                    padding-left: 24px;
+                }
+                .documentation-content li {
+                    margin: 6px 0;
+                    color: var(--vscode-foreground);
+                }
+                .documentation-content code {
+                    background-color: var(--vscode-textCodeBlock-background);
+                    color: var(--vscode-textPreformat-foreground);
+                    padding: 2px 6px;
+                    border-radius: 3px;
+                    font-family: var(--vscode-editor-font-family);
+                    font-size: 0.9em;
+                }
+                .documentation-content pre {
+                    background-color: var(--vscode-editor-background);
+                    border: 1px solid var(--vscode-panel-border);
+                    border-radius: 6px;
+                    padding: 16px;
+                    margin: 16px 0;
+                    overflow-x: auto;
+                }
+                .documentation-content pre code {
+                    background: none;
+                    padding: 0;
+                    border-radius: 0;
+                    font-size: 13px;
+                    line-height: 1.5;
+                    color: var(--vscode-editor-foreground);
+                }
+                .documentation-content blockquote {
+                    margin: 16px 0;
+                    padding: 12px 16px;
+                    background-color: var(--vscode-textBlockQuote-background);
+                    border-left: 4px solid var(--vscode-textLink-foreground);
+                    color: var(--vscode-textBlockQuote-foreground);
+                    font-style: italic;
+                }
+                .documentation-content blockquote p {
+                    margin: 0;
+                }
+                .documentation-content table {
+                    width: 100%;
+                    border-collapse: collapse;
+                    margin: 16px 0;
+                    font-size: 14px;
+                }
+                .documentation-content th,
+                .documentation-content td {
+                    border: 1px solid var(--vscode-panel-border);
+                    padding: 8px 12px;
+                    text-align: left;
+                }
+                .documentation-content th {
+                    background-color: var(--vscode-editorWidget-background);
+                    font-weight: 600;
+                    color: var(--vscode-foreground);
+                }
+                .documentation-content tr:nth-child(even) {
+                    background-color: var(--vscode-list-inactiveSelectionBackground);
+                }
+
+                /* Code Block Container */
+                .code-block-container {
+                    margin: 16px 0;
+                    border: 1px solid var(--vscode-panel-border);
+                    border-radius: 6px;
+                    background-color: var(--vscode-textCodeBlock-background);
+                    overflow: hidden;
+                }
+                .code-block-header {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    padding: 8px 12px;
+                    background-color: var(--vscode-editorWidget-background) !important;
+                    border-bottom: 1px solid var(--vscode-panel-border);
+                }
+                .language-label {
+                    font-size: 11px;
+                    font-weight: 600;
+                    color: var(--vscode-descriptionForeground);
+                    text-transform: uppercase;
+                    letter-spacing: 0.5px;
+                }
+                .code-actions {
+                    display: flex;
+                    gap: 6px;
+                }
+                .code-action-btn {
+                    display: inline-flex;
+                    align-items: center;
+                    gap: 4px;
+                    padding: 4px 8px;
+                    background-color: var(--vscode-button-secondaryBackground);
+                    color: var(--vscode-button-secondaryForeground);
+                    border: 1px solid var(--vscode-button-border);
+                    border-radius: 3px;
+                    font-size: 11px;
+                    font-family: inherit;
+                    cursor: pointer;
+                    transition: all 0.2s ease;
+                }
+                .code-action-btn:hover {
+                    background-color: var(--vscode-button-secondaryHoverBackground);
+                }
+                .code-action-btn:disabled {
+                    opacity: 0.6;
+                    cursor: not-allowed;
+                }
+                .code-block-container pre {
+                    margin: 0;
+                    border: none;
+                    border-radius: 0;
+                    background-color: transparent;
+                }
+                .code-block-container pre code {
+                    padding: 16px;
+                    display: block;
+                    background-color: transparent;
+                }
+
+                /* Force all code elements to have consistent background */
+                .code-block-container pre,
+                .code-block-container code,
+                .code-block-container .hljs,
+                .code-block-container [class*="language-"] {
+                    background-color: transparent !important;
+                    background: transparent !important;
+                }
+
+                /* Modal-specific styles */
+                .documentation-modal-backdrop {
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    bottom: 0;
+                    background: rgba(0, 0, 0, 0.8);
+                    z-index: 9999;
+                }
+                .documentation-modal-content {
+                    position: relative;
+                    background: var(--vscode-editor-background);
+                    border: 1px solid var(--vscode-panel-border);
+                    border-radius: 8px;
+                    max-width: 900px;
+                    max-height: 90vh;
+                    width: 90%;
+                    display: flex;
+                    flex-direction: column;
+                    overflow: hidden;
+                    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+                    z-index: 10001;
+                }
+                .documentation-modal-header {
+                    padding: 16px 20px;
+                    border-bottom: 1px solid var(--vscode-panel-border);
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    background: var(--vscode-editorWidget-background);
+                }
+                .documentation-modal-header h3 {
+                    margin: 0;
+                    color: var(--vscode-foreground);
+                    font-size: 18px;
+                    font-weight: 600;
+                }
+                .documentation-close-btn {
+                    background: none;
+                    border: none;
+                    color: var(--vscode-foreground);
+                    font-size: 24px;
+                    cursor: pointer;
+                    padding: 0;
+                    width: 32px;
+                    height: 32px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    border-radius: 4px;
+                }
+                .documentation-close-btn:hover {
+                    background: var(--vscode-toolbar-hoverBackground);
+                }
+                .documentation-modal-body {
+                    padding: 20px;
+                    overflow-y: auto;
+                    flex: 1;
+                    background-color: var(--vscode-editor-background);
+                }
+            </style>
+            <div class="documentation-modal-backdrop"></div>
+            <div class="documentation-modal-content">
+                <div class="documentation-modal-header">
+                    <h3>${escapeHtml(title)}</h3>
+                    <button class="documentation-close-btn" title="關閉 (ESC)">✕</button>
+                </div>
+                <div class="documentation-modal-body">
+                    <div class="documentation-content">
+                        ${renderedHtml}
+                    </div>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(modal);
+
+        // 初始化語法高亮
+        if (typeof hljs !== 'undefined') {
+            modal.querySelectorAll('pre code').forEach((block) => {
+                try {
+                    hljs.highlightElement(block);
+                } catch (error) {
+                    console.warn('Failed to highlight code block:', error);
+                }
+            });
+        }
+
+        // 關閉功能
+        const closeModal = () => {
+            modal.remove();
+            document.removeEventListener('keydown', escHandler);
+        };
+
+        const closeBtn = modal.querySelector('.documentation-close-btn');
+        const backdrop = modal.querySelector('.documentation-modal-backdrop');
+
+        if (closeBtn) closeBtn.addEventListener('click', closeModal);
+        if (backdrop) backdrop.addEventListener('click', (e) => {
+            if (e.target === backdrop) closeModal();
+        });
+
+        // ESC 鍵關閉
+        const escHandler = (e) => {
+            if (e.key === 'Escape') closeModal();
+        };
+        document.addEventListener('keydown', escHandler);
     }
 
     function editLanguage(languageName) {
@@ -2520,189 +2726,9 @@ ${escapeHtml(template.code)}
     // showLoading, escapeHtml, renderMarkdown 現在從 TextBricksUtils 導入
 
     // 保留原有的 renderMarkdown 實現作為內部函數（如果與 utils 不同）
-    function renderMarkdownLocal(text) {
-        if (!text) return '';
 
-        // Simple markdown rendering - convert common markdown syntax to HTML
-        let html = escapeHtml(text);
 
-        // Headers
-        html = html.replace(/^### (.*$)/gm, '<h3>$1</h3>');
-        html = html.replace(/^## (.*$)/gm, '<h2>$1</h2>');
-        html = html.replace(/^# (.*$)/gm, '<h1>$1</h1>');
-
-        // Bold and italic
-        html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-        html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
-
-        // Code blocks
-        html = html.replace(/```([\s\S]*?)```/g, '<pre><code>$1</code></pre>');
-        html = html.replace(/`(.*?)`/g, '<code>$1</code>');
-
-        // Links
-        html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank">$1</a>');
-
-        // Line breaks
-        html = html.replace(/\n/g, '<br>');
-
-        return html;
-    }
-
-    // Template Documentation Modal
-    function showDocumentationModal(templatePath) {
-        const template = currentData.templates?.find(t => buildTemplatePath(t) === templatePath);
-        if (!template || !template.documentation) {
-            console.warn('Template or documentation not found for path:', templatePath);
-            return;
-        }
-
-        createDocumentationModal(
-            `${template.title} - 說明文件`,
-            template.documentation
-        );
-    }
-
-    // Topic Documentation Modal
-    function showTopicDocumentationModal(topicPath) {
-        const topic = findTopicByPath(topicPath);
-        if (!topic || !topic.documentation) {
-            console.warn('Topic or documentation not found for path:', topicPath);
-            return;
-        }
-
-        createDocumentationModal(
-            `${topic.title || topic.name} - 主題說明文件`,
-            topic.documentation
-        );
-    }
-
-    // Generic Documentation Modal Creator
-    function createDocumentationModal(title, documentation) {
-        // Create modal backdrop
-        const modalBackdrop = document.createElement('div');
-        modalBackdrop.className = 'modal-backdrop documentation-modal-backdrop';
-        modalBackdrop.style.cssText = `
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.5);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-            padding: 20px;
-        `;
-
-        // Create modal content
-        const modalContent = document.createElement('div');
-        modalContent.className = 'documentation-modal-content';
-        modalContent.style.cssText = `
-            background: var(--dark-bg);
-            border-radius: 8px;
-            border: 1px solid var(--border-color);
-            max-width: 800px;
-            max-height: 80vh;
-            width: 100%;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-        `;
-
-        // Create modal header
-        const modalHeader = document.createElement('div');
-        modalHeader.className = 'documentation-modal-header';
-        modalHeader.style.cssText = `
-            padding: 16px 20px;
-            border-bottom: 1px solid var(--border-color);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            background: var(--light-bg);
-        `;
-
-        const modalTitle = document.createElement('h3');
-        modalTitle.style.cssText = `
-            margin: 0;
-            color: var(--text-color);
-            font-size: 1.2em;
-        `;
-        modalTitle.textContent = title;
-
-        const closeButton = document.createElement('button');
-        closeButton.style.cssText = `
-            background: none;
-            border: none;
-            color: var(--muted-text);
-            font-size: 1.5em;
-            cursor: pointer;
-            padding: 4px 8px;
-            border-radius: 4px;
-        `;
-        closeButton.textContent = '×';
-        closeButton.addEventListener('click', () => {
-            document.body.removeChild(modalBackdrop);
-        });
-
-        modalHeader.appendChild(modalTitle);
-        modalHeader.appendChild(closeButton);
-
-        // Create modal body
-        const modalBody = document.createElement('div');
-        modalBody.className = 'documentation-modal-body';
-        modalBody.style.cssText = `
-            padding: 20px;
-            overflow-y: auto;
-            flex: 1;
-        `;
-
-        const docContent = document.createElement('div');
-        docContent.className = 'doc-content';
-        // Use the same preview format as the edit modal
-        const renderedHtml = markdownToHtml(documentation);
-        docContent.innerHTML = `
-            <div class="preview-header">
-                <h2>📖 說明文檔預覽</h2>
-                <div class="preview-note">這是您的 Markdown 文檔的預覽效果</div>
-            </div>
-            <div class="documentation-content">
-                ${renderedHtml}
-            </div>
-        `;
-
-        modalBody.appendChild(docContent);
-
-        // Assemble modal
-        modalContent.appendChild(modalHeader);
-        modalContent.appendChild(modalBody);
-        modalBackdrop.appendChild(modalContent);
-
-        // Add to DOM
-        document.body.appendChild(modalBackdrop);
-
-        // Close on backdrop click
-        modalBackdrop.addEventListener('click', (e) => {
-            if (e.target === modalBackdrop) {
-                document.body.removeChild(modalBackdrop);
-            }
-        });
-
-        // Prevent content click from closing modal
-        modalContent.addEventListener('click', (e) => {
-            e.stopPropagation();
-        });
-
-        // ESC key support
-        const escHandler = (e) => {
-            if (e.key === 'Escape') {
-                document.body.removeChild(modalBackdrop);
-                document.removeEventListener('keydown', escHandler);
-            }
-        };
-        document.addEventListener('keydown', escHandler);
-    }
+    // 文檔顯示已統一使用 DocumentationProvider
 
     // JSON Import functions
     function openJsonModal() {
@@ -3097,130 +3123,74 @@ ${description}
             return;
         }
 
-        // Create a modal preview instead of new window
-        showTopicPreviewModal(content, type);
-    }
-
-    function showTopicPreviewModal(content, type) {
-        // Use unified preview modal
-        showUnifiedPreviewModal(content, type, '主題說明文檔預覽');
-    }
-
-    // Unified preview modal function to prevent conflicts
-    function showUnifiedPreviewModal(content, type, title = '預覽') {
-        // Remove any existing preview modal first
-        const existingModal = document.getElementById('preview-modal');
-        if (existingModal) {
-            // Clean up existing event listeners
-            if (existingModal._keydownHandler) {
-                document.removeEventListener('keydown', existingModal._keydownHandler);
-            }
-            existingModal.remove();
+        // 使用 DocumentationProvider 渲染預覽
+        if (type === 'markdown') {
+            previewMarkdownWithProvider(content, '主題說明文檔預覽');
+        } else {
+            // 非 Markdown 類型使用簡單顯示
+            showSimplePreview(content, type, '主題說明文檔預覽');
         }
+    }
 
-        let previewContent;
+    // 使用 DocumentationProvider 渲染 Markdown 預覽
+    function previewMarkdownWithProvider(markdown, title) {
+        const requestId = `preview_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+
+        // 監聽渲染結果
+        const messageHandler = (event) => {
+            const message = event.data;
+            if (message.type === 'documentationRendered' && message.requestId === requestId) {
+                window.removeEventListener('message', messageHandler);
+                displayDocumentationModal(message.html, title);
+            }
+        };
+        window.addEventListener('message', messageHandler);
+
+        // 發送渲染請求（使用臨時對象）
+        vscode.postMessage({
+            type: 'renderTemplateDocumentation',
+            requestId: requestId,
+            template: {
+                title: title,
+                name: 'preview',
+                documentation: markdown
+            }
+        });
+    }
+
+    // 簡單預覽（非 Markdown）
+    function showSimplePreview(content, type, title) {
+        let contentHtml;
         switch (type) {
-            case 'markdown':
-                const renderedHtml = markdownToHtml(content);
-                previewContent = `
-                    <div class="preview-header">
-                        <h2>📖 ${title} - Markdown</h2>
-                        <div class="preview-note">這是您的 Markdown 文檔的預覽效果</div>
-                    </div>
-                    <div class="documentation-content">
-                        ${renderedHtml}
-                    </div>
-                `;
-                break;
             case 'file':
-                previewContent = `
-                    <div class="preview-header">
-                        <h2>📄 ${title} - 檔案路徑</h2>
-                        <div class="preview-note">這是您指定的檔案路徑</div>
-                    </div>
+                contentHtml = `
                     <div class="file-path-preview">
+                        <h2>📄 檔案路徑</h2>
                         <div class="path-display"><code>${escapeHtml(content)}</code></div>
-                        <div class="path-note">注意：確保此檔案存在且可讀取</div>
+                        <p class="path-note">注意：確保此檔案存在且可讀取</p>
                     </div>
                 `;
                 break;
             case 'url':
-                previewContent = `
-                    <div class="preview-header">
-                        <h2>🌐 ${title} - 外部連結</h2>
-                        <div class="preview-note">這是您指定的外部連結</div>
-                    </div>
+                contentHtml = `
                     <div class="url-preview">
+                        <h2>🌐 外部連結</h2>
                         <div class="url-display">
                             <a href="${escapeHtml(content)}" target="_blank" rel="noopener noreferrer">${escapeHtml(content)}</a>
                         </div>
-                        <div class="url-note">點擊連結可在新視窗中開啟</div>
+                        <p class="url-note">點擊連結可在新視窗中開啟</p>
                     </div>
                 `;
                 break;
             default:
-                previewContent = `
-                    <div class="preview-header">
+                contentHtml = `
+                    <div class="error">
                         <h2>⚠️ 無法預覽</h2>
-                        <div class="preview-note">請先選擇說明文檔類型</div>
+                        <p>請先選擇說明文檔類型</p>
                     </div>
                 `;
         }
-
-        // Create modal with higher z-index to ensure it appears above edit modals
-        const modal = document.createElement('div');
-        modal.id = 'preview-modal';
-        modal.className = 'modal';
-        modal.style.zIndex = '10000'; // Higher than edit modal
-        modal.innerHTML = `
-            <div class="preview-modal-backdrop" style="z-index: 9999;"></div>
-            <div class="preview-modal-content" style="z-index: 10001;">
-                <div class="preview-modal-header">
-                    <h3>${title}</h3>
-                    <button class="preview-close-btn" title="關閉預覽">✕</button>
-                </div>
-                <div class="preview-modal-body">
-                    ${previewContent}
-                </div>
-                <div class="modal-footer">
-                    <button class="btn btn-primary preview-ok-btn">確定</button>
-                </div>
-            </div>
-        `;
-
-        document.body.appendChild(modal);
-
-        // Set up close functionality
-        const closeModal = () => {
-            if (modal._keydownHandler) {
-                document.removeEventListener('keydown', modal._keydownHandler);
-            }
-            modal.remove();
-        };
-
-        // Add event listeners with proper cleanup
-        const closeBtn = modal.querySelector('.preview-close-btn');
-        const okBtn = modal.querySelector('.preview-ok-btn');
-        const backdrop = modal.querySelector('.preview-modal-backdrop');
-
-        if (closeBtn) closeBtn.addEventListener('click', closeModal);
-        if (okBtn) okBtn.addEventListener('click', closeModal);
-        if (backdrop) {
-            backdrop.addEventListener('click', (e) => {
-                if (e.target === backdrop) {
-                    closeModal();
-                }
-            });
-        }
-
-        // ESC key handler
-        const handleKeyDown = (e) => {
-            if (e.key === 'Escape') {
-                closeModal();
-            }
-        };
-        document.addEventListener('keydown', handleKeyDown);
-        modal._keydownHandler = handleKeyDown;
+        displayDocumentationModal(contentHtml, title);
     }
 
     function previewDocumentation() {
@@ -3244,72 +3214,23 @@ ${description}
         
         const content = docInput.value;
         const type = typeSelect.value;
-        
+
         console.log('Content:', content);
         console.log('Type:', type);
-        
+
         if (!content) {
             showError('請先輸入說明文檔內容');
             return;
         }
-        
-        // Create a modal preview instead of new window
-        showPreviewModal(content, type);
-    }
-    
-    function showPreviewModal(content, type) {
-        // Use unified preview modal with template title
+
+        // 使用 DocumentationProvider 渲染預覽
         const title = editingItem ? `模板文檔預覽 - ${editingItem.title}` : '模板文檔預覽 - 新模板';
-        showUnifiedPreviewModal(content, type, title);
+        if (type === 'markdown') {
+            previewMarkdownWithProvider(content, title);
+        } else {
+            showSimplePreview(content, type, title);
+        }
     }
-    
-    
-    // Markdown to HTML conversion (same logic as DocumentationProvider)
-    function markdownToHtml(markdown) {
-        // Simple markdown to HTML conversion
-        let html = markdown;
-        
-        // Headers
-        html = html.replace(/^### (.*$)/gm, '<h3>$1</h3>');
-        html = html.replace(/^## (.*$)/gm, '<h2>$1</h2>');
-        html = html.replace(/^# (.*$)/gm, '<h1>$1</h1>');
-        
-        // Code blocks
-        html = html.replace(/```(\w+)?\n([\s\S]*?)```/g, (match, lang, code) => {
-            const language = lang || '';
-            return `<pre><code class="language-${language}">${escapeHtml(code.trim())}</code></pre>`;
-        });
-        
-        // Inline code
-        html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
-        
-        // Bold and italic
-        html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-        html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
-        
-        // Links
-        html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank">$1</a>');
-        
-        // Lists
-        html = html.replace(/^- (.*$)/gm, '<li>$1</li>');
-        html = html.replace(/(<li>.*<\/li>)/gs, '<ul>$1</ul>');
-        
-        // Paragraphs
-        html = html.replace(/\n\n/g, '</p><p>');
-        html = '<p>' + html + '</p>';
-        
-        // Clean up empty paragraphs
-        html = html.replace(/<p><\/p>/g, '');
-        html = html.replace(/<p>(<h[1-6]>)/g, '$1');
-        html = html.replace(/(<\/h[1-6]>)<\/p>/g, '$1');
-        html = html.replace(/<p>(<pre>)/g, '$1');
-        html = html.replace(/(<\/pre>)<\/p>/g, '$1');
-        html = html.replace(/<p>(<ul>)/g, '$1');
-        html = html.replace(/(<\/ul>)<\/p>/g, '$1');
-        
-        return html;
-    }
-    
     function handleJsonImport() {
         const validation = validateJsonInput();
         
@@ -3357,23 +3278,6 @@ ${description}
         } else if (hintDiv) {
             hintDiv.style.display = 'none';
         }
-    }
-
-    function markdownToHtml(markdown) {
-        // 簡單的 Markdown 轉換，處理基本格式
-        if (!markdown || typeof markdown !== 'string') {
-            return '';
-        }
-
-        return markdown
-            .replace(/### (.*$)/gim, '<h3>$1</h3>')
-            .replace(/## (.*$)/gim, '<h2>$1</h2>')
-            .replace(/# (.*$)/gim, '<h1>$1</h1>')
-            .replace(/\*\*(.*?)\*\*/gim, '<strong>$1</strong>')
-            .replace(/\*(.*?)\*/gim, '<em>$1</em>')
-            .replace(/^\- (.*$)/gim, '<li>$1</li>')
-            .replace(/(<li>.*<\/li>)/gims, '<ul>$1</ul>')
-            .replace(/\n/gim, '<br>');
     }
 
     // ==================== Scope Management ====================
@@ -3468,7 +3372,7 @@ ${description}
 
         const html = `
             <div class="topic-hierarchy">
-                ${roots.map(renderTopicNode).join('')}
+                ${roots.map(renderFavoriteTopicNode).join('')}
             </div>
         `;
         container.innerHTML = html;
@@ -3477,7 +3381,7 @@ ${description}
         bindTopicEvents(container);
     }
 
-    function renderTopicNode(node, depth = 0) {
+    function renderFavoriteTopicNode(node, depth = 0) {
         const topic = node.topic;
         const hasChildren = node.children && node.children.length > 0;
         const indent = depth * 20;
@@ -3508,7 +3412,7 @@ ${description}
                 </div>
                 ${hasChildren && !topic.display.collapsed ?
                     `<div class="topic-children">
-                        ${node.children.map(child => renderTopicNode(child, depth + 1)).join('')}
+                        ${node.children.map(child => renderFavoriteTopicNode(child, depth + 1)).join('')}
                     </div>` :
                     ''
                 }
@@ -3559,34 +3463,8 @@ ${description}
         return search(currentData.topics.hierarchy.roots);
     }
 
-    function editTopic(topicPath) {
-        const topic = findTopicInHierarchy(topicPath)?.topic;
-        if (topic) {
-            openModal('topic', topic);
-        }
-    }
+    // editTopic() and deleteTopic() 已在第 2343, 2350 行定義
 
-    function deleteTopic(topicPath) {
-        const topic = findTopicInHierarchy(topicPath)?.topic;
-        if (topic && confirm(`確定要刪除主題 "${topic.title}" 嗎？`)) {
-            vscode.postMessage({
-                type: 'deleteTopic',
-                topicPath: topicPath,
-                deleteChildren: false
-            });
-        }
-    }
-
-    function moveTopic(topicPath, newParentPath, newOrder) {
-        vscode.postMessage({
-            type: 'moveTopic',
-            operation: {
-                topicPath,
-                newParentPath,
-                newOrder
-            }
-        });
-    }
 
     // ==================== Statistics and Overview ====================
 
@@ -3604,16 +3482,17 @@ ${description}
     function updateOverviewStats() {
         const scopeStats = currentData.scope?.usageStats;
         const topicStats = currentData.topics?.statistics;
-        const templatesCount = currentData.templates?.length || 0;
-        const languagesCount = currentData.languages?.length || 0;
         const favoritesCount = currentData.scope?.favorites?.length || 0;
 
+        // 使用 UIStateService 獲取統計
+        const stats = uiStateService.getStatistics();
+
         // 更新統計數字到對應的元素
-        updateStatValue('total-templates', templatesCount);
+        updateStatValue('total-templates', stats.totalTemplates);
         updateStatValue('favorite-templates', favoritesCount);
-        updateStatValue('total-topics', topicStats?.totalTopics || 0);
-        updateStatValue('active-topics', topicStats?.activeTopics || topicStats?.totalTopics || 0);
-        updateStatValue('total-languages', languagesCount);
+        updateStatValue('total-topics', stats.totalTopics);
+        updateStatValue('active-topics', topicStats?.activeTopics || stats.totalTopics);
+        updateStatValue('total-languages', stats.totalLanguages);
 
         // 更新最常用語言
         const mostUsedLang = getMostUsedLanguage();
@@ -3882,11 +3761,31 @@ ${description}
             // Show loading state
             container.innerHTML = '<div class="loading-state">載入中...</div>';
 
-            // Build tree structure from current data
-            const treeData = buildContentTreeData();
+            // 使用 TreeBuilderService 構建樹
+            const hierarchy = currentData.topics?.hierarchy?.roots || [];
+            const templates = currentData.templates || [];
+            const treeData = treeBuilderService.buildContentTree(hierarchy, templates);
 
             // Store tree data globally for link search
             window.treeData = treeData;
+
+            // 建立 topic lookup map（用於 showTopicDetails）
+            window.topicLookup = new Map();
+            const buildTopicLookup = (nodes, parentPath = null) => {
+                nodes.forEach(node => {
+                    if (node.type === 'topic') {
+                        window.topicLookup.set(node.path, {
+                            ...node.data,
+                            parent: parentPath,
+                            path: node.path
+                        });
+                        if (node.children) {
+                            buildTopicLookup(node.children, node.path);
+                        }
+                    }
+                });
+            };
+            buildTopicLookup(treeData);
 
             if (!treeData || treeData.length === 0) {
                 container.innerHTML = `
@@ -3941,195 +3840,7 @@ ${description}
         }
     }
 
-    function buildContentTreeData() {
-        const templates = currentData.templates || [];
-        const topics = currentData.topics?.hierarchy || null;
-
-        console.log('Templates:', templates.length);
-        console.log('Templates data:', templates);
-
-        // 檢查每個模板的topic字段
-        templates.forEach((template, index) => {
-            console.log(`Template ${index}: "${template.title}" -> topic: "${template.topic}"`);
-        });
-        console.log('Topics hierarchy:', topics);
-
-        // If we have hierarchical topics, use them
-        if (topics && topics.roots) {
-            const result = topics.roots.map(root => buildTreeNodeFromTopic(root));
-            console.log('Built tree from hierarchy:', result);
-            return result;
-        }
-
-        // Otherwise, build a simple structure from templates
-        const topicMap = new Map();
-
-        templates.forEach(template => {
-            const topicName = template.topic || '未分類';
-
-            // Check if topic contains subtopic information (e.g., "C語言/基礎語法")
-            const topicParts = topicName.split('/');
-            const mainTopic = topicParts[0];
-            const subTopic = topicParts[1];
-
-            console.log(`Processing template: ${template.title}, topic: ${topicName}, parts:`, topicParts);
-
-            // Ensure main topic exists
-            if (!topicMap.has(mainTopic)) {
-                topicMap.set(mainTopic, {
-                    path: mainTopic,
-                    name: mainTopic,
-                    type: 'topic',
-                    templates: [],
-                    children: [],
-                    subTopics: new Map()
-                });
-            }
-
-            const mainTopicData = topicMap.get(mainTopic);
-
-            if (subTopic) {
-                // Has subtopic
-                if (!mainTopicData.subTopics.has(subTopic)) {
-                    mainTopicData.subTopics.set(subTopic, {
-                        path: `${mainTopic}/${subTopic}`,
-                        name: subTopic,
-                        type: 'topic',
-                        templates: [],
-                        children: []
-                    });
-                }
-                mainTopicData.subTopics.get(subTopic).templates.push(template);
-            } else {
-                // Direct template under main topic
-                mainTopicData.templates.push(template);
-            }
-        });
-
-        console.log('Topic map:', topicMap);
-
-        return Array.from(topicMap.values()).map(topic => {
-            const children = [];
-
-            // Add subtopics as children
-            if (topic.subTopics && topic.subTopics.size > 0) {
-                Array.from(topic.subTopics.values()).forEach(subTopic => {
-                    children.push({
-                        ...subTopic,
-                        expanded: true,
-                        children: subTopic.templates.map(template => ({
-                            path: buildTemplatePath(template),
-                            name: template.title,
-                            type: 'template',
-                            data: template,
-                            children: []
-                        }))
-                    });
-                });
-            }
-
-            // Add direct templates
-            topic.templates.forEach(template => {
-                children.push({
-                    path: buildTemplatePath(template),
-                    name: template.title,
-                    type: 'template',
-                    data: template,
-                    children: []
-                });
-            });
-
-            return {
-                path: topic.name,
-                name: topic.name,
-                type: topic.type,
-                expanded: true,
-                children: children
-            };
-        });
-    }
-
-    function findParentTopic(topicNode) {
-        // This is a simple helper to find parent - in a real implementation
-        // you might need to traverse the hierarchy
-        return topicNode.parent || null;
-    }
-
-    function buildTreeNodeFromTopic(topicNode, parentPath = null) {
-        // 先嘗試從 topic 獲取路徑
-        let topicPath = getItemIdentifier(topicNode.topic, 'topic');
-
-        // 如果有 parentPath，組合成完整路徑
-        if (parentPath && topicPath) {
-            // 如果 topicPath 只是名稱（不包含 /），則需要與 parent 組合
-            if (!topicPath.includes('/')) {
-                topicPath = `${parentPath}/${topicPath}`;
-            }
-        }
-
-        const node = {
-            path: topicPath,
-            name: topicNode.topic.title || topicNode.topic.name,
-            type: 'topic',
-            data: topicNode.topic,
-            children: [],
-            expanded: !topicNode.topic.display?.collapsed
-        };
-
-        // Store topic data for later lookup, 加入 parent 信息
-        if (!window.topicLookup) {
-            window.topicLookup = new Map();
-        }
-
-        // 建立包含 parent 的完整主題對象
-        const topicWithParent = {
-            ...topicNode.topic,
-            parent: parentPath,
-            path: topicPath
-        };
-
-        window.topicLookup.set(topicPath, topicWithParent);
-        console.log('Stored topic for lookup:', topicPath, 'parent:', parentPath, topicWithParent);
-
-        // Add child topics，傳遞當前路徑作為子主題的 parent
-        if (topicNode.children) {
-            node.children.push(...topicNode.children.map(child => buildTreeNodeFromTopic(child, topicPath)));
-        }
-
-        // Add templates for this topic using unified topicPath matching
-        const templates = currentData.templates?.filter(t => {
-            return t.topicPath === topicPath;
-        }) || [];
-
-        templates.forEach(template => {
-            node.children.push({
-                path: buildTemplatePath(template),
-                name: template.title,
-                type: 'template',
-                data: template,
-                children: [],
-                parent: node
-            });
-        });
-
-        // Add links for this topic
-        const topicLinks = topicNode.topic.loadedLinks || [];
-        console.log(`Found ${topicLinks.length} links for topic ${topicPath}:`, topicLinks);
-
-        topicLinks.forEach(link => {
-            const linkName = link.name;
-            node.children.push({
-                path: linkName,
-                name: link.title,
-                type: 'link',
-                data: link,
-                children: [],
-                parent: node
-            });
-        });
-
-        return node;
-    }
+    // buildContentTreeData() 和 buildTreeNodeFromTopic() 已由 TreeBuilderService 取代
 
     function renderTreeNode(node, depth) {
         const hasChildren = node.children && node.children.length > 0;
@@ -4161,7 +3872,7 @@ ${description}
                 <div class="tree-item ${node.type}" style="padding-left: ${depth * 16}px">
                     <span class="tree-toggle ${toggleClass}"></span>
                     <span class="tree-icon">${icon}</span>
-                    <span class="tree-label">${escapeHtml(node.displayName || node.name)}</span>
+                    <span class="tree-label">${escapeHtml(node.title || node.name)}</span>
                     ${hasChildren && node.type === 'topic' ?
                         `<span class="tree-count">${node.children.length}</span>` : ''}
                 </div>
@@ -4498,26 +4209,6 @@ ${description}
                     <h4>描述</h4>
                     <p>${escapeHtml(topic.description || '無描述')}</p>
                 </div>
-
-                <div class="details-section">
-                    <h4>模板 (${templates.length})</h4>
-                    <div class="templates-grid">
-                        ${templates.length === 0 ?
-                            '<p class="no-data">此主題尚無模板</p>' :
-                            templates.map(template => `
-                                <div class="template-card" data-action="show-template-details" data-template-path="${buildTemplatePath(template)}">
-                                    <div class="template-header">
-                                        <span class="template-icon">📄</span>
-                                        <span class="template-title">${escapeHtml(template.title)}</span>
-                                    </div>
-                                    <div class="template-meta">
-                                        <span class="language-tag">${escapeHtml(template.language)}</span>
-                                    </div>
-                                </div>
-                            `).join('')
-                        }
-                    </div>
-                </div>
             </div>
         `;
 
@@ -4546,9 +4237,6 @@ ${description}
                 <div class="details-actions">
                     <button class="btn btn-secondary btn-small" data-action="edit-template" data-template-path="${templatePath}">
                         <span class="icon">✏️</span> 編輯
-                    </button>
-                    <button class="btn btn-primary btn-small" data-action="use-template" data-template-path="${templatePath}">
-                        <span class="icon">📋</span> 使用
                     </button>
                     ${template.documentation ? `
                         <button class="btn btn-info btn-small" data-action="view-documentation" data-template-path="${templatePath}">
@@ -4729,32 +4417,19 @@ ${description}
     }
 
     function findTopicByPath(topicPath) {
-        console.log('currentData.topics:', currentData.topics);
-
         // Check our own topic lookup first
         if (window.topicLookup && window.topicLookup.has(topicPath)) {
-            const topic = window.topicLookup.get(topicPath);
-            console.log('Found topic in lookup:', topic);
-            return topic;
+            return window.topicLookup.get(topicPath);
         }
 
-        // Search in hierarchy first
+        // Search in hierarchy
         if (currentData.topics?.hierarchy?.topicsMap) {
-            console.log('Searching in topicsMap:', currentData.topics.hierarchy.topicsMap);
-            // Check if it's a Map object
             if (currentData.topics.hierarchy.topicsMap instanceof Map) {
                 const topic = currentData.topics.hierarchy.topicsMap.get(topicPath);
-                if (topic) {
-                    console.log('Found topic in Map:', topic);
-                    return topic;
-                }
+                if (topic) return topic;
             } else if (typeof currentData.topics.hierarchy.topicsMap === 'object') {
-                // Handle as regular object
                 const topic = currentData.topics.hierarchy.topicsMap[topicPath];
-                if (topic) {
-                    console.log('Found topic in Object:', topic);
-                    return topic;
-                }
+                if (topic) return topic;
             }
         }
 
@@ -4882,17 +4557,12 @@ ${description}
     }
 
     // Helper functions for actions
-    function editTopic(topicPath) {
-        const topic = findTopicByPath(topicPath);
-        if (topic) {
-            openModal('topic', topic);
-        }
-    }
+    // editTopic() 已在第 2343 行定義
 
     function createTemplateInTopic(topicPath) {
         const topic = findTopicByPath(topicPath);
         if (topic) {
-            openModal('template', { topic: topic.name });
+            openModal('template', { topic: topicPath });
         }
     }
 
@@ -5064,12 +4734,6 @@ ${description}
         });
     }
 
-    function clearAllFavorites() {
-        if (confirm('確定要清空所有收藏嗎？')) {
-            const favorites = [...(currentData.scope?.favorites || [])];
-            favorites.forEach(itemPath => removeFromFavorites(itemPath));
-        }
-    }
 
     // Additional helper functions for context menu actions
     function createSubtopic(parentTopicPath) {
@@ -5310,19 +4974,6 @@ ${description}
         container.innerHTML = html;
     }
 
-    function viewFavoriteItem(itemPath) {
-        // 查找並顯示收藏項目的詳細信息
-        const template = currentData.templates?.find(t => buildTemplatePath(t) === itemPath);
-        if (template) {
-            openModal('template', template);
-        } else {
-            // 可能是主題或其他類型的項目
-            vscode.postMessage({
-                type: 'showInfo',
-                message: `項目 "${itemPath}" 的詳細信息`
-            });
-        }
-    }
 
     // 更新 showTab 函數來處理新的標籤
     function showTab(tabName) {
@@ -5413,18 +5064,6 @@ ${description}
     }
 
     // 處理可用位置點擊
-    function handleLocationClick(locationData) {
-        if (locationData.available) {
-            vscode.postMessage({
-                type: 'changeDataLocation',
-                locationPath: locationData.path,
-                options: {
-                    migrateData: true,
-                    createBackup: true
-                }
-            });
-        }
-    }
 
     // 顯示驗證結果
     function showValidationResult(validation) {

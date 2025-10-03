@@ -44,7 +44,8 @@ export class TextBricksManagerProvider {
         scopeManager?: ScopeManager,
         topicManager?: TopicManager,
         dataPathService?: DataPathService,
-        private readonly webviewProvider?: WebviewProvider
+        private readonly webviewProvider?: WebviewProvider,
+        private readonly documentationProvider?: any
     ) {
         this.platform = new VSCodePlatform(context);
         this.dataPathService = dataPathService || DataPathService.getInstance(this.platform);
@@ -304,6 +305,37 @@ export class TextBricksManagerProvider {
 
                 case 'getFullDisplayPath':
                     this._getFullDisplayPath(message.path, message.requestId);
+                    break;
+
+                // 文檔渲染
+                case 'renderTemplateDocumentation':
+                    if (this.documentationProvider && message.template && message.template.documentation) {
+                        const renderedHtml = this.documentationProvider.markdownToHtml(
+                            message.template.documentation,
+                            message.template.name
+                        );
+                        this._panel?.webview.postMessage({
+                            type: 'documentationRendered',
+                            requestId: message.requestId,
+                            html: renderedHtml,
+                            title: `${message.template.title} - 說明文件`
+                        });
+                    }
+                    break;
+
+                case 'renderTopicDocumentation':
+                    if (this.documentationProvider && message.topic && message.topic.documentation) {
+                        const renderedHtml = this.documentationProvider.markdownToHtml(
+                            message.topic.documentation,
+                            message.topic.name
+                        );
+                        this._panel?.webview.postMessage({
+                            type: 'documentationRendered',
+                            requestId: message.requestId,
+                            html: renderedHtml,
+                            title: `${message.topic.title || message.topic.name} - 主題說明文件`
+                        });
+                    }
                     break;
 
                 // UI 事件
@@ -1173,6 +1205,12 @@ export class TextBricksManagerProvider {
         const servicesBridgeUri = webview.asWebviewUri(
             vscode.Uri.joinPath(this._extensionUri, 'assets', 'js', 'services-bridge.js')
         );
+        const uiStateServiceUri = webview.asWebviewUri(
+            vscode.Uri.joinPath(this._extensionUri, 'assets', 'js', 'ui-state-service.js')
+        );
+        const treeBuilderServiceUri = webview.asWebviewUri(
+            vscode.Uri.joinPath(this._extensionUri, 'assets', 'js', 'tree-builder-service.js')
+        );
         const scriptUri = webview.asWebviewUri(
             vscode.Uri.joinPath(this._extensionUri, 'assets', 'js', 'textbricks-manager.js')
         );
@@ -1694,6 +1732,8 @@ export class TextBricksManagerProvider {
     <script nonce="${nonce}" src="${eventDelegatorUri}"></script>
     <script nonce="${nonce}" src="${cardTemplatesUri}"></script>
     <script nonce="${nonce}" src="${servicesBridgeUri}"></script>
+    <script nonce="${nonce}" src="${uiStateServiceUri}"></script>
+    <script nonce="${nonce}" src="${treeBuilderServiceUri}"></script>
     <script nonce="${nonce}" src="${scriptUri}"></script>
 </body>
 </html>`;
@@ -1860,6 +1900,7 @@ export class TextBricksManagerProvider {
             // 獲取最新的主題和語言數據
             const topics = this.templateEngine.getAllTopicConfigs();
             const languages = this.templateEngine.getLanguages();
+            const templates = this.templateEngine.getTemplateManager().getAllTemplates();
 
             // 更新 PathTransformService
             const topicsMap = new Map();

@@ -27,13 +27,13 @@ export class CodeOperationService {
     /**
      * 複製完整模板
      */
-    async copyTemplate(templateId: string, options?: OperationOptions): Promise<void> {
-        const template = await this._getTemplate(templateId);
+    async copyTemplate(templatePath: string, options?: OperationOptions): Promise<void> {
+        const template = await this._getTemplate(templatePath);
         if (!template) return;
 
         try {
             const isEditorActive = this.platform.editor.isEditorActive();
-            
+
             if (!isEditorActive) {
                 await this._handleNoEditor(template.code, options);
                 return;
@@ -42,9 +42,9 @@ export class CodeOperationService {
             // 使用formatTemplate保持與tooltip一致
             const targetIndentation = await this.platform.editor.calculateTargetIndentation();
             const formattedCode = this.engine.formatTemplate(template, targetIndentation);
-            
+
             await this._executeClipboardOperation(formattedCode, options);
-            await this._recordUsage(templateId);
+            await this._recordUsage(templatePath);
             
             this._showFeedback(
                 options?.successMessage || `模板 '${template.title}' 已複製`, 
@@ -61,8 +61,8 @@ export class CodeOperationService {
     /**
      * 插入完整模板
      */
-    async insertTemplate(templateId: string, options?: OperationOptions): Promise<void> {
-        const template = await this._getTemplate(templateId);
+    async insertTemplate(templatePath: string, options?: OperationOptions): Promise<void> {
+        const template = await this._getTemplate(templatePath);
         if (!template) return;
 
         try {
@@ -77,8 +77,8 @@ export class CodeOperationService {
             const formattedCode = this.engine.formatTemplate(template, targetIndentation);
             
             await this._executeInsertOperation(formattedCode, options);
-            await this._recordUsage(templateId);
-            
+            await this._recordUsage(templatePath);
+
             this._showFeedback(
                 options?.successMessage || `模板 '${template.title}' 已插入`, 
                 'info', 
@@ -94,7 +94,7 @@ export class CodeOperationService {
     /**
      * 複製程式碼片段
      */
-    async copyCodeSnippet(code: string, templateId?: string, options?: OperationOptions): Promise<void> {
+    async copyCodeSnippet(code: string, templatePath?: string, options?: OperationOptions): Promise<void> {
         try {
             const isEditorActive = this.platform.editor.isEditorActive();
             
@@ -103,10 +103,10 @@ export class CodeOperationService {
                 return;
             }
 
-            const formattedCode = await this._formatCodeSnippet(code, templateId);
-            
+            const formattedCode = await this._formatCodeSnippet(code, templatePath);
+
             await this._executeClipboardOperation(formattedCode, options);
-            await this._recordUsage(templateId);
+            await this._recordUsage(templatePath);
             
             const lines = code.split('\n').length;
             const defaultMessage = lines > 1 ? `${lines} 行程式碼已複製` : '程式碼片段已複製';
@@ -121,7 +121,7 @@ export class CodeOperationService {
     /**
      * 插入程式碼片段
      */
-    async insertCodeSnippet(code: string, templateId?: string, options?: OperationOptions): Promise<void> {
+    async insertCodeSnippet(code: string, templatePath?: string, options?: OperationOptions): Promise<void> {
         try {
             const isEditorActive = this.platform.editor.isEditorActive();
             
@@ -130,10 +130,10 @@ export class CodeOperationService {
                 return;
             }
 
-            const formattedCode = await this._formatCodeSnippet(code, templateId);
-            
+            const formattedCode = await this._formatCodeSnippet(code, templatePath);
+
             await this._executeInsertOperation(formattedCode, options);
-            await this._recordUsage(templateId);
+            await this._recordUsage(templatePath);
             
             this._showFeedback(options?.successMessage || '程式碼已插入', 'info', options);
         } catch (error) {
@@ -145,17 +145,17 @@ export class CodeOperationService {
 
     // ==================== 私有輔助方法 ====================
 
-    private async _getTemplate(templateId: string): Promise<ExtendedTemplate | null> {
-        const template = this.engine.getTemplateById(templateId);
+    private async _getTemplate(templatePath: string): Promise<ExtendedTemplate | null> {
+        const template = this.engine.getTemplateByPath(templatePath);
         if (!template) {
-            await this.platform.ui.showErrorMessage(`找不到模板 ID: ${templateId}`);
+            await this.platform.ui.showErrorMessage(`找不到模板路徑: ${templatePath}`);
             return null;
         }
         return template;
     }
 
-    private async _formatCodeSnippet(code: string, templateId: string | undefined): Promise<string> {
-        const template = templateId ? this.engine.getTemplateById(templateId) : undefined;
+    private async _formatCodeSnippet(code: string, templatePath: string | undefined): Promise<string> {
+        const template = templatePath ? this.engine.getTemplateByPath(templatePath) : undefined;
         const targetIndentation = await this.platform.editor.calculateTargetIndentation();
 
         // 檢查是否為完整模板
@@ -194,10 +194,10 @@ export class CodeOperationService {
         await this.platform.editor.insertText(code);
     }
 
-    private async _recordUsage(templateId?: string): Promise<void> {
-        if (templateId) {
+    private async _recordUsage(templatePath?: string): Promise<void> {
+        if (templatePath) {
             try {
-                await this.engine.recordTemplateUsage(templateId);
+                await this.engine.recordTemplateUsage(templatePath);
             } catch (error) {
                 // 使用統計失敗不應該影響主要功能
                 this.platform.logWarning('Failed to record template usage', 'CodeOperationService');
