@@ -205,7 +205,8 @@ export class SearchManager {
         }
 
         if (filters.topic) {
-            result = result.filter(t => t.topic === filters.topic);
+            // TODO: topic 過濾需要從檔案路徑推導
+            console.warn('[SearchManager] Topic filtering not yet implemented with path-based system');
         }
 
         if (filters.tags && filters.tags.length > 0) {

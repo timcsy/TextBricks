@@ -10,7 +10,7 @@ import { DataPathService } from '../services/DataPathService';
 import { ExtendedTemplate } from '@textbricks/shared';
 
 export class TemplateRepository {
-    private templates: Map<string, ExtendedTemplate> = new Map();
+    private templates: Map<string, ExtendedTemplate> = new Map(); // Key: path (如 "python/templates/hello-world")
     private platform: IPlatform;
     private dataPathService: DataPathService;
     private topicManager: any; // 待整合 TopicManager
@@ -36,33 +36,34 @@ export class TemplateRepository {
 
     /**
      * 創建新模板
+     * @param templateData 模板資料
+     * @param topicPath 主題路徑（如 "python" 或 "c/basic"）
      */
-    async create(templateData: Omit<ExtendedTemplate, 'id'>): Promise<ExtendedTemplate> {
+    async create(templateData: Omit<ExtendedTemplate, 'type'>, topicPath: string): Promise<ExtendedTemplate> {
         const { join } = await import('path');
         const { writeFile, mkdir } = await import('fs/promises');
 
-        // 生成唯一 ID
-        const id = this.generateTemplateId(templateData.title);
-
         const template: ExtendedTemplate = {
+            type: 'template',
             ...templateData,
-            id,
             metadata: {
-                usage: 0,
                 createdAt: new Date(),
                 updatedAt: new Date()
             }
         };
 
+        // 添加 topicPath 屬性用於前端顯示
+        (template as any).topicPath = topicPath;
+
         // 構建檔案路徑
-        const dataPath = await this.dataPathService.getDataPath();
-        if (!dataPath) {
-            throw new Error('Data path not configured');
+        const scopePath = await this.dataPathService.getScopePath('local');
+        if (!scopePath) {
+            throw new Error('Scope path not configured');
         }
 
-        const topicPath = join(dataPath, template.topic);
-        const templatesPath = join(topicPath, 'templates');
-        const filePath = join(templatesPath, `${id}.json`);
+        const fullTopicPath = join(scopePath, topicPath);
+        const templatesPath = join(fullTopicPath, 'templates');
+        const filePath = join(templatesPath, `${template.name}.json`);
 
         // 確保目錄存在
         await mkdir(templatesPath, { recursive: true });
@@ -70,24 +71,34 @@ export class TemplateRepository {
         // 保存檔案
         await writeFile(filePath, JSON.stringify(template, null, 2), 'utf8');
 
-        // 加入快取
-        this.templates.set(id, template);
+        // 加入快取 (使用完整路徑作為 key)
+        const templatePath = `${topicPath}/templates/${template.name}`;
+        this.templates.set(templatePath, template);
 
         return template;
     }
 
     /**
-     * 根據 ID 查詢模板
+     * 根據路徑查詢模板
+     * @param path 模板路徑（如 "python/templates/hello-world"）
+     */
+    async findByPath(path: string): Promise<ExtendedTemplate | null> {
+        return this.templates.get(path) || null;
+    }
+
+    /**
+     * @deprecated 使用 findByPath 替代
      */
     async findById(id: string): Promise<ExtendedTemplate | null> {
-        return this.templates.get(id) || null;
+        return this.findByPath(id);
     }
 
     /**
      * 更新模板
+     * @param path 模板路徑（如 "python/templates/hello-world"）
      */
-    async update(id: string, updates: Partial<ExtendedTemplate>): Promise<ExtendedTemplate | null> {
-        const existing = this.templates.get(id);
+    async update(path: string, updates: Partial<ExtendedTemplate>): Promise<ExtendedTemplate | null> {
+        const existing = this.templates.get(path);
         if (!existing) {
             return null;
         }
@@ -95,7 +106,8 @@ export class TemplateRepository {
         const updated: ExtendedTemplate = {
             ...existing,
             ...updates,
-            id: existing.id, // 保持 ID 不變
+            type: 'template',
+            name: existing.name, // 保持 name 不變
             metadata: {
                 ...existing.metadata,
                 ...updates.metadata,
@@ -103,30 +115,36 @@ export class TemplateRepository {
             }
         };
 
+        // 提取主題路徑
+        const topicPath = path.replace('/templates/' + existing.name, '');
+
         // 更新檔案
-        await this.saveTemplateFile(updated);
+        await this.saveTemplateFile(updated, topicPath);
 
         // 更新快取
-        this.templates.set(id, updated);
+        this.templates.set(path, updated);
 
         return updated;
     }
 
     /**
      * 刪除模板
+     * @param path 模板路徑（如 "python/templates/hello-world"）
      */
-    async delete(id: string): Promise<boolean> {
-        const template = this.templates.get(id);
+    async delete(path: string): Promise<boolean> {
+        const template = this.templates.get(path);
         if (!template) {
             return false;
         }
 
         try {
-            await this.deleteTemplateFile(id, template.topic);
-            this.templates.delete(id);
+            // 提取主題路徑
+            const topicPath = path.replace('/templates/' + template.name, '');
+            await this.deleteTemplateFile(template.name, topicPath);
+            this.templates.delete(path);
             return true;
         } catch (error) {
-            console.error(`Failed to delete template ${id}:`, error);
+            console.error(`Failed to delete template ${path}:`, error);
             return false;
         }
     }
@@ -134,12 +152,15 @@ export class TemplateRepository {
     // ==================== 查詢方法 ====================
 
     /**
-     * 根據主題查詢模板
+     * 根據主題路徑查詢模板
+     * @param topicPath 主題路徑（如 "python" 或 "c/basic"）
      */
-    findByTopic(topic: string): ExtendedTemplate[] {
+    findByTopic(topicPath: string): ExtendedTemplate[] {
         const results: ExtendedTemplate[] = [];
-        for (const template of this.templates.values()) {
-            if (template.topic === topic) {
+        const prefix = `${topicPath}/templates/`;
+
+        for (const [path, template] of this.templates.entries()) {
+            if (path.startsWith(prefix)) {
                 results.push(template);
             }
         }
@@ -188,17 +209,11 @@ export class TemplateRepository {
 
     /**
      * 增加模板使用次數
+     * @deprecated usage 統計已移至 ScopeManager 集中管理
      */
-    async incrementUsage(id: string): Promise<void> {
-        const template = this.templates.get(id);
-        if (template) {
-            if (!template.metadata) {
-                template.metadata = {};
-            }
-            template.metadata.usage = (template.metadata.usage || 0) + 1;
-            template.metadata.lastUsedAt = new Date();
-            await this.saveTemplateFile(template);
-        }
+    async incrementUsage(path: string): Promise<void> {
+        console.warn('[TemplateRepository] incrementUsage is deprecated. Use ScopeManager.updateUsage instead.');
+        // 此方法保留用於向後相容，但建議使用 ScopeManager
     }
 
     // ==================== 檔案系統操作 (私有) ====================
@@ -221,53 +236,9 @@ export class TemplateRepository {
         console.log(`[TemplateRepository] Using scope path: ${scopePath}`);
 
         try {
-            // 如果有 TopicManager，使用它獲取主題列表
-            if (this.topicManager && typeof this.topicManager.getAllTopics === 'function') {
-                const topics = this.topicManager.getAllTopics();
-                console.log(`[TemplateRepository] Scanning ${topics.length} topics for templates`);
+            // 遞迴掃描目錄載入所有模板
+            await this.scanDirectoryRecursively(scopePath, '');
 
-                for (const topic of topics) {
-                    // 使用 topic.path 而不是 topic.id 來構建檔案路徑
-                    // topic.id 可能是 "c-basic"，但檔案路徑是 "c/basic"
-                    const topicPath = topic.path
-                        ? join(scopePath, ...topic.path)
-                        : join(scopePath, topic.id);
-                    const templatesPath = join(topicPath, 'templates');
-
-                    try {
-                        await stat(templatesPath);
-                        const files = await readdir(templatesPath);
-                        console.log(`[TemplateRepository] Found ${files.length} files in ${templatesPath}`);
-
-                        for (const file of files) {
-                            if (file.endsWith('.json')) {
-                                try {
-                                    const filePath = join(templatesPath, file);
-                                    const content = await readFile(filePath, 'utf8');
-                                    const template: ExtendedTemplate = JSON.parse(content);
-
-                                    // 確保有主題資訊
-                                    // language 欄位應該在模板 JSON 中明確定義，不自動推斷
-                                    if (!template.topic) {
-                                        template.topic = topic.id;
-                                    }
-
-                                    this.templates.set(template.id, template);
-                                    console.log(`[TemplateRepository] Loaded template: ${template.id} from ${topic.id}, language: ${template.language}`);
-                                } catch (error) {
-                                    console.warn(`[TemplateRepository] Failed to load template ${file}:`, error);
-                                }
-                            }
-                        }
-                    } catch (error) {
-                        // templates 資料夾不存在，跳過
-                        console.log(`[TemplateRepository] No templates folder at ${templatesPath}: ${error}`);
-                    }
-                }
-            } else {
-                // 降級方案：遞迴掃描目錄
-                await this.scanDirectoryRecursively(scopePath);
-            }
 
             console.log(`[TemplateRepository] Loaded ${this.templates.size} templates`);
         } catch (error) {
@@ -276,9 +247,11 @@ export class TemplateRepository {
     }
 
     /**
-     * 遞迴掃描目錄載入模板（降級方案）
+     * 遞迴掃描目錄載入模板
+     * @param dirPath 目錄的絕對路徑
+     * @param relativePath 相對於 scope 的路徑（如 "python" 或 "c/basic"）
      */
-    private async scanDirectoryRecursively(dirPath: string): Promise<void> {
+    private async scanDirectoryRecursively(dirPath: string, relativePath: string): Promise<void> {
         const { join } = await import('path');
         const { readdir, readFile, stat } = await import('fs/promises');
 
@@ -299,15 +272,27 @@ export class TemplateRepository {
                                     const filePath = join(itemPath, file);
                                     const content = await readFile(filePath, 'utf8');
                                     const template: ExtendedTemplate = JSON.parse(content);
-                                    this.templates.set(template.id, template);
+
+                                    // 構建模板路徑作為 key
+                                    const templateName = file.replace('.json', '');
+                                    const templatePath = relativePath
+                                        ? `${relativePath}/templates/${templateName}`
+                                        : `templates/${templateName}`;
+
+                                    // 添加 topicPath 屬性用於前端顯示
+                                    (template as any).topicPath = relativePath || '';
+
+                                    this.templates.set(templatePath, template);
+                                    console.log(`[TemplateRepository] Loaded template: ${templatePath}, topicPath: ${relativePath}, language: ${template.language}`);
                                 } catch (error) {
                                     console.warn(`Failed to load template ${file}:`, error);
                                 }
                             }
                         }
-                    } else {
-                        // 遞迴掃描子目錄
-                        await this.scanDirectoryRecursively(itemPath);
+                    } else if (item !== 'links') {
+                        // 遞迴掃描子目錄（跳過 links 資料夾）
+                        const newRelativePath = relativePath ? `${relativePath}/${item}` : item;
+                        await this.scanDirectoryRecursively(itemPath, newRelativePath);
                     }
                 }
             }
@@ -318,19 +303,23 @@ export class TemplateRepository {
 
     /**
      * 保存模板到檔案系統
+     * @param template 模板物件
+     * @param topicPath 主題路徑（如 "python" 或 "c/basic"）
      */
-    private async saveTemplateFile(template: ExtendedTemplate): Promise<void> {
+    private async saveTemplateFile(template: ExtendedTemplate, topicPath: string): Promise<void> {
         const { join } = await import('path');
         const { writeFile, mkdir } = await import('fs/promises');
 
-        const dataPath = await this.dataPathService.getDataPath();
-        if (!dataPath) {
-            throw new Error('Data path not configured');
+        const scopePath = await this.dataPathService.getScopePath('local');
+        if (!scopePath) {
+            throw new Error('Scope path not configured');
         }
 
-        const topicPath = join(dataPath, template.topic);
-        const templatesPath = join(topicPath, 'templates');
-        const filePath = join(templatesPath, `${template.id}.json`);
+        const fullTopicPath = join(scopePath, topicPath);
+        const templatesPath = join(fullTopicPath, 'templates');
+        const filePath = join(templatesPath, `${template.name}.json`);
+
+        console.log(`[TemplateRepository] Saving template to: ${filePath}`);
 
         // 確保目錄存在
         await mkdir(templatesPath, { recursive: true });
@@ -341,35 +330,25 @@ export class TemplateRepository {
 
     /**
      * 從檔案系統刪除模板
+     * @param templateName 模板名稱（如 "hello-world"）
+     * @param topicPath 主題路徑（如 "python" 或 "c/basic"）
      */
-    private async deleteTemplateFile(templateId: string, topicId: string): Promise<void> {
+    private async deleteTemplateFile(templateName: string, topicPath: string): Promise<void> {
         const { join } = await import('path');
         const { unlink } = await import('fs/promises');
 
-        const dataPath = await this.dataPathService.getDataPath();
-        if (!dataPath) {
-            throw new Error('Data path not configured');
+        const scopePath = await this.dataPathService.getScopePath('local');
+        if (!scopePath) {
+            throw new Error('Scope path not configured');
         }
 
-        const topicPath = join(dataPath, topicId);
-        const templatesPath = join(topicPath, 'templates');
-        const filePath = join(templatesPath, `${templateId}.json`);
+        const fullTopicPath = join(scopePath, topicPath);
+        const templatesPath = join(fullTopicPath, 'templates');
+        const filePath = join(templatesPath, `${templateName}.json`);
+
+        console.log(`[TemplateRepository] Deleting template from: ${filePath}`);
 
         await unlink(filePath);
-    }
-
-    /**
-     * 生成唯一的模板 ID
-     */
-    private generateTemplateId(title: string): string {
-        const timestamp = Date.now();
-        const random = Math.random().toString(36).substring(2, 8);
-        const sanitized = title.toLowerCase()
-            .replace(/[^a-z0-9]+/g, '-')
-            .replace(/^-|-$/g, '')
-            .substring(0, 20);
-
-        return `${sanitized}-${timestamp}-${random}`;
     }
 
     /**

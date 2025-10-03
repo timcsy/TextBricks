@@ -43,13 +43,13 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
         }
     }
 
-    private _getLanguageTagName(languageId: string): string {
+    private _getLanguageTagName(languageName: string): string {
         if (!this._scopeConfig) {
-            return languageId.toUpperCase();
+            return languageName.toUpperCase();
         }
 
-        const language = this._scopeConfig.languages?.find((lang: any) => lang.id === languageId);
-        return language?.tagName || languageId.toUpperCase();
+        const language = this._scopeConfig.languages?.find((lang: any) => lang.name === languageName);
+        return language?.tagName || languageName.toUpperCase();
     }
 
     private _getFavorites(): string[] {
@@ -105,7 +105,7 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
 
         // 收集當前主題的直接子主題 ID
         allCards
-            .filter(card => card.type === 'topic' && card.topic === this._currentTopicPath)
+            .filter(card => card.type === 'topic' && card.topicPath === this._currentTopicPath)
             .forEach(card => {
                 if (card.target) {
                     subtopicIds.add(card.target);
@@ -114,25 +114,31 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
 
         // 顯示當前主題及其子主題的項目
         return items.filter(item => {
-            if (!item.topic) return false;
-            return item.topic === this._currentTopicPath || subtopicIds.has(item.topic);
+            if (!item.topicPath) return false;
+            return item.topicPath === this._currentTopicPath || subtopicIds.has(item.topicPath);
         });
     }
 
     private _getRecommendedByUsage(items: any[], limit: number = 6): any[] {
         return items
-            .map(item => ({
-                ...item,
-                usageCount: this._getUsageCount(item.id)
-            }))
-            .filter(item => item.usageCount > 0) // 只顯示有使用記錄的
-            .sort((a, b) => b.usageCount - a.usageCount) // 按使用次數降序排列
+            .map(item => {
+                const itemPath = (item as any).topicPath ? `${(item as any).topicPath}/templates/${item.name}` : item.name;
+                return {
+                    ...item,
+                    usageCount: this._getUsageCount(itemPath)
+                };
+            })
+            .filter(item => item.usageCount > 0)
+            .sort((a, b) => b.usageCount - a.usageCount)
             .slice(0, limit);
     }
 
     private _getFavoriteItems(items: any[]): any[] {
         const favorites = this._getFavorites();
-        return items.filter(item => favorites.includes(item.id));
+        return items.filter(item => {
+            const itemPath = (item as any).topicPath ? `${(item as any).topicPath}/templates/${item.name}` : item.name;
+            return favorites.includes(itemPath);
+        });
     }
 
     private _getFavoriteItemsForDisplay(): any[] {
@@ -142,65 +148,72 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
         const favorites = this._getFavorites();
 
         // Find favorited templates
-        const favoriteTemplates = allTemplates.filter(template => favorites.includes(template.id));
-
-        // Find favorited cards (topics and links)
-        // Note: For topic cards, we check both card.id and card.target because card.target is the topic path
-        // For link cards, we only check card.id
-        const favoriteCards = allCards.filter(card => {
-            if (card.type === 'topic') {
-                // For topic cards, check both id and target (topic path)
-                return favorites.includes(card.id) || favorites.includes(card.target);
-            } else {
-                // For link cards and others, only check id
-                return favorites.includes(card.id);
-            }
+        const favoriteTemplates = allTemplates.filter(template => {
+            const templatePath = (template as any).topicPath ? `${(template as any).topicPath}/templates/${template.name}` : template.name;
+            return favorites.includes(templatePath);
         });
 
-        // Find favorited main topics (like "c", "python", "javascript")
-        // Get all possible topic names from scope configuration
-        const allPossibleTopics = this._scopeConfig?.topics || [];
-        const favoriteMainTopics = allPossibleTopics
-            .filter(topicName => favorites.includes(topicName))
-            .map(topicName => {
-                const managedTopic = this.templateEngine.getTopicByName?.(topicName);
-                return {
-                    type: 'topic',
-                    id: topicName,
-                    title: managedTopic?.displayName || topicName,
-                    description: managedTopic?.description || `${topicName} 相關內容`,
-                    documentation: managedTopic?.documentation || '', // Include documentation field
-                    topic: '', // Main topics are at root level
-                    target: topicName,
-                    language: topicName
-                };
-            });
+        // Find favorited cards (topics and links)
+        const favoriteCards = allCards.filter(card => {
+            let cardPath: string;
+            if (card.type === 'topic') {
+                cardPath = card.target || card.name;
+            } else if (card.type === 'link') {
+                cardPath = card.topicPath ? `${card.topicPath}/links/${card.name}` : card.name;
+            } else {
+                cardPath = card.topicPath ? `${card.topicPath}/templates/${card.name}` : card.name;
+            }
+            return favorites.includes(cardPath);
+        });
 
-        // Combine items and remove duplicates based on ID
-        const seenIds = new Set();
+        // Find favorited main topics
+        const allTopicConfigs = this.templateEngine.getAllTopicConfigs();
+        const favoriteMainTopics = allTopicConfigs
+            .filter(topic => favorites.includes(topic.name))
+            .map(topic => ({
+                type: 'topic' as const,
+                name: topic.name,
+                title: topic.title,
+                description: topic.description,
+                documentation: topic.documentation || '',
+                topicPath: '',
+                target: topic.name,
+                language: topic.name
+            }));
+
+        // Combine items and remove duplicates based on path
+        const seenPaths = new Set();
         const allFavoriteItems = [];
 
         // Add templates first
         favoriteTemplates.forEach(template => {
-            if (!seenIds.has(template.id)) {
-                seenIds.add(template.id);
+            const path = (template as any).topicPath ? `${(template as any).topicPath}/templates/${template.name}` : template.name;
+            if (!seenPaths.has(path)) {
+                seenPaths.add(path);
                 allFavoriteItems.push(template);
             }
         });
 
         // Add cards, but check for duplicates
         favoriteCards.forEach(card => {
-            const cardId = card.id || card.target;
-            if (cardId && !seenIds.has(cardId)) {
-                seenIds.add(cardId);
+            let cardPath: string;
+            if (card.type === 'topic') {
+                cardPath = card.target || card.name;
+            } else if (card.type === 'link') {
+                cardPath = card.topicPath ? `${card.topicPath}/links/${card.name}` : card.name;
+            } else {
+                cardPath = card.topicPath ? `${card.topicPath}/templates/${card.name}` : card.name;
+            }
+            if (cardPath && !seenPaths.has(cardPath)) {
+                seenPaths.add(cardPath);
                 allFavoriteItems.push(card);
             }
         });
 
         // Add main topics, but check for duplicates
         favoriteMainTopics.forEach(mainTopic => {
-            if (!seenIds.has(mainTopic.id)) {
-                seenIds.add(mainTopic.id);
+            if (!seenPaths.has(mainTopic.name)) {
+                seenPaths.add(mainTopic.name);
                 allFavoriteItems.push(mainTopic);
             }
         });
@@ -215,7 +228,7 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
 
             // 收集當前主題的直接子主題 ID
             allCards
-                .filter(card => card.type === 'topic' && card.topic === this._currentTopicPath)
+                .filter(card => card.type === 'topic' && card.topicPath === this._currentTopicPath)
                 .forEach(card => {
                     if (card.target) {
                         subtopicIds.add(card.target);
@@ -224,8 +237,8 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
 
             // When in a specific topic, only show favorites under current topic
             return allFavoriteItems.filter(item => {
-                if (!item.topic) return true; // Main topics have empty topic, show them at root
-                return item.topic === this._currentTopicPath || subtopicIds.has(item.topic);
+                if (!item.topicPath) return true; // Main topics have empty topic, show them at root
+                return item.topicPath === this._currentTopicPath || subtopicIds.has(item.topicPath);
             });
         }
     }
@@ -352,7 +365,8 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
     }
 
     private _showTopicDocumentation(topicName: string) {
-        const managedTopic = this.templateEngine.getTopicByName?.(topicName);
+        const allTopicConfigs = this.templateEngine.getAllTopicConfigs();
+        const managedTopic = allTopicConfigs.find(t => t.name === topicName);
         if (managedTopic && managedTopic.documentation) {
             if (this._documentationProvider) {
                 this._documentationProvider.showTopicDocumentation(managedTopic);
@@ -527,43 +541,26 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
 
         // If we have a current topic path, build the breadcrumb trail
         if (this._currentTopicPath) {
-            // 獲取所有主題配置，構建從根到當前主題的完整路徑
+            const pathParts = this._currentTopicPath.split('/');
             const allTopics = this.templateEngine.getAllTopicConfigs?.() || [];
-            const currentTopic = allTopics.find(t => t.id === this._currentTopicPath);
 
-            if (currentTopic) {
-                // 構建主題層級路徑（從根到當前）
-                const topicPath: Array<{id: string, displayName: string}> = [];
-                let topic = currentTopic;
+            // Build breadcrumb for each path segment
+            pathParts.forEach((segment, index) => {
+                const isLast = index === pathParts.length - 1;
+                const currentPath = pathParts.slice(0, index + 1).join('/');
 
-                while (topic) {
-                    topicPath.unshift({
-                        id: topic.id,
-                        displayName: topic.displayName || topic.name
-                    });
+                // Find the topic config for this segment
+                const topic = allTopics.find(t => t.name === segment);
+                const title = topic?.title || segment;
 
-                    if (topic.parentId) {
-                        topic = allTopics.find(t => t.id === topic.parentId) || null;
-                    } else {
-                        topic = null;
-                    }
+                breadcrumbHtml += ` <span class="breadcrumb-separator">></span> `;
+
+                if (isLast) {
+                    breadcrumbHtml += `<span class="breadcrumb-item active">${title}</span>`;
+                } else {
+                    breadcrumbHtml += `<span class="breadcrumb-item clickable" data-navigate-path="${currentPath}">${title}</span>`;
                 }
-
-                // 生成麵包屑 HTML
-                topicPath.forEach((pathItem, index) => {
-                    const isLast = index === topicPath.length - 1;
-
-                    breadcrumbHtml += ` <span class="breadcrumb-separator">></span> `;
-
-                    if (isLast) {
-                        // Last item is not clickable (current page)
-                        breadcrumbHtml += `<span class="breadcrumb-item active">${pathItem.displayName}</span>`;
-                    } else {
-                        // Previous items are clickable
-                        breadcrumbHtml += `<span class="breadcrumb-item clickable" data-navigate-path="${pathItem.id}">${pathItem.displayName}</span>`;
-                    }
-                });
-            }
+            });
         }
 
         return breadcrumbHtml;
@@ -606,9 +603,11 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
         }
 
         // Try to get title from managed topics
-        const managedTopic = this.templateEngine.getTopicByName?.(topicPath);
-        if (managedTopic?.displayName) {
-            return managedTopic.displayName;
+        const allTopicConfigs = this.templateEngine.getAllTopicConfigs();
+        const topicName = topicPath.split('/').pop() || topicPath;
+        const managedTopic = allTopicConfigs.find(t => t.name === topicName);
+        if (managedTopic?.title) {
+            return managedTopic.title;
         }
 
         // Fall back to the last part of the path
@@ -659,16 +658,17 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
             // At root level - get all root topics
             const rootTopics = new Set<string>();
             allCards.forEach(card => {
-                if (card.topic && !card.topic.includes('/')) {
-                    rootTopics.add(card.topic);
+                if (card.topicPath && !card.topicPath.includes('/')) {
+                    rootTopics.add(card.topicPath);
                 }
             });
 
+            const allTopicConfigs = this.templateEngine.getAllTopicConfigs();
             rootTopics.forEach(topicPath => {
-                const managedTopic = this.templateEngine.getTopicByName?.(topicPath);
+                const managedTopic = allTopicConfigs.find(t => t.name === topicPath);
                 topics.push({
                     path: topicPath,
-                    title: managedTopic?.displayName || topicPath
+                    title: managedTopic?.title || topicPath
                 });
             });
         } else {
@@ -679,28 +679,29 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
 
             const siblingTopics = new Set<string>();
             allCards.forEach(card => {
-                if (card.topic) {
-                    const cardPathParts = card.topic.split('/');
+                if (card.topicPath) {
+                    const cardPathParts = card.topicPath.split('/');
                     if (cardPathParts.length === currentLevel) {
                         if (parentPath === '') {
                             // Root level siblings
-                            siblingTopics.add(card.topic);
+                            siblingTopics.add(card.topicPath);
                         } else {
                             // Check if it's a sibling (same parent)
                             const cardParentPath = cardPathParts.slice(0, -1).join('/');
                             if (cardParentPath === parentPath) {
-                                siblingTopics.add(card.topic);
+                                siblingTopics.add(card.topicPath);
                             }
                         }
                     }
                 }
             });
 
+            const allTopicConfigs = this.templateEngine.getAllTopicConfigs();
             siblingTopics.forEach(topicPath => {
-                const managedTopic = this.templateEngine.getTopicByName?.(topicPath);
+                const managedTopic = allTopicConfigs.find(t => t.name === topicPath);
                 topics.push({
                     path: topicPath,
-                    title: managedTopic?.displayName || topicPath.split('/').pop() || topicPath
+                    title: managedTopic?.title || topicPath.split('/').pop() || topicPath
                 });
             });
         }
@@ -769,13 +770,14 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
     }
 
     private _generateRecommendedTemplateCardHtml(template: any, type: 'recommended' | 'favorite'): string {
-        const usageCount = template.usageCount || this._getUsageCount(template.id);
+        const templatePath = template.topicPath ? `${template.topicPath}/templates/${template.name}` : template.name;
+        const usageCount = template.usageCount || this._getUsageCount(templatePath);
         const hasDocumentation = template.documentation && template.documentation.trim().length > 0;
-        const isFavorite = this._isFavorite(template.id);
+        const isFavorite = this._isFavorite(templatePath);
 
         return `
             <div class="template-card recommended-template ${type === 'favorite' ? 'favorite-template' : ''}"
-                 data-template-id="${template.id}"
+                 data-template-id="${templatePath}"
                  data-template-code="${this._escapeHtml(template.code)}"
                  data-has-documentation="${hasDocumentation}"
                  data-card-type="template"
@@ -788,7 +790,7 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
                     <div class="card-actions template-actions">
                         <span class="recommended-star">⭐</span>
                         <button class="action-btn favorite-btn"
-                                data-item-id="${template.id}"
+                                data-item-id="${templatePath}"
                                 title="${isFavorite ? '取消收藏' : '加入收藏'}">
                             <span class="icon">${isFavorite ? '❤️' : '♡'}</span>
                         </button>
@@ -823,17 +825,17 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
         // Otherwise show top-level topics (原有的邏輯)
         // 首頁只顯示頂層主題（無 parentId 的主題）的直接內容
         const rootTopics = this.templateEngine.getRootTopics?.() || [];
-        const rootTopicIds = new Set(rootTopics.map(t => t.id));
+        const rootTopicNames = new Set(rootTopics.map(t => t.name));
 
-        console.log('[WebviewProvider] Root topics:', Array.from(rootTopicIds));
+        console.log('[WebviewProvider] Root topics:', Array.from(rootTopicNames));
 
         // 只保留屬於頂層主題的卡片
-        const topLevelCards = allCards.filter(card => rootTopicIds.has(card.topic));
+        const topLevelCards = allCards.filter(card => card.topicPath && rootTopicNames.has(card.topicPath));
 
         // 按主題分組
         const cardsByMainTopic = new Map<string, ExtendedCard[]>();
         topLevelCards.forEach(card => {
-            const mainTopic = card.topic;
+            const mainTopic = card.topicPath || '';
             if (!cardsByMainTopic.has(mainTopic)) {
                 cardsByMainTopic.set(mainTopic, []);
             }
@@ -858,7 +860,7 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
 
             console.log(`[WebviewProvider] Topic "${mainTopicName}": currentLevel=${currentLevelCards.length}, topics=${topicCards.length}, templates=${templateCards.length}, links=${linkCards.length}`);
             if (currentLevelCards.length > 0 && templateCards.length === 0) {
-                console.log(`[WebviewProvider] WARNING: No template cards found in "${mainTopicName}"! Card types:`, currentLevelCards.map(c => ({ id: c.id, type: c.type })));
+                console.log(`[WebviewProvider] WARNING: No template cards found in "${mainTopicName}"! Card types:`, currentLevelCards.map(c => ({ name: c.name, type: c.type })));
             }
 
             const cardsHtml = [
@@ -870,7 +872,8 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
             // 獲取主題物件資訊
             // Extract topic name from path - for c/advanced, we need "advanced"
             const topicName = mainTopicName.split('/').pop() || mainTopicName;
-            const managedTopic = this.templateEngine.getTopicByName?.(topicName);
+            const allTopicConfigs = this.templateEngine.getAllTopicConfigs();
+        const managedTopic = allTopicConfigs.find(t => t.name === topicName);
 
 
             // 計算主題下的卡片和子主題內容總數
@@ -892,7 +895,7 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
                     mainTopicName,
                     topicName,
                     hasDocumentation,
-                    managedTopicId: managedTopic?.id,
+                    managedTopicName: managedTopic?.name,
                     documentation: managedTopic?.documentation?.substring(0, 50) + '...'
                 });
             }
@@ -920,7 +923,7 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
                             <h3 class="topic-title">
                                 <span class="topic-toggle"></span>
                                 ${managedTopic?.display?.icon ? `<span class="topic-icon">${managedTopic.display.icon}</span>` : ''}
-                                ${managedTopic?.displayName || mainTopicName}
+                                ${managedTopic?.title || mainTopicName}
                             </h3>
                             <div class="topic-actions">
                                 <button class="action-btn favorite-btn"
@@ -955,15 +958,15 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
         }).join('');
     }
 
-    private _generateTemplateCardHtml(template: Template): string {        
-        // Check if this template is recommended
-        const isRecommended = this._isTemplateRecommended(template.id);
+    private _generateTemplateCardHtml(template: Template): string {
+        const templatePath = (template as any).topicPath ? `${(template as any).topicPath}/templates/${template.name}` : template.name;
+        const isRecommended = this._isTemplateRecommended(templatePath);
         const templateClass = isRecommended ? 'template-card recommended-template' : 'template-card';
         const hasDocumentation = template.documentation && template.documentation.trim().length > 0;
-        
+
         return `
-            <div class="${templateClass}" 
-                 data-template-id="${template.id}" 
+            <div class="${templateClass}"
+                 data-template-id="${templatePath}"
                  data-template-code="${this._escapeHtml(template.code)}"
                  data-has-documentation="${hasDocumentation}"
                  draggable="true">
@@ -988,7 +991,7 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
         `;
     }
 
-    private _isTemplateRecommended(templateId: string): boolean {
+    private _isTemplateRecommended(templatePath: string): boolean {
         if (!this.managementService) {
             return false;
         }
@@ -996,7 +999,10 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
         try {
             // 檢查所有推薦模板
             const recommendedTemplates = this.managementService.getRecommendedTemplates(6);
-            return recommendedTemplates.some(template => template.id === templateId);
+            return recommendedTemplates.some(template => {
+                const tPath = (template as any).topicPath ? `${(template as any).topicPath}/templates/${template.name}` : template.name;
+                return tPath === templatePath;
+            });
         } catch (error) {
             return false;
         }
@@ -1004,7 +1010,7 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
 
     private _generateSpecificTopicHtml(allCards: ExtendedCard[], topicPath: string): string {
         // Get all cards that belong to the current topic path
-        const currentPathCards = allCards.filter(card => card.topic === topicPath);
+        const currentPathCards = allCards.filter(card => card.topicPath === topicPath);
 
         // Separate current level cards by type
         const currentTopicCards = currentPathCards.filter(card => card.type === 'topic');
@@ -1017,7 +1023,7 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
         if (currentTopicCards.length > 0) {
             html = currentTopicCards.map(topicCard => {
                 // 獲取子主題的所有卡片
-                const subtopicCards = allCards.filter(card => card.topic === topicCard.target);
+                const subtopicCards = allCards.filter(card => card.topicPath === topicCard.target);
                 const subtopicTemplates = subtopicCards.filter(card => card.type === 'template');
                 const subtopicLinks = subtopicCards.filter(card => card.type === 'link');
                 const subtopicSubtopics = subtopicCards.filter(card => card.type === 'topic');
@@ -1030,7 +1036,7 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
 
                 // 獲取子主題資訊
                 const allTopics = this.templateEngine.getAllTopicConfigs?.() || [];
-                const managedTopic = allTopics.find(t => t.id === topicCard.target);
+                const managedTopic = allTopics.find(t => t.name === topicCard.target);
                 const topicDisplayName = topicCard.title;
                 const topicDescription = topicCard.description;
 
@@ -1089,8 +1095,9 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
         // 如果當前層級有剩餘的模板或連結（不屬於子主題的），集中顯示
         if (currentTemplateCards.length > 0 || currentLinkCards.length > 0) {
             const allTopics = this.templateEngine.getAllTopicConfigs?.() || [];
-            const managedTopic = allTopics.find(t => t.id === topicPath);
-            const topicDisplayName = managedTopic?.displayName || topicPath;
+            const topicName = topicPath.split('/').pop() || topicPath;
+            const managedTopic = allTopics.find(t => t.name === topicName);
+            const topicDisplayName = managedTopic?.title || topicPath;
 
             const templatesHtml = currentTemplateCards.map(card => this._generateTemplateCardFromCard(card)).join('');
             const linksHtml = currentLinkCards.map(card => this._generateLinkCardHtml(card)).join('');
@@ -1141,11 +1148,12 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
 
     private _generateTopicCardHtml(card: ExtendedCard): string {
         // Check for documentation from both the card and the managed topic
-        const topicId = card.target || card.id;
+        const topicTarget = card.target || card.name;
 
-        // 使用 TopicManager 直接查找主題配置（通過 ID）
+        // 使用 TopicManager 直接查找主題配置（通過 name）
         const allTopics = this.templateEngine.getAllTopicConfigs?.() || [];
-        const managedTopic = allTopics.find(t => t.id === topicId);
+        const topicName = topicTarget.split('/').pop() || topicTarget;
+        const managedTopic = allTopics.find(t => t.name === topicName);
 
         const hasDocumentation = (card.documentation && card.documentation.trim().length > 0) ||
                                  (managedTopic && managedTopic.documentation && managedTopic.documentation.trim().length > 0);
@@ -1153,7 +1161,7 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
 
         return `
             <div class="topic-card"
-                 data-topic-path="${card.target || card.id}"
+                 data-topic-path="${card.target || card.name}"
                  data-card-type="topic">
                 <div class="card-header">
                     <h4 class="card-title">
@@ -1162,13 +1170,13 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
                     </h4>
                     <div class="card-actions">
                         <button class="action-btn favorite-btn"
-                                data-item-id="${card.target || card.id}"
-                                title="${this._isFavorite(card.target || card.id) ? '取消收藏' : '加入收藏'}">
-                            <span class="icon">${this._isFavorite(card.target || card.id) ? '❤️' : '♡'}</span>
+                                data-item-id="${card.target || card.name}"
+                                title="${this._isFavorite(card.target || card.name) ? '取消收藏' : '加入收藏'}">
+                            <span class="icon">${this._isFavorite(card.target || card.name) ? '❤️' : '♡'}</span>
                         </button>
                         ${hasDocumentation ? `
                             <button class="action-btn doc-btn"
-                                    data-topic-name="${managedTopic?.name || topicId}"
+                                    data-topic-name="${managedTopic?.name || topicName}"
                                     title="查看說明文件">
                                 <span class="icon">📖</span>
                             </button>
@@ -1200,26 +1208,27 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
         if (card.target) {
             // Check if target includes 'templates/' path
             if (card.target.includes('/templates/') || card.target.includes('templates/')) {
-                const templateId = card.target.split('/').pop();
-                targetTemplate = allTemplates.find(t => t.id === templateId);
+                const templateName = card.target.split('/').pop();
+                targetTemplate = allTemplates.find(t => t.name === templateName);
                 isTemplateLink = !!targetTemplate;
             } else {
-                // Try direct template ID lookup
-                targetTemplate = allTemplates.find(t => t.id === card.target);
+                // Try direct template name lookup
+                targetTemplate = allTemplates.find(t => t.name === card.target);
                 isTemplateLink = !!targetTemplate;
             }
         }
 
         if (isTemplateLink && targetTemplate) {
             // Display as template card with link context
-                const isRecommended = this._isTemplateRecommended(targetTemplate.id);
+                const templatePath = (targetTemplate as any).topicPath ? `${(targetTemplate as any).topicPath}/templates/${targetTemplate.name}` : targetTemplate.name;
+                const isRecommended = this._isTemplateRecommended(templatePath);
                 const templateClass = isRecommended ? 'template-card recommended-template' : 'template-card';
                 const templateHasDocumentation = targetTemplate.documentation && targetTemplate.documentation.trim().length > 0;
-                const usageCount = this._getUsageCount(targetTemplate.id);
+                const usageCount = this._getUsageCount(templatePath);
 
                 return `
                     <div class="${templateClass}"
-                         data-template-id="${targetTemplate.id}"
+                         data-template-id="${templatePath}"
                          data-template-code="${this._escapeHtml(targetTemplate.code)}"
                          data-has-documentation="${templateHasDocumentation}"
                          data-card-type="template"
@@ -1232,9 +1241,9 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
                             <div class="card-actions template-actions">
                                 ${isRecommended ? '<span class="recommended-star">⭐</span>' : ''}
                                 <button class="action-btn favorite-btn"
-                                        data-item-id="${targetTemplate.id}"
-                                        title="${this._isFavorite(targetTemplate.id) ? '取消收藏' : '加入收藏'}">
-                                    <span class="icon">${this._isFavorite(targetTemplate.id) ? '❤️' : '♡'}</span>
+                                        data-item-id="${templatePath}"
+                                        title="${this._isFavorite(templatePath) ? '取消收藏' : '加入收藏'}">
+                                    <span class="icon">${this._isFavorite(templatePath) ? '❤️' : '♡'}</span>
                                 </button>
                                 <button class="action-btn preview-btn" title="預覽程式碼">
                                     <span class="icon">👁️</span>
@@ -1266,13 +1275,13 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
                     </h4>
                     <div class="card-actions">
                         <button class="action-btn favorite-btn"
-                                data-item-id="${card.id}"
-                                title="${this._isFavorite(card.id) ? '取消收藏' : '加入收藏'}">
-                            <span class="icon">${this._isFavorite(card.id) ? '❤️' : '♡'}</span>
+                                data-item-id="${card.topicPath ? `${card.topicPath}/links/${card.name}` : card.name}"
+                                title="${this._isFavorite(card.topicPath ? `${card.topicPath}/links/${card.name}` : card.name) ? '取消收藏' : '加入收藏'}">
+                            <span class="icon">${this._isFavorite(card.topicPath ? `${card.topicPath}/links/${card.name}` : card.name) ? '❤️' : '♡'}</span>
                         </button>
                         ${hasDocumentation ? `
                             <button class="action-btn doc-btn"
-                                    data-link-id="${card.id}"
+                                    data-link-id="${card.topicPath ? `${card.topicPath}/links/${card.name}` : card.name}"
                                     title="查看說明文件">
                                 <span class="icon">📖</span>
                             </button>
@@ -1293,14 +1302,15 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
 
     private _generateTemplateCardFromCard(card: ExtendedCard): string {
         // Check if this template is recommended
-        const isRecommended = this._isTemplateRecommended(card.id);
+        const cardPath = card.topicPath ? `${card.topicPath}/templates/${card.name}` : card.name;
+        const isRecommended = this._isTemplateRecommended(cardPath);
         const templateClass = isRecommended ? 'template-card recommended-template' : 'template-card';
         const hasDocumentation = card.documentation && card.documentation.trim().length > 0;
-        const usageCount = this._getUsageCount(card.id);
+        const usageCount = this._getUsageCount(cardPath);
 
         return `
             <div class="${templateClass}"
-                 data-template-id="${card.id}"
+                 data-template-id="${cardPath}"
                  data-template-code="${this._escapeHtml(card.code || '')}"
                  data-has-documentation="${hasDocumentation}"
                  data-card-type="template"
@@ -1313,9 +1323,9 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
                     <div class="card-actions template-actions">
                         ${isRecommended ? '<span class="recommended-star">⭐</span>' : ''}
                         <button class="action-btn favorite-btn"
-                                data-item-id="${card.id}"
-                                title="${this._isFavorite(card.id) ? '取消收藏' : '加入收藏'}">
-                            <span class="icon">${this._isFavorite(card.id) ? '❤️' : '♡'}</span>
+                                data-item-id="${cardPath}"
+                                title="${this._isFavorite(cardPath) ? '取消收藏' : '加入收藏'}">
+                            <span class="icon">${this._isFavorite(cardPath) ? '❤️' : '♡'}</span>
                         </button>
                         <button class="action-btn preview-btn" title="預覽程式碼">
                             <span class="icon">👁️</span>
@@ -1347,8 +1357,8 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
         const subtopicCounts: {[key: string]: number} = {};
 
         allCards.forEach(card => {
-            if (card.topic.startsWith(mainTopic + '/')) {
-                const subtopic = card.topic.split('/')[1];
+            if (card.topicPath && card.topicPath.startsWith(mainTopic + '/')) {
+                const subtopic = card.topicPath.split('/')[1];
                 if (subtopic) {
                     subtopicCounts[subtopic] = (subtopicCounts[subtopic] || 0) + 1;
                 }

@@ -60,11 +60,11 @@ const TextBricksUtils = {
     getTopicDisplayName(topicPath, topicsData) {
         if (!topicPath) return '未分類';
 
-        // 如果有主題數據，查找對應的 displayName
+        // 如果有主題數據，查找對應的 title
         if (topicsData) {
-            const topic = topicsData.find(t => t.id === topicPath);
-            if (topic?.displayName) {
-                return topic.displayName;
+            const topic = topicsData.find(t => t.id === topicPath || t.name === topicPath);
+            if (topic?.title) {
+                return topic.title;
             }
         }
 
@@ -77,17 +77,17 @@ const TextBricksUtils = {
 
     /**
      * 獲取語言標籤名稱
-     * @param {string} languageId - 語言 ID
+     * @param {string} languageName - 語言名稱
      * @param {Array} languages - 語言列表
      * @returns {string} 語言標籤名稱
      */
-    getLanguageTagName(languageId, languages) {
+    getLanguageTagName(languageName, languages) {
         if (!languages) {
-            return languageId.toUpperCase();
+            return languageName.toUpperCase();
         }
 
-        const language = languages.find(lang => lang.id === languageId);
-        return language?.displayName || languageId.toUpperCase();
+        const language = languages.find(lang => lang.name === languageName);
+        return language?.title || languageName.toUpperCase();
     },
 
     // ========== 日期時間 ==========

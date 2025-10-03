@@ -1,5 +1,6 @@
 {
-  "id": "js-variables",
+  "type": "template",
+  "name": "variables",
   "title": "變數宣告",
   "description": "JavaScript 基本變數宣告範例",
   "language": "javascript",

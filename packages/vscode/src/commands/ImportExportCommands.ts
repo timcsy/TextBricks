@@ -36,7 +36,8 @@ export class ImportExportCommands {
             const options = await this.getImportOptions();
             if (!options) return;
 
-            const result = await this.templateEngine.importTemplates(importData, options);
+            const targetTopicPath = 'imported';
+            const result = await this.templateEngine.importTemplates(importData, targetTopicPath, options);
 
             // 顯示結果
             await this.showImportResult(result);

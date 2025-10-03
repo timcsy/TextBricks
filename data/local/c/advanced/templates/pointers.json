@@ -1,5 +1,6 @@
 {
-  "id": "c-pointers",
+  "type": "template",
+  "name": "pointers",
   "title": "指標基礎",
   "description": "C 語言指標的基本使用",
   "language": "c",

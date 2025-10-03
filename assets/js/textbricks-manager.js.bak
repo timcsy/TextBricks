@@ -1088,6 +1088,8 @@ ${escapeHtml(template.code)}
 
 
     function getTopicForm(topic) {
+        console.log('[getTopicForm] Topic:', topic);
+        console.log('[getTopicForm] Topic parent:', topic?.parent);
 
         // 計算當前主題的完整路徑
         const currentTopicPath = topic ? (Array.isArray(topic.path) ? topic.path.join('/') : topic.path) : '';
@@ -1095,6 +1097,7 @@ ${escapeHtml(template.code)}
 
         // 計算所屬主題的顯示路徑
         const parentDisplayPath = topic?.parent ? getDisplayPath(topic.parent) : '';
+        console.log('[getTopicForm] Parent path:', topic?.parent, 'Display:', parentDisplayPath);
 
         return `
             <div class="form-group">
@@ -1387,10 +1390,12 @@ ${escapeHtml(template.code)}
         if (selectBtn) {
             selectBtn.addEventListener('click', () => {
                 if (selectedPath) {
+                    console.log('[Topic Browser] Selected path:', selectedPath);
 
                     const targetInput = document.getElementById(targetInputId);
                     if (targetInput) {
                         targetInput.value = selectedPath;
+                        console.log('[Topic Browser] Set target input:', targetInputId, '=', selectedPath);
                     }
 
                     // 如果有顯示輸入框，更新顯示路徑（使用 title 組成）
@@ -1399,6 +1404,7 @@ ${escapeHtml(template.code)}
                         if (displayInput) {
                             const displayPath = getDisplayPath(selectedPath);
                             displayInput.value = displayPath;
+                            console.log('[Topic Browser] Set display input:', displayInputId, '=', displayPath);
                         }
                     }
 
@@ -1450,6 +1456,7 @@ ${escapeHtml(template.code)}
             const currentName = topic.name;
             const topicPath = parentPath ? `${parentPath}/${currentName}` : currentName;
 
+            console.log('[buildTopicOnlyHierarchyHTML] Parent:', parentPath, 'Current:', currentName, 'Final path:', topicPath);
 
             html += `
                 <div class="tree-node" data-path="${escapeHtml(topicPath)}" data-type="topic">
@@ -1578,6 +1585,7 @@ ${escapeHtml(template.code)}
         const hierarchy = currentData.topics.hierarchy;
         let html = '';
 
+        console.log('Using hierarchy.roots:', hierarchy.roots);
 
         if (hierarchy.roots && hierarchy.roots.length > 0) {
             // Build tree from roots array
@@ -1586,6 +1594,7 @@ ${escapeHtml(template.code)}
             });
         }
 
+        console.log('Generated HTML:', html);
         return html;
     }
 
@@ -1781,6 +1790,7 @@ ${escapeHtml(template.code)}
             return '<div class="no-data">沒有模板數據</div>';
         }
 
+        console.log('Building tree from templates:', currentData.templates);
 
         // Group templates by language and topic
         const grouped = {};
@@ -1856,6 +1866,7 @@ ${escapeHtml(template.code)}
             `;
         });
 
+        console.log('Generated HTML from templates:', html);
         return html;
     }
 
@@ -2066,6 +2077,7 @@ ${escapeHtml(template.code)}
 
     // Select a target in the browser
     window.selectTarget = function(item) {
+        console.log('selectTarget called with:', item);
         // Remove previous selection
         document.querySelectorAll('.tree-item.selected').forEach(el => {
             el.classList.remove('selected');
@@ -2089,10 +2101,12 @@ ${escapeHtml(template.code)}
                 const selectedType = item.dataset.type;
                 const selectedLabel = item.querySelector('.tree-label').textContent;
 
+                console.log('[Target Browser] Selected path:', selectedPath, 'type:', selectedType);
 
                 // Generate full display path for the selected item using getDisplayPath
                 const fullDisplayPath = getDisplayPath(selectedPath);
 
+                console.log('[Target Browser] Display path:', fullDisplayPath);
 
                 // Update the main form - now using hidden input + display input pattern
                 const targetInput = document.getElementById('link-target');
@@ -2155,6 +2169,8 @@ ${escapeHtml(template.code)}
         const modal = document.getElementById('modal');
         const type = modal.dataset.type;
 
+        console.log('[saveItem] Modal type:', type);
+        console.log('[saveItem] editingItem:', editingItem);
 
         try {
             let data, messageType, identifier;
@@ -2162,11 +2178,14 @@ ${escapeHtml(template.code)}
             switch (type) {
                 case 'template':
                     data = getTemplateData();
+                    console.log('[saveItem] Template data:', data);
                     if (editingItem) {
                         messageType = 'updateTemplate';
                         identifier = getItemIdentifier(editingItem, 'template');
+                        console.log('[saveItem] Update mode - template path:', identifier);
                     } else {
                         messageType = 'createTemplate';
+                        console.log('[saveItem] Create mode');
                     }
                     break;
 
@@ -2714,6 +2733,7 @@ ${escapeHtml(template.code)}
         populateAvailableLanguages();
         clearJsonInput();
         jsonModal.classList.add('active');
+        console.log('JSON modal opened');
     }
 
     function closeJsonModal() {
@@ -2724,6 +2744,7 @@ ${escapeHtml(template.code)}
         }
         jsonModal.classList.remove('active');
         clearJsonInput();
+        console.log('JSON modal closed');
     }
 
     function populateAvailableLanguages() {
@@ -3227,6 +3248,7 @@ ${description}
         const docInput = document.getElementById('template-documentation');
         const typeSelect = document.getElementById('template-documentation-type');
         
+        console.log('Preview documentation called');
         console.log('docInput:', docInput);
         console.log('typeSelect:', typeSelect);
         
@@ -3591,6 +3613,7 @@ ${description}
     // ==================== Statistics and Overview ====================
 
     function renderOverview() {
+        console.log('Rendering overview tab...');
 
         // 確保總覽頁面是活躍的
         showTab('overview');
@@ -3599,6 +3622,7 @@ ${description}
         updateOverviewStats();
         updateRecentActivity();
 
+        console.log('Overview tab rendered successfully');
     }
 
     function updateOverviewStats() {
@@ -3677,6 +3701,7 @@ ${description}
     }
 
     function renderFavoritesTab() {
+        console.log('Rendering favorites tab...');
 
         // 確保收藏頁面是活躍的
         showTab('favorites');
@@ -3685,6 +3710,7 @@ ${description}
         updateFavoritesStats();
         updateFavoritesList();
 
+        console.log('Favorites tab rendered successfully');
     }
 
     function updateFavoritesStats() {
@@ -3774,6 +3800,7 @@ ${description}
     // ==================== Content Management ====================
 
     function renderContentManagement() {
+        console.log('Rendering content management...');
 
         // 確保內容管理頁面是活躍的
         showTab('content');
@@ -3783,6 +3810,7 @@ ${description}
         updateContentFilters();
         renderContentTree();
 
+        console.log('Content management rendered successfully');
     }
 
     function setupContentManagementEventListeners() {
@@ -3945,6 +3973,7 @@ ${description}
         const templates = currentData.templates || [];
         const topics = currentData.topics?.hierarchy || null;
 
+        console.log('Building content tree data...');
         console.log('Templates:', templates.length);
         console.log('Templates data:', templates);
 
@@ -3956,12 +3985,14 @@ ${description}
 
         // If we have hierarchical topics, use them
         if (topics && topics.roots) {
+            console.log('Using hierarchical topics:', topics.roots);
             const result = topics.roots.map(root => buildTreeNodeFromTopic(root));
             console.log('Built tree from hierarchy:', result);
             return result;
         }
 
         // Otherwise, build a simple structure from templates
+        // console.log('Building from templates...');
         const topicMap = new Map();
 
         templates.forEach(template => {
@@ -4014,6 +4045,7 @@ ${description}
             // Add subtopics as children
             if (topic.subTopics && topic.subTopics.size > 0) {
                 Array.from(topic.subTopics.values()).forEach(subTopic => {
+                    console.log(`Building subtopic: ${subTopic.name}, templates:`, subTopic.templates);
                     children.push({
                         ...subTopic,
                         expanded: true,
@@ -4152,6 +4184,7 @@ ${description}
         const toggleClass = hasChildren ?
             (isExpanded ? 'expanded' : 'collapsed') : 'leaf';
 
+        console.log(`Rendering node: ${node.name}, type: ${node.type}, hasChildren: ${hasChildren}, isExpanded: ${isExpanded}, depth: ${depth}`);
         if (hasChildren) {
             console.log(`Children for ${node.name}:`, node.children.map(c => c.name));
         }
@@ -4339,6 +4372,7 @@ ${description}
     }
 
     function selectTreeItem(item) {
+        console.log('selectTreeItem called with:', item);
 
         // Remove previous selection
         document.querySelectorAll('.tree-item.selected').forEach(el => {
@@ -4381,6 +4415,7 @@ ${description}
     }
 
     function restoreTreeSelection(container) {
+        console.log('restoreTreeSelection called with selectedTreeItem:', selectedTreeItem);
 
         let itemToSelect = null;
 
@@ -4408,6 +4443,7 @@ ${description}
     }
 
     function showContentDetails(itemPath, itemType) {
+        console.log('showContentDetails called with:', itemPath, itemType);
         const container = document.getElementById('content-details');
         if (!container) {
             console.error('content-details container not found');
@@ -4431,6 +4467,7 @@ ${description}
     }
 
     function showTopicDetails(topicPath, container) {
+        console.log('showTopicDetails called with:', topicPath, container);
         // Find topic data
         const topic = window.topicLookup?.get(topicPath);
         console.log('Found topic:', topic);
@@ -4729,6 +4766,7 @@ ${description}
     }
 
     function findTopicByPath(topicPath) {
+        console.log('findTopicByPath called with:', topicPath);
         console.log('currentData.topics:', currentData.topics);
 
         // Check our own topic lookup first
@@ -5183,6 +5221,7 @@ ${description}
     }
 
     function renderStatsTab() {
+        console.log('Rendering stats tab...');
 
         // 確保統計頁面是活躍的
         showTab('stats');
@@ -5192,6 +5231,7 @@ ${description}
         updateLanguageUsageStats();
         updateTopicUsageStats();
 
+        console.log('Stats tab rendered successfully');
     }
 
     function updateTemplateUsageStats() {

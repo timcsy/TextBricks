@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { VSCodePlatform } from './adapters/vscode';
-import { TextBricksEngine, CodeOperationService, SearchService, DocumentationService, DataPathService } from '@textbricks/core';
+import { TextBricksEngine, CodeOperationService, SearchService, DocumentationService, DataPathService, ScopeManager, TopicManager, TemplateRepository } from '@textbricks/core';
 import { WebviewProvider } from './providers/WebviewProvider';
 import { TextBricksManagerProvider } from './providers/TextBricksManagerProvider';
 import { DocumentationProvider } from './providers/DocumentationProvider';
@@ -37,8 +37,24 @@ export async function activate(context: vscode.ExtensionContext) {
         const dataPath = await dataPathService.getDataPath();
         const localScopePath = await dataPathService.getScopePath('local');
 
-        // 初始化核心服務
-        const textBricksEngine = new TextBricksEngine(platform);
+        // 創建共享的管理器實例
+        const scopeManager = new ScopeManager(platform);
+        const topicManager = new TopicManager(platform, dataPathService);
+        const templateRepository = new TemplateRepository(platform, dataPathService, topicManager);
+
+        // 初始化管理器
+        await scopeManager.initialize();
+        await topicManager.initialize();
+        await templateRepository.initialize();
+
+        // 初始化核心服務，注入共享的管理器
+        const textBricksEngine = new TextBricksEngine(
+            platform,
+            dataPathService,
+            topicManager,
+            scopeManager,
+            templateRepository
+        );
         const codeOperationService = new CodeOperationService(textBricksEngine, platform);
         const searchService = new SearchService(textBricksEngine);
         const documentationService = new DocumentationService(platform);
@@ -61,6 +77,9 @@ export async function activate(context: vscode.ExtensionContext) {
             context.extensionUri,
             textBricksEngine, // 使用新的引擎
             context, // 添加 context 參數
+            scopeManager, // 傳遞共享的 scopeManager
+            topicManager, // 傳遞共享的 topicManager
+            dataPathService, // 傳遞共享的 dataPathService
             webviewProvider // 傳遞 webviewProvider 用於同步更新
         );
         

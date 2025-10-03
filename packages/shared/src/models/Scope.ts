@@ -12,20 +12,17 @@ export interface ScopeConfig {
     name: string;
     /** 描述 */
     description: string;
-    /** Scope 類型 */
-    type: 'local' | 'project' | 'team' | 'custom';
     /** 支援的程式語言 */
     languages: Language[];
-    /** 可用主題列表 */
-    topics: string[];
-    /** 用戶收藏項目 */
+    /** 用戶收藏項目（使用路徑格式，如 "python/templates/hello-world" 或 "c/basic"） */
     favorites: string[];
-    /** 使用統計 */
+    /** 集中式使用統計（key 為路徑格式，如 "python/templates/hello-world"） */
     usage: Record<string, number>;
     /** 設定選項 */
     settings: ScopeSettings;
     /** 元數據 */
     metadata: ScopeMetadata;
+    // 注意：移除 topics 陣列，改為從檔案系統掃描
 }
 
 export interface ScopeSettings {
@@ -61,15 +58,15 @@ export interface ScopeUsageStats {
     totalTemplates: number;
     /** 總主題數 */
     totalTopics: number;
-    /** 最常用的模板 */
+    /** 最常用的模板（使用路徑識別） */
     mostUsedTemplates: Array<{
-        id: string;
+        path: string;  // 如 "python/templates/hello-world"
         title: string;
         usage: number;
     }>;
-    /** 最近使用的模板 */
+    /** 最近使用的模板（使用路徑識別） */
     recentTemplates: Array<{
-        id: string;
+        path: string;  // 如 "python/templates/hello-world"
         title: string;
         lastUsed: string;
     }>;
@@ -112,6 +109,6 @@ export type ScopeEvent =
     | { type: 'scope-created', scope: ScopeConfig }
     | { type: 'scope-updated', scope: ScopeConfig }
     | { type: 'scope-deleted', scopeId: string }
-    | { type: 'favorite-added', itemId: string }
-    | { type: 'favorite-removed', itemId: string }
-    | { type: 'usage-updated', itemId: string, newCount: number };
+    | { type: 'favorite-added', itemPath: string }
+    | { type: 'favorite-removed', itemPath: string }
+    | { type: 'usage-updated', itemPath: string, newCount: number };

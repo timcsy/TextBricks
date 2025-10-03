@@ -2109,11 +2109,12 @@ textarea {
 }
 
 /* Target browser modal */
-.target-browser-modal .modal-content {
-    width: 600px;
+.target-browser-modal .modal-content,
+.topic-browser-modal .modal-content {
+    width: 700px;
     max-width: 90vw;
-    height: 500px;
-    max-height: 80vh;
+    height: 600px;
+    max-height: 85vh;
 }
 
 .modal-close-btn {
@@ -2130,6 +2131,7 @@ textarea {
     justify-content: center;
     min-width: 32px;
     min-height: 32px;
+    transition: all 0.15s ease;
 }
 
 .modal-close-btn:hover {
@@ -2146,65 +2148,99 @@ textarea {
     height: 100%;
     overflow-y: auto;
     border: 1px solid var(--border-color);
-    border-radius: 4px;
-    padding: 8px;
+    border-radius: 6px;
+    padding: 12px;
+    background: var(--vscode-editor-background);
 }
 
 .tree-node {
-    margin-bottom: 2px;
+    margin-bottom: 0;
 }
 
 .tree-children {
-    margin-left: 16px;
+    margin-left: 0;
+    border-left: 1px solid var(--border-color);
+    margin-left: 20px;
+    padding-left: 8px;
 }
 
 .tree-item {
-    display: flex;
+    display: flex !important;
     align-items: center;
-    padding: 4px 8px;
-    border-radius: 3px;
+    padding: 8px 12px !important;
+    border-radius: 6px;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all 0.15s ease;
     margin-bottom: 2px;
+    gap: 8px;
 }
 
 .tree-item:hover {
     background: var(--hover-bg);
+    transform: translateX(2px);
 }
 
 .tree-item.selected {
     background: var(--primary-color);
     color: white;
+    box-shadow: 0 2px 8px rgba(0, 122, 204, 0.3);
 }
 
 .tree-item.selected .tree-path {
     color: rgba(255, 255, 255, 0.8);
 }
 
+.tree-item.selected .tree-icon {
+    transform: scale(1.1);
+}
+
 .tree-toggle {
-    margin-right: 6px;
-    font-size: 12px;
-    width: 12px;
+    margin-right: 4px;
+    font-size: 10px;
+    width: 16px;
+    height: 16px;
     cursor: pointer;
     user-select: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 3px;
+    transition: all 0.15s ease;
+}
+
+.tree-toggle:hover {
+    background: var(--hover-bg);
 }
 
 .tree-spacer {
-    margin-right: 6px;
-    width: 12px;
+    width: 16px;
+    margin-right: 4px;
 }
 
 .topic-item {
     font-weight: 500;
+    font-size: 14px;
 }
 
 .template-item {
     font-size: 13px;
-    opacity: 0.9;
+    opacity: 0.95;
+    padding-left: 28px;
+}
+
+.link-item {
+    font-size: 13px;
+    opacity: 0.95;
+    padding-left: 28px;
+    font-style: italic;
 }
 
 .template-item .tree-icon {
-    font-size: 12px;
+    font-size: 13px;
+}
+
+.link-item .tree-icon {
+    font-size: 13px;
 }
 
 .tree-icon {

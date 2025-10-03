@@ -1,9 +1,11 @@
 export interface Language {
-  id: string;
-  name: string;
-  displayName: string;
-  extension: string;
+  name: string;  // 唯一識別（如 "python", "javascript"）
+  title: string;  // 顯示名稱（原 displayName）
+  tagName: string;
+  description: string;
+  fileExtensions: string[];
   icon?: string;
+  color?: string;
 }
 
 /**
@@ -17,24 +19,26 @@ export interface Language {
 export type Topic = import('./Topic').TopicConfig;
 
 export interface Template {
-  id: string;
-  title: string;
+  type: 'template';
+  name: string;  // 檔案名稱，用於路徑識別（如 "hello-world"）
+  title: string;  // 顯示標題
   description: string;
   code: string;
-  language: string;
-  topic: string;
+  language: string;  // 語言名稱（如 "python"）
   documentation?: string; // Markdown content, local file path, or URL
+  // 注意：topic 路徑從檔案系統結構推導，不再儲存
+  // 唯一識別路徑格式：{topic_path}/templates/{name}
 }
 
 // 統一的卡片介面，支援三種類型
 export interface Card {
   type: 'template' | 'topic' | 'link';
-  id: string;
-  title: string;
+  name: string;  // 名稱（用於路徑識別）
+  title: string;  // 顯示標題
   description: string;
   language: string;
-  topic: string;  // 根主題 ID（用於分組）
-  originalTopic?: string;  // 原始主題 ID（可能是子主題）
+  topicPath?: string;  // 主題路徑（用於分組，從檔案系統推導）
+  originalTopicPath?: string;  // 原始主題路徑（可能是子主題）
 
   // template 類型專用
   code?: string;
@@ -105,7 +109,7 @@ export interface TemplateImportData {
 
 // Basic recommendation interface (保留簡單版本)
 export interface TemplateRecommendation {
-  templateId: string;
+  templatePath: string;
   score: number;
   reason: string;
 }

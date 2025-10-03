@@ -5,6 +5,8 @@ export { SearchService } from './core/SearchService';
 export { CodeOperationService } from './core/CodeOperationService';
 export { DataPathService } from './services/DataPathService';
 export { RecommendationService, RecommendationConfig } from './services/RecommendationService';
+export { PathTransformService, getPathTransformService } from './services/PathTransformService';
+export { DisplayNameService, getDisplayNameService } from './services/DisplayNameService';
 
 // Core managers
 export { ImportExportManager } from './managers/ImportExportManager';

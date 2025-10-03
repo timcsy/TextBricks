@@ -1,5 +1,6 @@
 {
-  "id": "python-variables",
+  "type": "template",
+  "name": "variables",
   "title": "變數宣告",
   "description": "Python 基本變數宣告範例",
   "language": "python",

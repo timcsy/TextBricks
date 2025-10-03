@@ -1,6 +1,6 @@
 {
   "type": "link",
-  "id": "python-basic-link",
+  "name": "python-basic",
   "title": "Python 基礎",
   "target": "python",
   "description": "切換到 Python 語言學習",

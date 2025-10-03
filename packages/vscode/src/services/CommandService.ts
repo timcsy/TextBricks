@@ -139,8 +139,8 @@ export class CommandService {
             }
 
             const languageItems = languages.map(lang => ({
-                label: lang.displayName,
-                detail: lang.id,
+                label: lang.title,
+                detail: lang.name,
                 language: lang
             }));
 
@@ -162,7 +162,7 @@ export class CommandService {
 
             // 開啟編輯器
             const doc = await vscode.workspace.openTextDocument({
-                language: selectedLanguage.language.id,
+                language: selectedLanguage.language.name,
                 content: `// ${title}\n// ${description}\n\n// 在這裡寫您的程式碼\n`
             });
 
@@ -176,7 +176,7 @@ export class CommandService {
             );
 
             if (action === '儲存為模板') {
-                await this.saveAsTemplate(editor, title, description, selectedLanguage.language.id, topic);
+                await this.saveAsTemplate(editor, title, description, selectedLanguage.language.name, topic);
             }
 
         } catch (error) {
@@ -220,13 +220,15 @@ export class CommandService {
             }
 
             // 創建模板
-            await this.templateEngine.createTemplate({
+            const topicPath = topic || languageId;
+            const templateData = {
+                name: title.toLowerCase().replace(/\s+/g, '-'),
                 title,
                 description,
                 code,
-                language: languageId,
-                topic
-            });
+                language: languageId
+            };
+            await this.templateEngine.createTemplate(templateData, topicPath);
 
             vscode.window.showInformationMessage(`模板「${title}」已創建成功！`);
             this.webviewProvider.refresh();
@@ -257,7 +259,7 @@ export class CommandService {
             const templateItems = searchResult.templates.map(template => ({
                 label: template.title,
                 detail: template.description,
-                description: `${template.language} • ${template.topic}`,
+                description: `${template.language} • ${(template as any).topicPath || template.language}`,
                 template: template
             }));
 
@@ -353,7 +355,8 @@ export class CommandService {
             const options = await this.getImportOptions();
             if (!options) return;
 
-            const result = await this.templateEngine.importTemplates(importData, options);
+            const targetTopicPath = 'imported';
+            const result = await this.templateEngine.importTemplates(importData, targetTopicPath, options);
 
             // 顯示結果
             await this.showImportResult(result);
@@ -423,7 +426,8 @@ export class CommandService {
                 });
 
                 if (!selected) return;
-                templateId = selected.template.id;
+                // Use template path instead of ID
+                templateId = selected.template.name; // TODO: This should use full path
             }
 
             await this.documentationProvider.showDocumentation(templateId);

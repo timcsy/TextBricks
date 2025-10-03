@@ -1,11 +1,9 @@
 {
-  "id": "c",
+  "type": "topic",
   "name": "c",
-  "displayName": "C 語言",
+  "title": "C 語言",
   "description": "C 語言的基本語法和概念",
   "documentation": "# c\n\n## 主題簡介\nC 語言的基本語法和概念\n\n## 內容概覽\n這個主題包含了以下內容：\n\n- **核心概念**：基本原理和重要概念\n- **實用範例**：實際應用和程式範例\n- **進階技巧**：高級用法和最佳實踐\n\n## 相關技術\n- 相關技術1\n- 相關技術2\n\n## 使用指南\n1. **基礎瞭解**：掌握基本概念和語法\n2. **實際操作**：參考範例程式進行實作\n3. **深入探索**：嘗試不同的應用場景\n4. **最佳實踐**：遵循業界標準和建議\n\n## 相關主題\n- 相關主題1\n- 相關主題2\n\n## 參考資料\n- 官方文檔\n- 推薦教程\n- 實用工具",
-  "templates": "templates",
-  "links": "links",
   "subtopics": [
     "basic",
     "advanced"
@@ -16,8 +14,5 @@
     "order": 1,
     "collapsed": false,
     "showInNavigation": true
-  },
-  "path": [
-    "c"
-  ]
+  }
 }

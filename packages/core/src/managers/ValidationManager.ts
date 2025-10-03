@@ -187,11 +187,11 @@ export class ValidationManager {
             });
         }
 
-        if (!language.displayName || typeof language.displayName !== 'string') {
+        if (!language.title || typeof language.title !== 'string') {
             errors.push({
-                field: 'displayName',
-                message: '語言顯示名稱不能為空且必須是字串',
-                code: 'LANGUAGE_DISPLAY_NAME_REQUIRED'
+                field: 'title',
+                message: '語言標題不能為空且必須是字串',
+                code: 'LANGUAGE_TITLE_REQUIRED'
             });
         }
 

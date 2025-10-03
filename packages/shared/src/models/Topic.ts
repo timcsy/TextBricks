@@ -4,28 +4,25 @@
  */
 
 export interface TopicConfig {
-    /** 主題唯一標識 */
-    id: string;
-    /** 內部名稱 */
+    /** 主題類型 */
+    type: 'topic';
+    /** 內部名稱（用於路徑識別，如 "python", "basic"） */
     name: string;
-    /** 顯示名稱 */
-    displayName: string;
+    /** 顯示標題（原 displayName） */
+    title: string;
     /** 描述 */
     description: string;
     /** 說明文檔 */
     documentation?: string;
-    /** 模板資料夾名稱 */
-    templates: string;
-    /** 連結資料夾名稱 */
-    links: string;
-    /** 子主題列表 */
+    /** 子主題列表（僅包含直接子主題的 name） */
     subtopics?: string[];
     /** 顯示配置 */
     display: TopicDisplayConfig;
-    /** 父主題 ID（用於階層關係） */
-    parentId?: string;
-    /** 主題路徑（從根到當前主題的完整路徑） */
-    path?: string[];
+    // 注意：以下欄位從檔案系統結構推導，不再儲存：
+    // - id: 改用路徑作為唯一識別
+    // - templates/links: 固定為 "templates" 和 "links" 資料夾
+    // - parentId: 從檔案系統結構推導
+    // - path: 從檔案系統路徑推導
 }
 
 export interface TopicDisplayConfig {
@@ -69,13 +66,13 @@ export interface TopicNode {
 
 export interface TopicCreateData {
     /** 基本配置 */
-    id: string;
+    type: 'topic';
     name: string;
-    displayName: string;
+    title: string;  // 原 displayName
     description: string;
     documentation?: string;
-    /** 父主題 ID */
-    parentId?: string;
+    /** 父主題路徑（如 "c" 或 "c/basic"） */
+    parentPath?: string;
     /** 顯示配置 */
     display: Partial<TopicDisplayConfig>;
     /** 初始模板資料 */
@@ -87,21 +84,18 @@ export interface TopicCreateData {
 export interface TopicUpdateData {
     /** 可更新的欄位 */
     name?: string;
-    displayName?: string;
+    title?: string;  // 原 displayName
     description?: string;
     documentation?: string;
     display?: Partial<TopicDisplayConfig>;
-    /** 模板資料夾重新命名 */
-    templatesFolder?: string;
-    /** 連結資料夾重新命名 */
-    linksFolder?: string;
+    // 注意：templates 和 links 資料夾固定，不支援重新命名
 }
 
 export interface TopicMoveOperation {
-    /** 移動的主題 ID */
-    topicId: string;
-    /** 新的父主題 ID（null 表示移至根層級） */
-    newParentId: string | null;
+    /** 移動的主題路徑 */
+    topicPath: string;
+    /** 新的父主題路徑（null 表示移至根層級） */
+    newParentPath: string | null;
     /** 新的排序位置 */
     newOrder?: number;
 }
@@ -128,6 +122,6 @@ export interface TopicStatistics {
 export type TopicEvent =
     | { type: 'topic-created', topic: TopicConfig }
     | { type: 'topic-updated', topic: TopicConfig }
-    | { type: 'topic-deleted', topicId: string }
-    | { type: 'topic-moved', topicId: string, oldParentId: string | null, newParentId: string | null }
+    | { type: 'topic-deleted', topicPath: string }
+    | { type: 'topic-moved', topicPath: string, oldParentPath: string | null, newParentPath: string | null }
     | { type: 'hierarchy-reordered', changes: TopicMoveOperation[] };

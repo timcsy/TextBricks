@@ -102,9 +102,7 @@ export class ScopeManager {
             id: 'local',
             name: '本機範圍',
             description: '本機開發環境的程式語言模板和主題',
-            type: 'local',
             languages: [],
-            topics: [],
             favorites: [],
             usage: {},
             settings: {
@@ -231,58 +229,11 @@ export class ScopeManager {
         this.emitEvent({ type: 'scope-deleted', scopeId });
     }
 
-    // ==================== 收藏管理 ====================
-
-    async addToFavorites(itemId: string): Promise<void> {
-        if (!this.currentScope) {
-            throw new Error('No current scope');
-        }
-
-        if (!this.currentScope.favorites.includes(itemId)) {
-            this.currentScope.favorites.push(itemId);
-            await this.saveScopeConfig(this.currentScope);
-            this.emitEvent({ type: 'favorite-added', itemId });
-        }
-    }
-
-    async removeFromFavorites(itemId: string): Promise<void> {
-        if (!this.currentScope) {
-            throw new Error('No current scope');
-        }
-
-        const index = this.currentScope.favorites.indexOf(itemId);
-        if (index !== -1) {
-            this.currentScope.favorites.splice(index, 1);
-            await this.saveScopeConfig(this.currentScope);
-            this.emitEvent({ type: 'favorite-removed', itemId });
-        }
-    }
-
-    isFavorite(itemId: string): boolean {
-        return this.currentScope?.favorites.includes(itemId) || false;
-    }
+    // ==================== 收藏管理（已廢棄，使用下方的集中式管理方法） ====================
+    // 注意：這些舊方法已被下方的 addFavorite/removeFavorite/isFavorite 取代
 
     getFavorites(): string[] {
         return this.currentScope?.favorites || [];
-    }
-
-    // ==================== 使用統計 ====================
-
-    async updateUsage(itemId: string, increment: number = 1): Promise<void> {
-        if (!this.currentScope) {
-            throw new Error('No current scope');
-        }
-
-        const currentCount = this.currentScope.usage[itemId] || 0;
-        const newCount = currentCount + increment;
-        this.currentScope.usage[itemId] = newCount;
-
-        await this.saveScopeConfig(this.currentScope);
-        this.emitEvent({ type: 'usage-updated', itemId, newCount });
-    }
-
-    getUsage(itemId: string): number {
-        return this.currentScope?.usage[itemId] || 0;
     }
 
     getUsageStats(): ScopeUsageStats {
@@ -297,10 +248,10 @@ export class ScopeManager {
 
         return {
             totalTemplates: 0, // 這個需要從 TemplateManager 獲取
-            totalTopics: this.currentScope.topics.length,
-            mostUsedTemplates: sortedUsage.map(([id, count]) => ({
-                id,
-                title: id, // 這個需要從 TemplateManager 獲取實際標題
+            totalTopics: 0, // 從檔案系統掃描取得，不再存於 scope
+            mostUsedTemplates: sortedUsage.map(([path, count]) => ({
+                path,
+                title: path, // 這個需要從 TemplateManager 獲取實際標題
                 usage: count
             })),
             recentTemplates: [], // 需要額外的時間戳記錄
@@ -358,9 +309,7 @@ export class ScopeManager {
             targetScope = {
                 ...existingScope,
                 ...scope,
-                topics: options.mergeTopics
-                    ? [...new Set([...existingScope.topics, ...scope.topics])]
-                    : scope.topics,
+                // topics 從檔案系統掃描，不再合併
                 languages: options.mergeLanguages
                     ? [...new Set([...existingScope.languages, ...scope.languages])]
                     : scope.languages,
@@ -450,5 +399,92 @@ export class ScopeManager {
                 console.error('Error in scope event listener:', error);
             }
         });
+    }
+
+    // ==================== 集中式 Usage 管理 ====================
+
+    /**
+     * 更新項目使用次數（集中式管理）
+     * @param itemPath 項目路徑（如 "python/templates/hello-world" 或 "c/basic"）
+     */
+    async updateUsage(itemPath: string): Promise<void> {
+        if (!this.currentScope) {
+            console.warn('[ScopeManager] No current scope to update usage');
+            return;
+        }
+
+        // 更新 usage 統計
+        this.currentScope.usage[itemPath] = (this.currentScope.usage[itemPath] || 0) + 1;
+
+        // 保存到檔案系統
+        await this.saveScopeConfig(this.currentScope);
+
+        // 觸發事件
+        this.emitEvent({
+            type: 'usage-updated',
+            itemPath,
+            newCount: this.currentScope.usage[itemPath]
+        });
+    }
+
+    /**
+     * 獲取項目使用次數
+     * @param itemPath 項目路徑
+     */
+    getUsage(itemPath: string): number {
+        return this.currentScope?.usage[itemPath] || 0;
+    }
+
+    /**
+     * 清除所有 usage 統計
+     */
+    async clearAllUsage(): Promise<void> {
+        if (!this.currentScope) {
+            return;
+        }
+
+        this.currentScope.usage = {};
+        await this.saveScopeConfig(this.currentScope);
+    }
+
+    /**
+     * 新增收藏項目
+     * @param itemPath 項目路徑
+     */
+    async addFavorite(itemPath: string): Promise<void> {
+        if (!this.currentScope) {
+            return;
+        }
+
+        if (!this.currentScope.favorites.includes(itemPath)) {
+            this.currentScope.favorites.push(itemPath);
+            await this.saveScopeConfig(this.currentScope);
+            this.emitEvent({ type: 'favorite-added', itemPath });
+        }
+    }
+
+    /**
+     * 移除收藏項目
+     * @param itemPath 項目路徑
+     */
+    async removeFavorite(itemPath: string): Promise<void> {
+        if (!this.currentScope) {
+            return;
+        }
+
+        const index = this.currentScope.favorites.indexOf(itemPath);
+        if (index !== -1) {
+            this.currentScope.favorites.splice(index, 1);
+            await this.saveScopeConfig(this.currentScope);
+            this.emitEvent({ type: 'favorite-removed', itemPath });
+        }
+    }
+
+    /**
+     * 檢查是否為收藏項目
+     * @param itemPath 項目路徑
+     */
+    isFavorite(itemPath: string): boolean {
+        return this.currentScope?.favorites.includes(itemPath) || false;
     }
 }

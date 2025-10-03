@@ -76,8 +76,8 @@ export class DocumentationProvider {
         console.log('[DocumentationProvider] Force reloading data before showing topic documentation');
         await this.templateEngine.forceReloadTemplates();
 
-        // Try to read directly from file system as fallback
-        let latestTopic = this.templateEngine.getTopicByName(topic.name);
+        const allTopics = this.templateEngine.getAllTopicConfigs();
+        let latestTopic = allTopics.find(t => t.name === topic.name);
 
         if (!latestTopic) {
             // Direct file system read as fallback
@@ -368,8 +368,7 @@ export class DocumentationProvider {
                 <p>${docResult.error}</p>
             </div>`;
         } else {
-            // Convert markdown to HTML (simple implementation)
-            contentHtml = this._markdownToHtml(docResult.content, template.id);
+            contentHtml = this._markdownToHtml(docResult.content, template.name);
         }
 
         return `<!DOCTYPE html>
@@ -409,8 +408,8 @@ export class DocumentationProvider {
                 <span class="value language-tag">${template.language.toUpperCase()}</span>
             </div>
             <div class="info-item">
-                <span class="label">主題：</span>
-                <span class="value">${this._getTopicName(template.topic)}</span>
+                <span class="label">語言：</span>
+                <span class="value">${template.language}</span>
             </div>
             <div class="info-item">
                 <span class="label">文檔類型：</span>
@@ -450,7 +449,7 @@ export class DocumentationProvider {
             const codeId = Math.random().toString(36).substring(2, 11); // Generate unique ID
             // Store the raw code in a data attribute to preserve formatting
             const rawCodeEscaped = this._escapeHtml(trimmedCode);
-            const dataId = identifier || this._currentTemplate?.id || '';
+            const dataId = identifier || this._currentTemplate?.name || '';
             return `<div class="code-block-container" data-template-id="${dataId}">
                 <div class="code-block-header">
                     <span class="language-label">${language.toUpperCase() || 'CODE'}</span>

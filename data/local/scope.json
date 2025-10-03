@@ -4,67 +4,59 @@
   "description": "本機開發環境的程式語言模板和主題",
   "languages": [
     {
-      "id": "c",
-      "name": "C",
-      "displayName": "C 語言",
+      "name": "c",
+      "title": "C 語言",
       "tagName": "C",
-      "description": "系統程式設計語言",
+      "description": "C programming language",
       "fileExtensions": [
-        ".c",
-        ".h"
+        ".c"
       ],
-      "icon": "⚙️",
-      "color": "#A8B9CC"
+      "icon": "file-text"
     },
     {
-      "id": "python",
-      "name": "Python",
-      "displayName": "Python",
-      "tagName": "PY",
-      "description": "高階程式設計語言",
+      "name": "javascript",
+      "title": "JavaScript",
+      "tagName": "JAVASCRIPT",
+      "description": "JavaScript programming language",
       "fileExtensions": [
-        ".py",
-        ".pyw"
+        ".js"
       ],
-      "icon": "🐍",
-      "color": "#3776AB"
+      "icon": "file-text"
     },
     {
-      "id": "javascript",
-      "name": "JavaScript",
-      "displayName": "JavaScript",
-      "tagName": "JS",
-      "description": "網頁前端程式設計語言",
+      "name": "python",
+      "title": "Python",
+      "tagName": "PYTHON",
+      "description": "Python programming language",
       "fileExtensions": [
-        ".js",
-        ".mjs",
-        ".jsx"
+        ".py"
       ],
-      "icon": "📜",
-      "color": "#F7DF1E"
+      "icon": "file-text"
     }
   ],
-  "topics": [
-    "c",
-    "python",
-    "javascript"
-  ],
   "favorites": [
-    "c-hello-world",
+    "c/basic/templates/hello-world",
     "c/advanced",
     "c/basic"
   ],
   "usage": {
-    "c-hello-world": 15,
-    "python-hello-world": 12,
-    "javascript-hello-world": 8,
-    "c-variables": 10,
-    "python-variables": 7,
-    "c-pointers": 5
+    "c/basic/templates/hello-world": 15,
+    "python/templates/hello-world": 12,
+    "javascript/templates/hello-world": 8,
+    "c/basic/templates/variables": 10,
+    "python/templates/variables": 7,
+    "c/advanced/templates/pointers": 5
+  },
+  "settings": {
+    "autoSync": false,
+    "readOnly": false,
+    "shareMode": "private",
+    "autoBackup": true
   },
   "metadata": {
     "version": "1.0.0",
-    "lastUpdated": "2024-09-26",
+    "created": "2024-09-26",
+    "lastUpdated": "2025-10-02T15:25:36.722Z",
     "author": "TextBricks"
   }
 }

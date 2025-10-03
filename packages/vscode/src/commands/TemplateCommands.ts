@@ -43,8 +43,8 @@ export class TemplateCommands {
         // Topics are optional, can be empty
 
         const languageItems = languages.map(lang => ({
-            label: lang.displayName,
-            detail: lang.id,
+            label: lang.title,
+            detail: lang.name,
             language: lang
         }));
 
@@ -65,7 +65,7 @@ export class TemplateCommands {
 
         // 開啟新文檔進行程式碼編輯
         const doc = await vscode.workspace.openTextDocument({
-            language: selectedLanguage.language.id,
+            language: selectedLanguage.language.name,
             content: `// ${title}\n// ${description}\n\n// 在這裡寫您的程式碼\n`
         });
 
@@ -79,7 +79,7 @@ export class TemplateCommands {
         );
 
         if (action === '儲存為模板') {
-            await this.saveAsTemplate(editor, title, description, selectedLanguage.language.id, topic);
+            await this.saveAsTemplate(editor, title, description, selectedLanguage.language.name, topic);
         }
     }
 
@@ -96,13 +96,15 @@ export class TemplateCommands {
         const code = editor.document.getText();
 
         try {
-            await this.templateEngine.createTemplate({
+            const topicPath = topic || languageId;
+            const templateData = {
+                name: title.toLowerCase().replace(/\s+/g, '-'),
                 title,
                 description,
                 code,
-                language: languageId,
-                topic
-            });
+                language: languageId
+            };
+            await this.templateEngine.createTemplate(templateData, topicPath);
             
             vscode.window.showInformationMessage(`模板「${title}」已創建成功！`);
             this.webviewProvider.refresh();

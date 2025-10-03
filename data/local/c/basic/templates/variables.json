@@ -1,5 +1,6 @@
 {
-  "id": "c-variables",
+  "type": "template",
+  "name": "variables",
   "title": "變數宣告",
   "description": "C 語言基本變數宣告範例",
   "language": "c",

@@ -97,7 +97,8 @@ textBricksManagerProvider
             });
 
             if (!selected) return;
-            templateId = selected.template.id;
+            const template = selected.template;
+            templateId = (template as any).topicPath ? `${(template as any).topicPath}/templates/${template.name}` : template.name;
         }
 
         await this.documentationProvider.showDocumentation(templateId);

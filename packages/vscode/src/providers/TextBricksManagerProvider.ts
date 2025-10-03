@@ -1,5 +1,12 @@
 import * as vscode from 'vscode';
-import { TextBricksEngine, ScopeManager, TopicManager, DataPathService } from '@textbricks/core';
+import {
+    TextBricksEngine,
+    ScopeManager,
+    TopicManager,
+    DataPathService,
+    PathTransformService,
+    DisplayNameService
+} from '@textbricks/core';
 import {
     ExtendedTemplate,
     Language,
@@ -24,18 +31,29 @@ export class TextBricksManagerProvider {
     private dataPathService: DataPathService;
     private platform: VSCodePlatform;
 
+    // 新增的 Services
+    private pathTransformService: PathTransformService;
+    private displayNameService: DisplayNameService;
+
     private initializationPromise: Promise<void>;
 
     constructor(
         private readonly _extensionUri: vscode.Uri,
         private readonly templateEngine: TextBricksEngine,
         private readonly context: vscode.ExtensionContext,
+        scopeManager?: ScopeManager,
+        topicManager?: TopicManager,
+        dataPathService?: DataPathService,
         private readonly webviewProvider?: WebviewProvider
     ) {
         this.platform = new VSCodePlatform(context);
-        this.dataPathService = DataPathService.getInstance(this.platform);
-        this.scopeManager = new ScopeManager(this.platform);
-        this.topicManager = new TopicManager(this.platform, this.dataPathService);
+        this.dataPathService = dataPathService || DataPathService.getInstance(this.platform);
+        this.scopeManager = scopeManager || new ScopeManager(this.platform);
+        this.topicManager = topicManager || new TopicManager(this.platform, this.dataPathService);
+
+        // 初始化新的 Services
+        this.pathTransformService = new PathTransformService();
+        this.displayNameService = new DisplayNameService();
 
         // 啟動初始化但不等待
         this.initializationPromise = this.initializeManagers();
@@ -44,9 +62,14 @@ export class TextBricksManagerProvider {
     private async initializeManagers(): Promise<void> {
         try {
             await this.platform.initialize();
-            await this.dataPathService.initialize();
-            await this.scopeManager.initialize();
-            await this.topicManager.initialize();
+
+            // 如果管理器是外部注入的，它們應該已經初始化了
+            // 只有當我們自己創建時才需要初始化
+            if (!arguments[3]) { // 如果沒有傳入 scopeManager
+                await this.dataPathService.initialize();
+                await this.scopeManager.initialize();
+                await this.topicManager.initialize();
+            }
 
             // 監聽 scope 切換事件
             this.scopeManager.addEventListener(event => {
@@ -165,11 +188,11 @@ export class TextBricksManagerProvider {
                     break;
 
                 case 'updateTopic':
-                    await this._updateTopic(message.topicId, message.data);
+                    await this._updateTopic(message.topicPath || message.topicId, message.data);
                     break;
 
                 case 'deleteTopic':
-                    await this._deleteTopic(message.topicId, message.deleteChildren);
+                    await this._deleteTopic(message.topicPath || message.topicId, message.deleteChildren);
                     break;
 
                 case 'moveTopic':
@@ -186,11 +209,11 @@ export class TextBricksManagerProvider {
                     break;
 
                 case 'updateTemplate':
-                    await this._updateTemplate(message.templateId, message.data);
+                    await this._updateTemplate(message.templatePath || message.templateId, message.data);
                     break;
 
                 case 'deleteTemplate':
-                    await this._deleteTemplate(message.templateId);
+                    await this._deleteTemplate(message.templatePath || message.templateId);
                     break;
 
                 case 'batchCreateTemplates':
@@ -203,11 +226,11 @@ export class TextBricksManagerProvider {
                     break;
 
                 case 'updateLink':
-                    await this._updateLink(message.linkId, message.data);
+                    await this._updateLink(message.linkName || message.linkId, message.data);
                     break;
 
                 case 'deleteLink':
-                    vscode.window.showInformationMessage(`連結已刪除成功（臨時功能）`);
+                    await this._deleteLink(message.linkName || message.linkId);
                     break;
 
                 // 語言管理
@@ -216,7 +239,7 @@ export class TextBricksManagerProvider {
                     break;
 
                 case 'updateLanguage':
-                    await this._updateLanguage(message.languageId, message.data);
+                    await this._updateLanguage(message.languageName || message.languageId, message.data);
                     break;
 
                 // 匯入匯出
@@ -253,6 +276,36 @@ export class TextBricksManagerProvider {
                     await this._validateDataPath(message.path);
                     break;
 
+                // Services API - 路徑轉換
+                case 'pathToDisplayPath':
+                    this._pathToDisplayPath(message.path, message.requestId);
+                    break;
+
+                case 'displayPathToPath':
+                    this._displayPathToPath(message.displayPath, message.requestId);
+                    break;
+
+                case 'buildTemplatePath':
+                    this._buildTemplatePath(message.template, message.requestId);
+                    break;
+
+                case 'getItemIdentifier':
+                    this._getItemIdentifier(message.item, message.itemType, message.requestId);
+                    break;
+
+                // Services API - 顯示名稱
+                case 'getLanguageDisplayName':
+                    this._getLanguageDisplayName(message.languageName, message.requestId);
+                    break;
+
+                case 'getTopicDisplayName':
+                    this._getTopicDisplayName(message.topicPath, message.requestId);
+                    break;
+
+                case 'getFullDisplayPath':
+                    this._getFullDisplayPath(message.path, message.requestId);
+                    break;
+
                 // UI 事件
                 case 'showError':
                     vscode.window.showErrorMessage(message.message);
@@ -280,6 +333,9 @@ export class TextBricksManagerProvider {
 
         if (this._panel) {
             try {
+                // 更新 Services 的數據源
+                await this._updateServicesData();
+
                 // 獲取基本的模板和語言資料
                 const templateManager = this.templateEngine.getTemplateManager();
                 const templates = templateManager.getAllTemplates();
@@ -310,19 +366,19 @@ export class TextBricksManagerProvider {
                     const rawHierarchy = this.topicManager.getHierarchy();
                     console.log('[ManagerProvider] Raw hierarchy roots:', rawHierarchy?.roots?.length);
                     if (rawHierarchy?.roots?.[0]) {
-                        console.log('[ManagerProvider] First root topic:', rawHierarchy.roots[0].topic.id, 'loadedLinks:', (rawHierarchy.roots[0].topic as any).loadedLinks?.length);
+                        console.log('[ManagerProvider] First root topic:', rawHierarchy.roots[0].topic.name, 'loadedLinks:', (rawHierarchy.roots[0].topic as any).loadedLinks?.length);
                     }
                     // 清理循環引用：移除 parent 屬性，保留結構
                     topicHierarchy = this.cleanCircularReferences(rawHierarchy);
                     console.log('[ManagerProvider] Cleaned hierarchy roots:', topicHierarchy?.roots?.length);
                     if (topicHierarchy?.roots?.[0]) {
-                        console.log('[ManagerProvider] First cleaned root topic:', topicHierarchy.roots[0].topic.id, 'loadedLinks:', (topicHierarchy.roots[0].topic as any).loadedLinks?.length);
+                        console.log('[ManagerProvider] First cleaned root topic:', topicHierarchy.roots[0].topic.name, 'loadedLinks:', (topicHierarchy.roots[0].topic as any).loadedLinks?.length);
                     }
                     topicStats = this.cleanCircularReferences(this.topicManager.getStatistics());
                 } catch (topicError) {
                     console.warn('TopicManager error:', topicError);
                     // 從現有模板數據構建簡單的主題統計
-                    const topics = [...new Set(templates.map(t => t.topic))];
+                    const topics = [...new Set(templates.map(t => (t as any).topicPath || t.language))];
                     topicStats = {
                         totalTopics: topics.length,
                         activeTopics: topics.length
@@ -441,10 +497,11 @@ export class TextBricksManagerProvider {
         return cleaned;
     }
 
-    private async _createTemplate(templateData: Omit<ExtendedTemplate, 'id'>) {
+    private async _createTemplate(templateData: Omit<ExtendedTemplate, 'type'>) {
         try {
             console.log('Creating template with data:', templateData);
-            const newTemplate = await this.templateEngine.createTemplate(templateData);
+            const topicPath = (templateData as any).topicPath || (templateData as any).topic || 'default';
+            const newTemplate = await this.templateEngine.createTemplate(templateData, topicPath);
             console.log('Template created successfully:', newTemplate);
             vscode.window.showInformationMessage(`模板 "${newTemplate.title}" 已創建成功`);
             await this._sendData();
@@ -516,14 +573,14 @@ export class TextBricksManagerProvider {
 
     private async _createLanguage(languageData: Language) {
         const newLanguage = await this.templateEngine.createLanguage(languageData);
-        vscode.window.showInformationMessage(`語言 "${newLanguage.displayName}" 已創建成功`);
+        vscode.window.showInformationMessage(`語言 "${newLanguage.title}" 已創建成功`);
         await this._sendData();
     }
 
-    private async _updateLanguage(languageId: string, updates: Partial<Language>) {
-        const updated = await this.templateEngine.updateLanguage(languageId, updates);
+    private async _updateLanguage(languageName: string, updates: Partial<Language>) {
+        const updated = await this.templateEngine.updateLanguage(languageName, updates);
         if (updated) {
-            vscode.window.showInformationMessage(`語言 "${updated.displayName}" 已更新成功`);
+            vscode.window.showInformationMessage(`語言 "${updated.title}" 已更新成功`);
             await this._sendData();
         } else {
             vscode.window.showErrorMessage('找不到指定的語言');
@@ -577,7 +634,8 @@ export class TextBricksManagerProvider {
                 const importData = JSON.parse(content.toString());
 
                 const options = await this._getImportOptions();
-                const result = await this.templateEngine.importTemplates(importData, options);
+                const targetTopicPath = 'imported';
+                const result = await this.templateEngine.importTemplates(importData, targetTopicPath, options);
 
                 let message = `匯入完成: ${result.imported} 個模板已匯入`;
                 if (result.skipped > 0) {
@@ -631,21 +689,23 @@ export class TextBricksManagerProvider {
                     }
 
                     // Check if language exists
-                    const templateManager = this.templateEngine.getTemplateManager();
-                    const languageExists = templateManager.getLanguageById(template.language);
+                    const allLanguages = this.scopeManager.getCurrentScope().languages || [];
+                    const languageExists = allLanguages.find(lang => lang.name === template.language);
 
                     if (!languageExists) {
                         throw new Error(`模板 ${index}: 語言 "${template.language}" 不存在`);
                     }
 
                     // Create the template
-                    await this.templateEngine.createTemplate({
+                    const topicPath = template.topic || template.language || 'default';
+                    const templateData = {
+                        name: template.title.toLowerCase().replace(/\s+/g, '-'),
                         title: template.title,
                         description: template.description,
                         code: template.code,
-                        language: template.language,
-                        topic: template.topic
-                    });
+                        language: template.language
+                    };
+                    await this.templateEngine.createTemplate(templateData, topicPath);
 
                     successCount++;
                 } catch (error) {
@@ -709,7 +769,7 @@ export class TextBricksManagerProvider {
     private async _createTopic(topicData: any) {
         try {
             const newTopic = await this.topicManager.createTopic(topicData);
-            vscode.window.showInformationMessage(`主題 "${newTopic.displayName}" 已創建成功`);
+            vscode.window.showInformationMessage(`主題 "${newTopic.title}" 已創建成功`);
             await this._sendData();
 
             // 通知 WebviewProvider 刷新顯示
@@ -725,7 +785,7 @@ export class TextBricksManagerProvider {
     private async _updateTopic(topicId: string, updates: any) {
         try {
             const updated = await this.topicManager.updateTopic(topicId, updates);
-            vscode.window.showInformationMessage(`主題 "${updated.displayName}" 已更新成功`);
+            vscode.window.showInformationMessage(`主題 "${updated.title}" 已更新成功`);
             await this._sendData();
 
             // 通知 WebviewProvider 刷新顯示，保持導航狀態
@@ -747,14 +807,14 @@ export class TextBricksManagerProvider {
             }
 
             const confirmed = await vscode.window.showWarningMessage(
-                `確定要刪除主題 "${topic.displayName}" 嗎？此操作無法恢復。`,
+                `確定要刪除主題 "${topic.title}" 嗎？此操作無法恢復。`,
                 '確定',
                 '取消'
             );
 
             if (confirmed === '確定') {
                 await this.topicManager.deleteTopic(topicId, deleteChildren);
-                vscode.window.showInformationMessage(`主題 "${topic.displayName}" 已刪除`);
+                vscode.window.showInformationMessage(`主題 "${topic.title}" 已刪除`);
                 await this._sendData();
 
                 // 通知 WebviewProvider 刷新顯示
@@ -907,7 +967,7 @@ export class TextBricksManagerProvider {
 
     private async _addToFavorites(itemId: string) {
         try {
-            await this.scopeManager.addToFavorites(itemId);
+            await this.scopeManager.addFavorite(itemId);
             vscode.window.showInformationMessage('已添加到收藏');
             await this._sendData();
         } catch (error) {
@@ -917,7 +977,7 @@ export class TextBricksManagerProvider {
 
     private async _removeFromFavorites(itemId: string) {
         try {
-            await this.scopeManager.removeFromFavorites(itemId);
+            await this.scopeManager.removeFavorite(itemId);
             vscode.window.showInformationMessage('已從收藏中移除');
             await this._sendData();
         } catch (error) {
@@ -1109,6 +1169,9 @@ export class TextBricksManagerProvider {
         );
         const cardTemplatesUri = webview.asWebviewUri(
             vscode.Uri.joinPath(this._extensionUri, 'assets', 'js', 'common', 'card-templates.js')
+        );
+        const servicesBridgeUri = webview.asWebviewUri(
+            vscode.Uri.joinPath(this._extensionUri, 'assets', 'js', 'services-bridge.js')
         );
         const scriptUri = webview.asWebviewUri(
             vscode.Uri.joinPath(this._extensionUri, 'assets', 'js', 'textbricks-manager.js')
@@ -1630,6 +1693,7 @@ export class TextBricksManagerProvider {
     <script nonce="${nonce}" src="${utilsUri}"></script>
     <script nonce="${nonce}" src="${eventDelegatorUri}"></script>
     <script nonce="${nonce}" src="${cardTemplatesUri}"></script>
+    <script nonce="${nonce}" src="${servicesBridgeUri}"></script>
     <script nonce="${nonce}" src="${scriptUri}"></script>
 </body>
 </html>`;
@@ -1710,10 +1774,270 @@ export class TextBricksManagerProvider {
             // Directory might already exist, that's OK
         }
 
-        // Create the link file path
-        const linkFilePath = vscode.Uri.joinPath(linksDirPath, `${linkData.id}.json`);
+        // Create the link file path (using name instead of id)
+        const linkFilePath = vscode.Uri.joinPath(linksDirPath, `${linkData.name}.json`);
         return linkFilePath.fsPath;
     }
+
+    private async _deleteLink(linkId: string) {
+        try {
+            console.log('Deleting link with ID:', linkId);
+
+            // Find the link file by searching through all topics
+            const locationInfo = await this.dataPathService.getCurrentLocationInfo();
+            const scopePath = vscode.Uri.joinPath(
+                vscode.Uri.file(locationInfo.path),
+                'scopes',
+                'local'
+            );
+
+            // Search for the link file recursively
+            let linkFilePath: vscode.Uri | null = null;
+
+            async function searchForLinkFile(dir: vscode.Uri): Promise<vscode.Uri | null> {
+                try {
+                    const entries = await vscode.workspace.fs.readDirectory(dir);
+
+                    for (const [name, type] of entries) {
+                        const fullPath = vscode.Uri.joinPath(dir, name);
+
+                        if (type === vscode.FileType.Directory) {
+                            // Check if this is a links directory
+                            if (name === 'links') {
+                                // Look for the link file in this directory
+                                const possibleLinkPath = vscode.Uri.joinPath(fullPath, `${linkId}.json`);
+                                try {
+                                    await vscode.workspace.fs.stat(possibleLinkPath);
+                                    return possibleLinkPath;
+                                } catch {
+                                    // File not found, continue searching
+                                }
+                            } else {
+                                // Recursively search subdirectories
+                                const found = await searchForLinkFile(fullPath);
+                                if (found) return found;
+                            }
+                        }
+                    }
+                } catch (error) {
+                    console.warn('Error searching directory:', dir.fsPath, error);
+                }
+                return null;
+            }
+
+            linkFilePath = await searchForLinkFile(scopePath);
+
+            if (!linkFilePath) {
+                vscode.window.showErrorMessage(`找不到連結檔案：${linkId}`);
+                return;
+            }
+
+            // Delete the link file
+            await vscode.workspace.fs.delete(linkFilePath);
+
+            console.log('Link deleted successfully at:', linkFilePath.fsPath);
+            vscode.window.showInformationMessage(`連結已刪除成功`);
+            await this._sendData();
+
+            // 通知 WebviewProvider 刷新顯示
+            if (this.webviewProvider) {
+                console.log('Notifying WebviewProvider to refresh after link deletion...');
+                await this.webviewProvider.refresh();
+            }
+        } catch (error) {
+            console.error('Error deleting link:', error);
+            vscode.window.showErrorMessage(`刪除連結失敗: ${error}`);
+        }
+    }
+
+    // ==================== Services API Methods ====================
+
+    /**
+     * 更新 Services 的數據源（當數據重新載入時調用）
+     */
+    private async _updateServicesData() {
+        try {
+            // 獲取最新的主題和語言數據
+            const topics = this.templateEngine.getAllTopicConfigs();
+            const languages = this.templateEngine.getLanguages();
+
+            // 更新 PathTransformService
+            const topicsMap = new Map();
+            topics.forEach(topic => {
+                const topicWithPath = topic as any;
+                if (topicWithPath.path) {
+                    const pathKey = Array.isArray(topicWithPath.path)
+                        ? topicWithPath.path.join('/')
+                        : topicWithPath.path;
+                    topicsMap.set(pathKey, topic);
+                }
+                topicsMap.set(topic.name, topic);
+            });
+            this.pathTransformService.updateTopicsMap(topicsMap);
+
+            // 更新 DisplayNameService
+            this.displayNameService.updateLanguages(languages);
+            this.displayNameService.updateTopics(topics);
+        } catch (error) {
+            console.error('[TextBricksManagerProvider] Error updating services data:', error);
+        }
+    }
+
+    /**
+     * 路徑轉顯示路徑
+     */
+    private _pathToDisplayPath(path: string, requestId?: string) {
+        try {
+            const displayPath = this.pathTransformService.pathToDisplayPath(path);
+            this._panel?.webview.postMessage({
+                type: 'serviceResponse',
+                requestId,
+                method: 'pathToDisplayPath',
+                result: displayPath
+            });
+        } catch (error) {
+            this._panel?.webview.postMessage({
+                type: 'serviceError',
+                requestId,
+                method: 'pathToDisplayPath',
+                error: String(error)
+            });
+        }
+    }
+
+    /**
+     * 顯示路徑轉內部路徑
+     */
+    private _displayPathToPath(displayPath: string, requestId?: string) {
+        try {
+            const path = this.pathTransformService.displayPathToPath(displayPath);
+            this._panel?.webview.postMessage({
+                type: 'serviceResponse',
+                requestId,
+                method: 'displayPathToPath',
+                result: path
+            });
+        } catch (error) {
+            this._panel?.webview.postMessage({
+                type: 'serviceError',
+                requestId,
+                method: 'displayPathToPath',
+                error: String(error)
+            });
+        }
+    }
+
+    /**
+     * 構建模板路徑
+     */
+    private _buildTemplatePath(template: any, requestId?: string) {
+        try {
+            const path = this.pathTransformService.buildTemplatePath(template);
+            this._panel?.webview.postMessage({
+                type: 'serviceResponse',
+                requestId,
+                method: 'buildTemplatePath',
+                result: path
+            });
+        } catch (error) {
+            this._panel?.webview.postMessage({
+                type: 'serviceError',
+                requestId,
+                method: 'buildTemplatePath',
+                error: String(error)
+            });
+        }
+    }
+
+    /**
+     * 獲取項目識別符
+     */
+    private _getItemIdentifier(item: any, itemType: string, requestId?: string) {
+        try {
+            const identifier = this.pathTransformService.getItemIdentifier(item, itemType as any);
+            this._panel?.webview.postMessage({
+                type: 'serviceResponse',
+                requestId,
+                method: 'getItemIdentifier',
+                result: identifier
+            });
+        } catch (error) {
+            this._panel?.webview.postMessage({
+                type: 'serviceError',
+                requestId,
+                method: 'getItemIdentifier',
+                error: String(error)
+            });
+        }
+    }
+
+    /**
+     * 獲取語言顯示名稱
+     */
+    private _getLanguageDisplayName(languageName: string, requestId?: string) {
+        try {
+            const displayName = this.displayNameService.getLanguageDisplayName(languageName);
+            this._panel?.webview.postMessage({
+                type: 'serviceResponse',
+                requestId,
+                method: 'getLanguageDisplayName',
+                result: displayName
+            });
+        } catch (error) {
+            this._panel?.webview.postMessage({
+                type: 'serviceError',
+                requestId,
+                method: 'getLanguageDisplayName',
+                error: String(error)
+            });
+        }
+    }
+
+    /**
+     * 獲取主題顯示名稱
+     */
+    private _getTopicDisplayName(topicPath: string, requestId?: string) {
+        try {
+            const displayName = this.displayNameService.getTopicDisplayName(topicPath);
+            this._panel?.webview.postMessage({
+                type: 'serviceResponse',
+                requestId,
+                method: 'getTopicDisplayName',
+                result: displayName
+            });
+        } catch (error) {
+            this._panel?.webview.postMessage({
+                type: 'serviceError',
+                requestId,
+                method: 'getTopicDisplayName',
+                error: String(error)
+            });
+        }
+    }
+
+    /**
+     * 獲取完整顯示路徑
+     */
+    private _getFullDisplayPath(path: string, requestId?: string) {
+        try {
+            const displayPath = this.displayNameService.getFullDisplayPath(path);
+            this._panel?.webview.postMessage({
+                type: 'serviceResponse',
+                requestId,
+                method: 'getFullDisplayPath',
+                result: displayPath
+            });
+        } catch (error) {
+            this._panel?.webview.postMessage({
+                type: 'serviceError',
+                requestId,
+                method: 'getFullDisplayPath',
+                error: String(error)
+            });
+        }
+    }
+
+    // ==================== End Services API Methods ====================
 
     private _getNonce(): string {
         let text = '';

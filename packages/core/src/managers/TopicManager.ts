@@ -99,23 +99,14 @@ export class TopicManager {
                         const topicData = await readFile(topicConfigPath, 'utf-8');
                         const topicConfig: TopicConfig = JSON.parse(topicData);
 
-                        // 設定完整路徑和父主題關係
+                        // 構建完整路徑（作為唯一識別）
                         const fullPath = relativePath ? `${relativePath}/${entry.name}` : entry.name;
-                        topicConfig.path = fullPath.split('/');
-
-                        if (relativePath) {
-                            // 找到父主題 ID
-                            const parentTopic = Array.from(topicsMap.values())
-                                .find(t => t.path?.join('/') === relativePath);
-                            if (parentTopic) {
-                                topicConfig.parentId = parentTopic.id;
-                            }
-                        }
 
                         // 載入該主題的連結
                         await this.loadTopicLinks(entryPath, topicConfig);
 
-                        topicsMap.set(topicConfig.id, topicConfig);
+                        // 使用路徑作為 Map key
+                        topicsMap.set(fullPath, topicConfig);
 
                         // 遞迴處理子目錄
                         await this.loadTopicsRecursively(basePath, fullPath, topicsMap);
@@ -136,7 +127,7 @@ export class TopicManager {
         const { readdir, readFile } = await import('fs/promises');
 
         try {
-            const linksPath = join(topicPath, topicConfig.links || 'links');
+            const linksPath = join(topicPath, 'links');
             const linkFiles = await readdir(linksPath);
 
             const links: any[] = [];
@@ -156,12 +147,12 @@ export class TopicManager {
 
             // 將連結添加到主題配置中
             (topicConfig as any).loadedLinks = links;
-            console.log(`[TopicManager] Loaded ${links.length} links for topic ${topicConfig.id}:`, links.map(l => l.title));
+            console.log(`[TopicManager] Loaded ${links.length} links for topic ${topicConfig.name}:`, links.map(l => l.title));
 
         } catch (error) {
             // 連結目錄不存在或無法讀取，忽略
             (topicConfig as any).loadedLinks = [];
-            console.log(`[TopicManager] No links directory for topic ${topicConfig.id}`);
+            console.log(`[TopicManager] No links directory for topic ${topicConfig.name}`);
         }
     }
 
@@ -170,8 +161,8 @@ export class TopicManager {
         const roots: TopicNode[] = [];
         let maxDepth = 0;
 
-        // 創建所有節點
-        for (const topic of topicsMap.values()) {
+        // 創建所有節點（key 是路徑）
+        for (const [topicPath, topic] of topicsMap.entries()) {
             const node: TopicNode = {
                 topic,
                 children: [],
@@ -180,15 +171,19 @@ export class TopicManager {
                 totalTemplates: 0,
                 directTemplates: 0
             };
-            nodeMap.set(topic.id, node);
+            nodeMap.set(topicPath, node);
         }
 
-        // 建立父子關係
-        for (const topic of topicsMap.values()) {
-            const node = nodeMap.get(topic.id)!;
+        // 建立父子關係（基於路徑）
+        for (const [topicPath, topic] of topicsMap.entries()) {
+            const node = nodeMap.get(topicPath)!;
 
-            if (topic.parentId) {
-                const parentNode = nodeMap.get(topic.parentId);
+            // 從路徑推導父主題
+            const pathParts = topicPath.split('/');
+            if (pathParts.length > 1) {
+                // 有父主題
+                const parentPath = pathParts.slice(0, -1).join('/');
+                const parentNode = nodeMap.get(parentPath);
                 if (parentNode) {
                     parentNode.children.push(node);
                     node.parent = parentNode;
@@ -240,29 +235,48 @@ export class TopicManager {
         return this.hierarchy;
     }
 
-    getTopic(topicId: string): TopicConfig | undefined {
-        return this.hierarchy?.topicsMap.get(topicId);
+    /**
+     * 根據路徑獲取主題
+     * @param topicPath 主題路徑（如 "python" 或 "c/basic"）
+     */
+    getTopic(topicPath: string): TopicConfig | undefined {
+        return this.hierarchy?.topicsMap.get(topicPath);
     }
 
-    getTopicNode(topicId: string): TopicNode | undefined {
+    /**
+     * @deprecated 使用 getTopic(topicPath) 替代
+     */
+    getTopicById(topicId: string): TopicConfig | undefined {
+        return this.getTopic(topicId);
+    }
+
+    getTopicNode(topicPath: string): TopicNode | undefined {
         if (!this.hierarchy) return undefined;
 
-        const findNode = (nodes: TopicNode[]): TopicNode | undefined => {
+        const findNode = (nodes: TopicNode[], path: string): TopicNode | undefined => {
             for (const node of nodes) {
-                if (node.topic.id === topicId) {
-                    return node;
+                // 從 topicsMap 反查路徑
+                for (const [nodePath, topic] of this.hierarchy!.topicsMap.entries()) {
+                    if (topic === node.topic && nodePath === path) {
+                        return node;
+                    }
                 }
-                const found = findNode(node.children);
+                const found = findNode(node.children, path);
                 if (found) return found;
             }
             return undefined;
         };
 
-        return findNode(this.hierarchy.roots);
+        return findNode(this.hierarchy.roots, topicPath);
     }
 
-    getTopicPath(topicId: string): TopicConfig[] {
-        const node = this.getTopicNode(topicId);
+    /**
+     * 獲取主題的完整路徑（從根到當前）
+     * @param topicPath 主題路徑（如 "c/basic"）
+     * @returns 路徑上所有主題的配置陣列
+     */
+    getTopicPath(topicPath: string): TopicConfig[] {
+        const node = this.getTopicNode(topicPath);
         if (!node) return [];
 
         const path: TopicConfig[] = [];
@@ -276,8 +290,12 @@ export class TopicManager {
         return path;
     }
 
-    getSubtopics(topicId: string): TopicConfig[] {
-        const node = this.getTopicNode(topicId);
+    /**
+     * 獲取子主題
+     * @param topicPath 主題路徑（如 "c"）
+     */
+    getSubtopics(topicPath: string): TopicConfig[] {
+        const node = this.getTopicNode(topicPath);
         return node ? node.children.map(child => child.topic) : [];
     }
 
@@ -291,22 +309,24 @@ export class TopicManager {
 
     async createTopic(createData: TopicCreateData): Promise<TopicConfig> {
         try {
-            // 驗證數據
-            if (this.hierarchy?.topicsMap.has(createData.id)) {
-                throw new Error(`Topic with ID '${createData.id}' already exists`);
+            // 計算主題路徑
+            const topicPath = createData.parentPath
+                ? `${createData.parentPath}/${createData.name}`
+                : createData.name;
+
+            // 驗證數據 - 使用路徑作為 key
+            if (this.hierarchy?.topicsMap.has(topicPath)) {
+                throw new Error(`Topic with path '${topicPath}' already exists`);
             }
 
             // 建立完整的主題配置
             const topicConfig: TopicConfig = {
-                id: createData.id,
+                type: 'topic',
                 name: createData.name,
-                displayName: createData.displayName,
+                title: createData.title,
                 description: createData.description,
                 documentation: createData.documentation,
-                templates: 'templates',
-                links: 'links',
                 subtopics: [],
-                parentId: createData.parentId,
                 display: {
                     icon: createData.display.icon || '📁',
                     color: createData.display.color || '#007ACC',
@@ -316,23 +336,12 @@ export class TopicManager {
                 }
             };
 
-            // 計算路徑
-            if (createData.parentId) {
-                const parentTopic = this.getTopic(createData.parentId);
-                if (!parentTopic) {
-                    throw new Error(`Parent topic '${createData.parentId}' not found`);
-                }
-                topicConfig.path = [...(parentTopic.path || []), createData.name];
-            } else {
-                topicConfig.path = [createData.name];
-            }
-
             // 創建文件系統結構
-            await this.createTopicFileStructure(topicConfig, createData);
+            await this.createTopicFileStructure(topicConfig, createData, topicPath);
 
-            // 更新階層結構
+            // 更新階層結構 - 使用路徑作為 key
             if (this.hierarchy) {
-                this.hierarchy.topicsMap.set(topicConfig.id, topicConfig);
+                this.hierarchy.topicsMap.set(topicPath, topicConfig);
                 this.hierarchy = this.buildHierarchy(this.hierarchy.topicsMap);
             }
 
@@ -346,22 +355,21 @@ export class TopicManager {
         }
     }
 
-    async updateTopic(topicId: string, updateData: TopicUpdateData): Promise<TopicConfig> {
+    async updateTopic(topicPath: string, updateData: TopicUpdateData): Promise<TopicConfig> {
         try {
-            const existingTopic = this.getTopic(topicId);
+            const existingTopic = this.getTopic(topicPath);
             if (!existingTopic) {
-                throw new Error(`Topic '${topicId}' not found`);
+                throw new Error(`Topic '${topicPath}' not found`);
             }
 
             // 更新主題配置
             const updatedTopic: TopicConfig = {
-                ...existingTopic,
+                type: 'topic',
                 name: updateData.name || existingTopic.name,
-                displayName: updateData.displayName || existingTopic.displayName,
+                title: updateData.title || existingTopic.title,
                 description: updateData.description || existingTopic.description,
                 documentation: updateData.documentation || existingTopic.documentation,
-                templates: updateData.templatesFolder || existingTopic.templates,
-                links: updateData.linksFolder || existingTopic.links,
+                subtopics: existingTopic.subtopics,
                 display: {
                     ...existingTopic.display,
                     ...updateData.display
@@ -369,11 +377,11 @@ export class TopicManager {
             };
 
             // 保存到文件系統
-            await this.saveTopicConfig(updatedTopic);
+            await this.saveTopicConfig(updatedTopic, topicPath);
 
             // 更新階層結構
             if (this.hierarchy) {
-                this.hierarchy.topicsMap.set(topicId, updatedTopic);
+                this.hierarchy.topicsMap.set(topicPath, updatedTopic);
                 this.hierarchy = this.buildHierarchy(this.hierarchy.topicsMap);
             }
 
@@ -387,36 +395,38 @@ export class TopicManager {
         }
     }
 
-    async deleteTopic(topicId: string, deleteChildren: boolean = false): Promise<void> {
+    async deleteTopic(topicPath: string, deleteChildren: boolean = false): Promise<void> {
         try {
-            const topic = this.getTopic(topicId);
+            const topic = this.getTopic(topicPath);
             if (!topic) {
-                throw new Error(`Topic '${topicId}' not found`);
+                throw new Error(`Topic '${topicPath}' not found`);
             }
 
-            const node = this.getTopicNode(topicId);
+            const node = this.getTopicNode(topicPath);
             if (node && node.children.length > 0 && !deleteChildren) {
-                throw new Error(`Cannot delete topic '${topicId}' because it has subtopics. Use deleteChildren=true to force deletion.`);
+                throw new Error(`Cannot delete topic '${topicPath}' because it has subtopics. Use deleteChildren=true to force deletion.`);
             }
 
             // 遞迴刪除子主題
             if (node && deleteChildren) {
                 for (const child of node.children) {
-                    await this.deleteTopic(child.topic.id, true);
+                    // 構建子主題路徑
+                    const childPath = `${topicPath}/${child.topic.name}`;
+                    await this.deleteTopic(childPath, true);
                 }
             }
 
             // 從文件系統刪除
-            await this.deleteTopicFromFileSystem(topic);
+            await this.deleteTopicFromFileSystem(topic, topicPath);
 
             // 從階層結構中移除
             if (this.hierarchy) {
-                this.hierarchy.topicsMap.delete(topicId);
+                this.hierarchy.topicsMap.delete(topicPath);
                 this.hierarchy = this.buildHierarchy(this.hierarchy.topicsMap);
             }
 
             // 觸發事件
-            this.emitEvent({ type: 'topic-deleted', topicId });
+            this.emitEvent({ type: 'topic-deleted', topicPath });
 
         } catch (error) {
             throw new Error(`Failed to delete topic: ${error}`);
@@ -425,39 +435,34 @@ export class TopicManager {
 
     async moveTopic(operation: TopicMoveOperation): Promise<void> {
         try {
-            const topic = this.getTopic(operation.topicId);
+            const topic = this.getTopic(operation.topicPath);
             if (!topic) {
-                throw new Error(`Topic '${operation.topicId}' not found`);
+                throw new Error(`Topic '${operation.topicPath}' not found`);
             }
 
-            const oldParentId = topic.parentId || null;
+            // 計算舊的父路徑
+            const pathParts = operation.topicPath.split('/');
+            const oldParentPath = pathParts.length > 1 ? pathParts.slice(0, -1).join('/') : null;
 
             // 驗證移動操作
-            if (operation.newParentId === operation.topicId) {
+            if (operation.newParentPath === operation.topicPath) {
                 throw new Error('Cannot move topic to itself');
             }
 
             // 檢查是否會造成循環引用
-            if (operation.newParentId && this.wouldCreateCycle(operation.topicId, operation.newParentId)) {
+            if (operation.newParentPath && this.wouldCreateCycle(operation.topicPath, operation.newParentPath)) {
                 throw new Error('Move operation would create a cycle');
             }
 
-            // 更新主題的父子關係
-            const updatedTopic: TopicConfig = {
-                ...topic,
-                parentId: operation.newParentId || undefined
-            };
+            // 計算新路徑
+            const newTopicPath = operation.newParentPath
+                ? `${operation.newParentPath}/${topic.name}`
+                : topic.name;
 
-            // 重新計算路徑
-            if (operation.newParentId) {
-                const newParent = this.getTopic(operation.newParentId);
-                if (!newParent) {
-                    throw new Error(`New parent topic '${operation.newParentId}' not found`);
-                }
-                updatedTopic.path = [...(newParent.path || []), topic.name];
-            } else {
-                updatedTopic.path = [topic.name];
-            }
+            // 更新主題配置
+            const updatedTopic: TopicConfig = {
+                ...topic
+            };
 
             // 更新排序
             if (operation.newOrder !== undefined) {
@@ -465,20 +470,21 @@ export class TopicManager {
             }
 
             // 移動文件系統結構
-            await this.moveTopicFileStructure(topic, updatedTopic);
+            await this.moveTopicFileStructure(topic, operation.topicPath, newTopicPath);
 
             // 更新階層結構
             if (this.hierarchy) {
-                this.hierarchy.topicsMap.set(operation.topicId, updatedTopic);
+                this.hierarchy.topicsMap.delete(operation.topicPath);
+                this.hierarchy.topicsMap.set(newTopicPath, updatedTopic);
                 this.hierarchy = this.buildHierarchy(this.hierarchy.topicsMap);
             }
 
             // 觸發事件
             this.emitEvent({
                 type: 'topic-moved',
-                topicId: operation.topicId,
-                oldParentId,
-                newParentId: operation.newParentId
+                topicPath: newTopicPath,
+                oldParentPath,
+                newParentPath: operation.newParentPath
             });
 
         } catch (error) {
@@ -489,9 +495,9 @@ export class TopicManager {
     async reorderTopics(operations: TopicMoveOperation[]): Promise<void> {
         try {
             for (const operation of operations) {
-                const topic = this.getTopic(operation.topicId);
+                const topic = this.getTopic(operation.topicPath);
                 if (topic && operation.newOrder !== undefined) {
-                    await this.updateTopic(operation.topicId, {
+                    await this.updateTopic(operation.topicPath, {
                         display: { order: operation.newOrder }
                     });
                 }
@@ -559,14 +565,16 @@ export class TopicManager {
 
     // ==================== 私有方法 ====================
 
-    private wouldCreateCycle(topicId: string, newParentId: string): boolean {
-        const isDescendant = (ancestorId: string, descendantId: string): boolean => {
-            const node = this.getTopicNode(descendantId);
+    private wouldCreateCycle(topicPath: string, newParentPath: string): boolean {
+        const isDescendant = (ancestorPath: string, descendantPath: string): boolean => {
+            const node = this.getTopicNode(descendantPath);
             if (!node) return false;
 
             let current: TopicNode | undefined = node.parent;
             while (current) {
-                if (current.topic.id === ancestorId) {
+                // 構建當前節點的路徑
+                const currentPath = this.buildPathFromNode(current);
+                if (currentPath === ancestorPath) {
                     return true;
                 }
                 current = current.parent;
@@ -574,56 +582,60 @@ export class TopicManager {
             return false;
         };
 
-        return isDescendant(topicId, newParentId);
+        return isDescendant(topicPath, newParentPath);
     }
 
-    private async createTopicFileStructure(topic: TopicConfig, createData: TopicCreateData): Promise<void> {
+    private buildPathFromNode(node: TopicNode): string {
+        const parts: string[] = [];
+        let current: TopicNode | undefined = node;
+        while (current) {
+            parts.unshift(current.topic.name);
+            current = current.parent;
+        }
+        return parts.join('/');
+    }
+
+    private async createTopicFileStructure(topic: TopicConfig, createData: TopicCreateData, topicPath: string): Promise<void> {
         const { join } = await import('path');
         const { mkdir, writeFile } = await import('fs/promises');
 
-        const extensionPath = (this.platform as any).getExtensionPath?.() ||
-                            (this.platform as any).getExtensionContext?.()?.extensionPath;
-
-        if (!extensionPath) {
-            throw new Error('Extension path not found');
-        }
-
-        const topicPath = join(extensionPath, 'data', this.scopeId, ...(topic.path || []));
+        const scopePath = await this.dataPathService.getScopePath(this.scopeId);
+        const fullTopicPath = join(scopePath, ...topicPath.split('/'));
 
         // 創建主題目錄
-        await mkdir(topicPath, { recursive: true });
+        await mkdir(fullTopicPath, { recursive: true });
 
         // 創建 topic.json
-        await this.saveTopicConfig(topic);
+        await this.saveTopicConfig(topic, topicPath);
 
         // 創建模板和連結目錄
-        await mkdir(join(topicPath, topic.templates), { recursive: true });
-        await mkdir(join(topicPath, topic.links), { recursive: true });
+        await mkdir(join(fullTopicPath, 'templates'), { recursive: true });
+        await mkdir(join(fullTopicPath, 'links'), { recursive: true });
 
         // 創建初始模板和連結（如果提供）
         if (createData.templates && createData.templates.length > 0) {
             for (const template of createData.templates) {
-                const templatePath = join(topicPath, topic.templates, `${template.id}.json`);
-                await writeFile(templatePath, JSON.stringify(template, null, 2), 'utf-8');
+                const templateFilePath = join(fullTopicPath, 'templates', `${template.name}.json`);
+                await writeFile(templateFilePath, JSON.stringify(template, null, 2), 'utf-8');
             }
         }
 
         if (createData.links && createData.links.length > 0) {
             for (const link of createData.links) {
-                const linkPath = join(topicPath, topic.links, `${link.id}.json`);
-                await writeFile(linkPath, JSON.stringify(link, null, 2), 'utf-8');
+                const linkFilePath = join(fullTopicPath, 'links', `${link.name}.json`);
+                await writeFile(linkFilePath, JSON.stringify(link, null, 2), 'utf-8');
             }
         }
     }
 
-    private async saveTopicConfig(topic: TopicConfig): Promise<void> {
+    private async saveTopicConfig(topic: TopicConfig, topicPath: string): Promise<void> {
         const { join } = await import('path');
         const { writeFile, mkdir } = await import('fs/promises');
 
         // 使用 DataPathService 獲取正確的 scope 路徑
         const scopePath = await this.dataPathService.getScopePath(this.scopeId);
-        const topicPath = join(scopePath, ...(topic.path || []));
-        const configPath = join(topicPath, 'topic.json');
+        const fullTopicPath = join(scopePath, ...topicPath.split('/'));
+        const configPath = join(fullTopicPath, 'topic.json');
 
         console.log('[TopicManager] Saving topic to:', configPath);
         console.log('[TopicManager] Topic data being saved:', {
@@ -634,40 +646,28 @@ export class TopicManager {
         });
 
         // 確保目錄存在
-        await mkdir(topicPath, { recursive: true });
+        await mkdir(fullTopicPath, { recursive: true });
 
         // 保存配置文件
         await writeFile(configPath, JSON.stringify(topic, null, 2), 'utf-8');
     }
 
-    private async deleteTopicFromFileSystem(topic: TopicConfig): Promise<void> {
+    private async deleteTopicFromFileSystem(topic: TopicConfig, topicPath: string): Promise<void> {
         const { join } = await import('path');
         const { rm } = await import('fs/promises');
 
-        const extensionPath = (this.platform as any).getExtensionPath?.() ||
-                            (this.platform as any).getExtensionContext?.()?.extensionPath;
-
-        if (!extensionPath) {
-            throw new Error('Extension path not found');
-        }
-
-        const topicPath = join(extensionPath, 'data', this.scopeId, ...(topic.path || []));
-        await rm(topicPath, { recursive: true, force: true });
+        const scopePath = await this.dataPathService.getScopePath(this.scopeId);
+        const fullTopicPath = join(scopePath, ...topicPath.split('/'));
+        await rm(fullTopicPath, { recursive: true, force: true });
     }
 
-    private async moveTopicFileStructure(oldTopic: TopicConfig, newTopic: TopicConfig): Promise<void> {
+    private async moveTopicFileStructure(topic: TopicConfig, oldTopicPath: string, newTopicPath: string): Promise<void> {
         const { join } = await import('path');
         const { rename, mkdir } = await import('fs/promises');
 
-        const extensionPath = (this.platform as any).getExtensionPath?.() ||
-                            (this.platform as any).getExtensionContext?.()?.extensionPath;
-
-        if (!extensionPath) {
-            throw new Error('Extension path not found');
-        }
-
-        const oldPath = join(extensionPath, 'data', this.scopeId, ...(oldTopic.path || []));
-        const newPath = join(extensionPath, 'data', this.scopeId, ...(newTopic.path || []));
+        const scopePath = await this.dataPathService.getScopePath(this.scopeId);
+        const oldPath = join(scopePath, ...oldTopicPath.split('/'));
+        const newPath = join(scopePath, ...newTopicPath.split('/'));
 
         if (oldPath !== newPath) {
             // 確保新的父目錄存在
@@ -679,7 +679,7 @@ export class TopicManager {
         }
 
         // 更新 topic.json
-        await this.saveTopicConfig(newTopic);
+        await this.saveTopicConfig(topic, newTopicPath);
     }
 
     // ==================== 事件系統 ====================

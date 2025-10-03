@@ -1578,6 +1578,7 @@ ${escapeHtml(template.code)}
         const hierarchy = currentData.topics.hierarchy;
         let html = '';
 
+        console.log('Using hierarchy.roots:', hierarchy.roots);
 
         if (hierarchy.roots && hierarchy.roots.length > 0) {
             // Build tree from roots array
@@ -2066,6 +2067,7 @@ ${escapeHtml(template.code)}
 
     // Select a target in the browser
     window.selectTarget = function(item) {
+        console.log('selectTarget called with:', item);
         // Remove previous selection
         document.querySelectorAll('.tree-item.selected').forEach(el => {
             el.classList.remove('selected');
@@ -2714,6 +2716,7 @@ ${escapeHtml(template.code)}
         populateAvailableLanguages();
         clearJsonInput();
         jsonModal.classList.add('active');
+        console.log('JSON modal opened');
     }
 
     function closeJsonModal() {
@@ -2724,6 +2727,7 @@ ${escapeHtml(template.code)}
         }
         jsonModal.classList.remove('active');
         clearJsonInput();
+        console.log('JSON modal closed');
     }
 
     function populateAvailableLanguages() {
@@ -3227,6 +3231,7 @@ ${description}
         const docInput = document.getElementById('template-documentation');
         const typeSelect = document.getElementById('template-documentation-type');
         
+        console.log('Preview documentation called');
         console.log('docInput:', docInput);
         console.log('typeSelect:', typeSelect);
         
@@ -3956,6 +3961,7 @@ ${description}
 
         // If we have hierarchical topics, use them
         if (topics && topics.roots) {
+            console.log('Using hierarchical topics:', topics.roots);
             const result = topics.roots.map(root => buildTreeNodeFromTopic(root));
             console.log('Built tree from hierarchy:', result);
             return result;
@@ -4339,6 +4345,7 @@ ${description}
     }
 
     function selectTreeItem(item) {
+        console.log('selectTreeItem called with:', item);
 
         // Remove previous selection
         document.querySelectorAll('.tree-item.selected').forEach(el => {
@@ -4381,6 +4388,7 @@ ${description}
     }
 
     function restoreTreeSelection(container) {
+        console.log('restoreTreeSelection called with selectedTreeItem:', selectedTreeItem);
 
         let itemToSelect = null;
 
@@ -4408,6 +4416,7 @@ ${description}
     }
 
     function showContentDetails(itemPath, itemType) {
+        console.log('showContentDetails called with:', itemPath, itemType);
         const container = document.getElementById('content-details');
         if (!container) {
             console.error('content-details container not found');
@@ -4431,6 +4440,7 @@ ${description}
     }
 
     function showTopicDetails(topicPath, container) {
+        console.log('showTopicDetails called with:', topicPath, container);
         // Find topic data
         const topic = window.topicLookup?.get(topicPath);
         console.log('Found topic:', topic);
@@ -4729,6 +4739,7 @@ ${description}
     }
 
     function findTopicByPath(topicPath) {
+        console.log('findTopicByPath called with:', topicPath);
         console.log('currentData.topics:', currentData.topics);
 
         // Check our own topic lookup first

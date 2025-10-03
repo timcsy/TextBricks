@@ -1,5 +1,6 @@
 {
-  "id": "js-hello-world",
+  "type": "template",
+  "name": "hello-world",
   "title": "Hello World",
   "description": "基本的 Hello World 程式",
   "language": "javascript",

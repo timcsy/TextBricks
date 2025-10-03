@@ -157,7 +157,7 @@ export class DocumentationService {
             metadata: {
                 title: template.title,
                 language: template.language,
-                topic: template.topic,
+                // topic 從檔案路徑推導，不再儲存於 template
                 ...metadata
             }
         };
@@ -173,9 +173,7 @@ export class DocumentationService {
             metadata.language = template.language;
         }
 
-        if (template.topic) {
-            metadata.topic = template.topic;
-        }
+        // topic 從檔案路徑推導，不再儲存於 template
 
         if ((template as any).metadata?.tags && (template as any).metadata.tags.length > 0) {
             metadata.tags = (template as any).metadata.tags;
@@ -268,7 +266,8 @@ export class DocumentationService {
         const grouped: Record<string, Template[]> = {};
 
         for (const template of templates) {
-            const topic = template.topic || 'Uncategorized';
+            // TODO: topic 需要從檔案路徑推導，暫時使用 language 分組
+            const topic = template.language || 'Uncategorized';
             if (!grouped[topic]) {
                 grouped[topic] = [];
             }
