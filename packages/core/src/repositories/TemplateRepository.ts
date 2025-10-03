@@ -7,18 +7,19 @@
 
 import { IPlatform } from '../interfaces/IPlatform';
 import { DataPathService } from '../services/DataPathService';
+import { TopicManager } from '../managers/TopicManager';
 import { ExtendedTemplate } from '@textbricks/shared';
 
 export class TemplateRepository {
     private templates: Map<string, ExtendedTemplate> = new Map(); // Key: path (如 "python/templates/hello-world")
     private platform: IPlatform;
     private dataPathService: DataPathService;
-    private topicManager: any; // 待整合 TopicManager
+    private topicManager?: TopicManager;
 
     constructor(
         platform: IPlatform,
         dataPathService: DataPathService,
-        topicManager?: any
+        topicManager?: TopicManager
     ) {
         this.platform = platform;
         this.dataPathService = dataPathService;
@@ -49,11 +50,9 @@ export class TemplateRepository {
             metadata: {
                 createdAt: new Date(),
                 updatedAt: new Date()
-            }
+            },
+            topicPath: topicPath
         };
-
-        // 添加 topicPath 屬性用於前端顯示
-        (template as any).topicPath = topicPath;
 
         // 構建檔案路徑
         const scopePath = await this.dataPathService.getScopePath('local');
@@ -144,7 +143,7 @@ export class TemplateRepository {
             this.templates.delete(path);
             return true;
         } catch (error) {
-            console.error(`Failed to delete template ${path}:`, error);
+            this.platform.logError(error as Error, 'delete');
             return false;
         }
     }
@@ -212,7 +211,7 @@ export class TemplateRepository {
      * @deprecated usage 統計已移至 ScopeManager 集中管理
      */
     async incrementUsage(path: string): Promise<void> {
-        console.warn('[TemplateRepository] incrementUsage is deprecated. Use ScopeManager.updateUsage instead.');
+        this.platform.logWarning('incrementUsage is deprecated. Use ScopeManager.updateUsage instead.', 'TemplateRepository');
         // 此方法保留用於向後相容，但建議使用 ScopeManager
     }
 
@@ -230,19 +229,18 @@ export class TemplateRepository {
         // 使用 getScopePath 而不是 getDataPath，因為模板存儲在 scope 目錄下
         const scopePath = await this.dataPathService.getScopePath('local');
         if (!scopePath) {
-            console.warn('[TemplateRepository] No scope path configured');
+            this.platform.logWarning('No scope path configured', 'TemplateRepository');
             return;
         }
-        console.log(`[TemplateRepository] Using scope path: ${scopePath}`);
+        this.platform.logInfo(`Using scope path: ${scopePath}`, 'TemplateRepository');
 
         try {
             // 遞迴掃描目錄載入所有模板
             await this.scanDirectoryRecursively(scopePath, '');
 
-
-            console.log(`[TemplateRepository] Loaded ${this.templates.size} templates`);
+            this.platform.logInfo(`Loaded ${this.templates.size} templates`, 'TemplateRepository');
         } catch (error) {
-            console.error('[TemplateRepository] Failed to load templates:', error);
+            this.platform.logError(error as Error, 'loadAllTemplates');
         }
     }
 
@@ -280,12 +278,12 @@ export class TemplateRepository {
                                         : `templates/${templateName}`;
 
                                     // 添加 topicPath 屬性用於前端顯示
-                                    (template as any).topicPath = relativePath || '';
+                                    template.topicPath = relativePath || '';
 
                                     this.templates.set(templatePath, template);
-                                    console.log(`[TemplateRepository] Loaded template: ${templatePath}, topicPath: ${relativePath}, language: ${template.language}`);
+                                    this.platform.logInfo(`Loaded template: ${templatePath}, topicPath: ${relativePath}, language: ${template.language}`, 'TemplateRepository');
                                 } catch (error) {
-                                    console.warn(`Failed to load template ${file}:`, error);
+                                    this.platform.logWarning(`Failed to load template ${file}`, 'TemplateRepository');
                                 }
                             }
                         }
@@ -297,7 +295,8 @@ export class TemplateRepository {
                 }
             }
         } catch (error) {
-            // 忽略無法讀取的目錄
+            // 忽略無法讀取的目錄（通常是權限問題或不存在）
+            this.platform.logInfo(`Skipping directory ${dirPath}: ${error}`, 'TemplateRepository');
         }
     }
 
@@ -319,7 +318,7 @@ export class TemplateRepository {
         const templatesPath = join(fullTopicPath, 'templates');
         const filePath = join(templatesPath, `${template.name}.json`);
 
-        console.log(`[TemplateRepository] Saving template to: ${filePath}`);
+        this.platform.logInfo(`Saving template to: ${filePath}`, 'TemplateRepository');
 
         // 確保目錄存在
         await mkdir(templatesPath, { recursive: true });
@@ -346,7 +345,7 @@ export class TemplateRepository {
         const templatesPath = join(fullTopicPath, 'templates');
         const filePath = join(templatesPath, `${templateName}.json`);
 
-        console.log(`[TemplateRepository] Deleting template from: ${filePath}`);
+        this.platform.logInfo(`Deleting template from: ${filePath}`, 'TemplateRepository');
 
         await unlink(filePath);
     }

@@ -6,15 +6,34 @@ import { DocumentationService } from '@textbricks/core';
 import { CodeOperationService } from '@textbricks/core';
 import { Template, Language, Card, ExtendedCard } from '@textbricks/shared';
 
+interface PartialScopeConfig {
+    languages?: Language[];
+    favorites?: string[];
+    usage?: Record<string, number>;
+}
+
+type ItemWithPath = Template & { topicPath?: string };
+type DisplayItem = ItemWithPath | Card | ExtendedCard;
+
+// Type guards
+function isTemplate(item: DisplayItem): item is ItemWithPath {
+    return 'type' in item && item.type === 'template';
+}
+
+function isCard(item: DisplayItem): item is Card | ExtendedCard {
+    return 'type' in item && (item.type === 'topic' || item.type === 'link');
+}
+
 export class WebviewProvider implements vscode.WebviewViewProvider {
     public static readonly viewType = 'textbricks-webview';
 
     private _view?: vscode.WebviewView;
     private _documentationProvider?: DocumentationProvider;
     private _currentTopicPath: string = ''; // Current navigation path
-    private _scopeConfig: any = null; // Cached scope configuration
+    private _scopeConfig: PartialScopeConfig | null = null; // Cached scope configuration
     private _browsingHistory: string[] = ['']; // Browsing history array, start with root
     private _historyIndex: number = 0; // Current position in history
+    private platform;
 
     constructor(
         private readonly _extensionUri: vscode.Uri,
@@ -25,6 +44,7 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
         private readonly dataPathService: DataPathService,
         private readonly managementService?: TextBricksEngine
     ) {
+        this.platform = this.templateEngine.getPlatform();
         // Initialize documentation provider
         this._documentationProvider = new DocumentationProvider(this._extensionUri, this.templateEngine, this.documentationService, this.codeOperationService);
 
@@ -38,7 +58,7 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
             const scopeData = await fs.readFile(scopePath, 'utf8');
             this._scopeConfig = JSON.parse(scopeData);
         } catch (error) {
-            console.error('Failed to load scope config:', error);
+            this.platform.logError(error as Error, 'WebviewProvider._loadScopeConfig');
             this._scopeConfig = { languages: [], favorites: [], usage: {} };
         }
     }
@@ -48,7 +68,7 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
             return languageName.toUpperCase();
         }
 
-        const language = this._scopeConfig.languages?.find((lang: any) => lang.name === languageName);
+        const language = this._scopeConfig.languages?.find(lang => lang.name === languageName);
         return language?.tagName || languageName.toUpperCase();
     }
 
@@ -72,7 +92,7 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
             const scopePath = path.join(localScopePath, 'scope.json');
             await fs.writeFile(scopePath, JSON.stringify(this._scopeConfig, null, 2), 'utf8');
         } catch (error) {
-            console.error('Failed to save scope config:', error);
+            this.platform.logError('Failed to save scope config:', error);
         }
     }
 
@@ -93,7 +113,7 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
         await this._saveScopeConfig();
     }
 
-    private _filterCurrentTopicItems(items: any[]): any[] {
+    private _filterCurrentTopicItems(items: DisplayItem[]): DisplayItem[] {
         if (!this._currentTopicPath) {
             // 如果在根層級，顯示所有項目（不論層級）
             return items;
@@ -114,15 +134,16 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
 
         // 顯示當前主題及其子主題的項目
         return items.filter(item => {
-            if (!item.topicPath) return false;
-            return item.topicPath === this._currentTopicPath || subtopicIds.has(item.topicPath);
+            const itemTopicPath = 'topicPath' in item ? item.topicPath : undefined;
+            if (!itemTopicPath) return false;
+            return itemTopicPath === this._currentTopicPath || subtopicIds.has(itemTopicPath);
         });
     }
 
-    private _getRecommendedByUsage(items: any[], limit: number = 6): any[] {
+    private _getRecommendedByUsage(items: ItemWithPath[], limit: number = 6): Array<ItemWithPath & { usageCount: number }> {
         return items
             .map(item => {
-                const itemPath = (item as any).topicPath ? `${(item as any).topicPath}/templates/${item.name}` : item.name;
+                const itemPath = item.topicPath ? `${item.topicPath}/templates/${item.name}` : item.name;
                 return {
                     ...item,
                     usageCount: this._getUsageCount(itemPath)
@@ -133,15 +154,15 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
             .slice(0, limit);
     }
 
-    private _getFavoriteItems(items: any[]): any[] {
+    private _getFavoriteItems(items: ItemWithPath[]): ItemWithPath[] {
         const favorites = this._getFavorites();
         return items.filter(item => {
-            const itemPath = (item as any).topicPath ? `${(item as any).topicPath}/templates/${item.name}` : item.name;
+            const itemPath = item.topicPath ? `${item.topicPath}/templates/${item.name}` : item.name;
             return favorites.includes(itemPath);
         });
     }
 
-    private _getFavoriteItemsForDisplay(): any[] {
+    private _getFavoriteItemsForDisplay(): DisplayItem[] {
         // Get both templates and cards that are favorited
         const allTemplates = this.templateEngine.getAllTemplates();
         const allCards = this.templateEngine.getAllCards();
@@ -149,7 +170,8 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
 
         // Find favorited templates
         const favoriteTemplates = allTemplates.filter(template => {
-            const templatePath = (template as any).topicPath ? `${(template as any).topicPath}/templates/${template.name}` : template.name;
+            const templateWithPath = template as ItemWithPath;
+            const templatePath = templateWithPath.topicPath ? `${templateWithPath.topicPath}/templates/${template.name}` : template.name;
             return favorites.includes(templatePath);
         });
 
@@ -311,7 +333,7 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
 
     public async refresh(preserveNavigationState: boolean = false) {
         if (this._view) {
-            console.log('[WebviewProvider.refresh] Starting refresh...', preserveNavigationState ? '(preserving navigation state)' : '(normal refresh)');
+            this.platform.logInfo(`Starting refresh... ${preserveNavigationState ? '(preserving navigation state)' : '(normal refresh)'}`, 'WebviewProvider.refresh');
 
             // 保存當前導航狀態
             const savedNavState = {
@@ -320,7 +342,7 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
                 historyIndex: this._historyIndex
             };
 
-            console.log('[WebviewProvider.refresh] Current state before operation:', savedNavState);
+            this.platform.logInfo(`Current state before operation: ${JSON.stringify(savedNavState)}`, 'WebviewProvider.refresh');
 
             // 強制重新載入模板數據，清除緩存
             await this.templateEngine.forceReloadTemplates();
@@ -330,19 +352,15 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
                 this._currentTopicPath = savedNavState.currentTopicPath;
                 this._browsingHistory = savedNavState.browsingHistory;
                 this._historyIndex = savedNavState.historyIndex;
-                console.log('[WebviewProvider.refresh] Navigation state preserved and restored:', {
-                    currentTopicPath: this._currentTopicPath,
-                    browsingHistory: this._browsingHistory,
-                    historyIndex: this._historyIndex
-                });
+                this.platform.logInfo(`Navigation state preserved and restored: ${this._currentTopicPath}`, 'WebviewProvider.refresh');
             } else {
-                console.log('[WebviewProvider.refresh] Normal refresh - navigation state may change based on HTML generation');
+                this.platform.logInfo('Normal refresh - navigation state may change based on HTML generation', 'WebviewProvider.refresh');
             }
 
             // 重新生成 HTML（現在會包含恢復的導航狀態）
             this._view.webview.html = this._getHtmlForWebview(this._view.webview);
 
-            console.log('[WebviewProvider.refresh] Templates refreshed successfully. Final currentTopicPath:', this._currentTopicPath);
+            this.platform.logInfo(`Templates refreshed successfully. Final currentTopicPath: ${this._currentTopicPath}`, 'WebviewProvider.refresh');
         }
     }
 
@@ -352,7 +370,7 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
 
     private async _handleDragTemplate(templatePath: string, text: string) {
         // This method is called during drag start - just log for now
-        console.log(`Dragging template ${templatePath}: ${text.substring(0, 50)}...`);
+        this.platform.logInfo(`Dragging template ${templatePath}: ${text.substring(0, 50)}...`, 'WebviewProvider');
     }
 
 
@@ -396,12 +414,12 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
             .map(item => {
                 // Check if item has type property (it's a card) or not (it's a template)
                 if (item.type === 'topic') {
-                    return this._generateTopicCardHtml(item);
+                    return this._generateTopicCardHtml(item as Card);
                 } else if (item.type === 'link') {
-                    return this._generateLinkCardHtml(item);
+                    return this._generateLinkCardHtml(item as Card);
                 } else {
                     // It's a template
-                    return this._generateRecommendedTemplateCardHtml(item, 'favorite');
+                    return this._generateRecommendedTemplateCardHtml(item as ItemWithPath, 'favorite');
                 }
             })
             .join('');
@@ -425,17 +443,12 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
             this._browsingHistory.push(topicPath);
             this._historyIndex = this._browsingHistory.length - 1;
 
-            console.log(`Navigation history updated:`, {
-                history: this._browsingHistory,
-                currentIndex: this._historyIndex,
-                currentPath: topicPath
-            });
+            this.platform.logInfo(`Navigation history updated: ${this._historyIndex}/${this._browsingHistory.length - 1}, path: ${topicPath}`, 'WebviewProvider');
         }
 
         // Update the current topic path
         this._currentTopicPath = topicPath;
-        console.log(`[_handleTopicNavigation] Navigating to topic: "${topicPath}"`);
-        console.log(`[_handleTopicNavigation] Current topic path set to: "${this._currentTopicPath}"`);
+        this.platform.logInfo(`Navigating to topic: "${topicPath}", current path set to: "${this._currentTopicPath}"`, 'WebviewProvider');
 
         // Refresh the webview to show the new topic context
         this.refresh();
@@ -446,11 +459,7 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
             this._historyIndex--;
             this._currentTopicPath = this._browsingHistory[this._historyIndex];
 
-            console.log(`Navigating back to: ${this._currentTopicPath || 'root'}`);
-            console.log(`History state:`, {
-                history: this._browsingHistory,
-                currentIndex: this._historyIndex
-            });
+            this.platform.logInfo(`Navigating back to: ${this._currentTopicPath || 'root'}, index: ${this._historyIndex}`, 'WebviewProvider');
 
             // Refresh the webview
             this.refresh();
@@ -462,11 +471,7 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
             this._historyIndex++;
             this._currentTopicPath = this._browsingHistory[this._historyIndex];
 
-            console.log(`Navigating forward to: ${this._currentTopicPath || 'root'}`);
-            console.log(`History state:`, {
-                history: this._browsingHistory,
-                currentIndex: this._historyIndex
-            });
+            this.platform.logInfo(`Navigating forward to: ${this._currentTopicPath || 'root'}, index: ${this._historyIndex}`, 'WebviewProvider');
 
             // Refresh the webview
             this.refresh();
@@ -712,10 +717,10 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
 
     private _generateRecommendedTemplatesHtml(): string {
         // 獲取所有模板並基於使用次數排序推薦
-        const allTemplates = this.templateEngine.getAllTemplates();
+        const allTemplates = this.templateEngine.getAllTemplates() as ItemWithPath[];
 
         // 過濾當前主題下的模板
-        const currentTopicTemplates = this._filterCurrentTopicItems(allTemplates);
+        const currentTopicTemplates = this._filterCurrentTopicItems(allTemplates).filter(isTemplate);
 
         // 基於使用次數排序獲取推薦模板（取前6個）
         const recommendedTemplates = this._getRecommendedByUsage(currentTopicTemplates, 6);
@@ -736,12 +741,12 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
             .map(item => {
                 // Check if item has type property (it's a card) or not (it's a template)
                 if (item.type === 'topic') {
-                    return this._generateTopicCardHtml(item);
+                    return this._generateTopicCardHtml(item as Card);
                 } else if (item.type === 'link') {
-                    return this._generateLinkCardHtml(item);
+                    return this._generateLinkCardHtml(item as Card);
                 } else {
                     // It's a template
-                    return this._generateRecommendedTemplateCardHtml(item, 'favorite');
+                    return this._generateRecommendedTemplateCardHtml(item as ItemWithPath, 'favorite');
                 }
             })
             .join('');
@@ -769,7 +774,7 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
         `;
     }
 
-    private _generateRecommendedTemplateCardHtml(template: any, type: 'recommended' | 'favorite'): string {
+    private _generateRecommendedTemplateCardHtml(template: ItemWithPath & { usageCount?: number }, type: 'recommended' | 'favorite'): string {
         const templatePath = template.topicPath ? `${template.topicPath}/templates/${template.name}` : template.name;
         const usageCount = template.usageCount || this._getUsageCount(templatePath);
         const hasDocumentation = template.documentation && template.documentation.trim().length > 0;
@@ -815,7 +820,7 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
     private _generateTopicsHtml(topics: string[]): string {
         // 獲取所有卡片
         const allCards = this.templateEngine.getAllCards();
-        console.log(`[WebviewProvider] getAllCards() returned ${allCards.length} cards, currentTopicPath: ${this._currentTopicPath}`);
+        this.platform.logInfo(`getAllCards() returned ${allCards.length} cards, currentTopicPath: ${this._currentTopicPath}`, 'WebviewProvider');
 
         // If we're in a specific topic, filter cards for that topic
         if (this._currentTopicPath) {
@@ -827,7 +832,7 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
         const rootTopics = this.templateEngine.getRootTopics?.() || [];
         const rootTopicNames = new Set(rootTopics.map(t => t.name));
 
-        console.log('[WebviewProvider] Root topics:', Array.from(rootTopicNames));
+        this.platform.logInfo(`Root topics: ${Array.from(rootTopicNames).join(', ')}`, 'WebviewProvider');
 
         // 只保留屬於頂層主題的卡片
         const topLevelCards = allCards.filter(card => card.topicPath && rootTopicNames.has(card.topicPath));
@@ -842,7 +847,7 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
             cardsByMainTopic.get(mainTopic)!.push(card);
         });
 
-        console.log('[WebviewProvider] Topics:', Array.from(cardsByMainTopic.keys()));
+        this.platform.logInfo(`Topics: ${Array.from(cardsByMainTopic.keys()).join(', ')}`, 'WebviewProvider');
 
         // 為每個頂層主題生成 HTML
         return Array.from(cardsByMainTopic.entries()).map(([mainTopicName, allCardsInTopic]) => {
@@ -858,10 +863,7 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
             const templateCards = currentLevelCards.filter(card => card.type === 'template');
             const linkCards = currentLevelCards.filter(card => card.type === 'link');
 
-            console.log(`[WebviewProvider] Topic "${mainTopicName}": currentLevel=${currentLevelCards.length}, topics=${topicCards.length}, templates=${templateCards.length}, links=${linkCards.length}`);
-            if (currentLevelCards.length > 0 && templateCards.length === 0) {
-                console.log(`[WebviewProvider] WARNING: No template cards found in "${mainTopicName}"! Card types:`, currentLevelCards.map(c => ({ name: c.name, type: c.type })));
-            }
+            this.platform.logInfo(`Topic "${mainTopicName}": currentLevel=${currentLevelCards.length}, topics=${topicCards.length}, templates=${templateCards.length}, links=${linkCards.length}`, 'WebviewProvider');
 
             const cardsHtml = [
                 ...topicCards.map(card => this._generateTopicCardHtml(card)),
@@ -891,13 +893,7 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
 
             // Debug logging for specific topics
             if (mainTopicName.includes('advanced') || mainTopicName.includes('basic')) {
-                console.log('DEBUG main topic group generation:', {
-                    mainTopicName,
-                    topicName,
-                    hasDocumentation,
-                    managedTopicName: managedTopic?.name,
-                    documentation: managedTopic?.documentation?.substring(0, 50) + '...'
-                });
+                this.platform.logInfo(`DEBUG main topic group: ${mainTopicName}, hasDoc=${hasDocumentation}, docLength=${managedTopic?.documentation?.length || 0}`, 'WebviewProvider');
             }
 
             // Check if main topic has navigable content (sub-topics or topic links)
@@ -1047,7 +1043,7 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
 
                 const hasDocumentation = managedTopic && managedTopic.documentation && managedTopic.documentation.trim().length > 0;
 
-                console.log(`[WebviewProvider] Subtopic "${topicCard.target}": managedTopic found=${!!managedTopic}, hasDocumentation=${hasDocumentation}`, managedTopic?.documentation?.substring(0, 50));
+                this.platform.logInfo(`Subtopic "${topicCard.target}": managedTopic found=${!!managedTopic}, hasDocumentation=${hasDocumentation}, docLength=${managedTopic?.documentation?.length || 0}`, 'WebviewProvider');
                 const hasNavigableContent = subtopicSubtopics.length > 0 || subtopicLinks.some(card => card.target && !card.target.startsWith('http'));
 
                 return `

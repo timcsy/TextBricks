@@ -4,23 +4,35 @@ import { TextBricksEngine } from '@textbricks/core';
 import { CodeOperationService } from '@textbricks/core';
 import { Template, DocumentationType, Topic } from '@textbricks/shared';
 
+// Message type definition
+interface DocumentationMessage {
+    type: string;
+    [key: string]: unknown;
+}
+
+// Documentation result type (flexible for different documentation formats)
+type DocumentationResult = unknown;
+
 export class DocumentationProvider {
     public static readonly viewType = 'textbricks-documentation';
-    
+
     private _panel?: vscode.WebviewPanel;
     private _disposables: vscode.Disposable[] = [];
     private _currentTemplate?: Template;
+    private platform;
 
     constructor(
         private readonly _extensionUri: vscode.Uri,
         private readonly templateEngine: TextBricksEngine,
         private readonly documentationService: DocumentationService,
         private readonly codeOperationService: CodeOperationService
-    ) {}
+    ) {
+        this.platform = this.templateEngine.getPlatform();
+    }
 
     public async showDocumentation(templatePath: string) {
         // Force reload latest data to ensure we get the most current template documentation
-        console.log('[DocumentationProvider] Force reloading data before showing template documentation');
+        this.platform.logInfo('Force reloading data before showing template documentation', 'DocumentationProvider');
         await this.templateEngine.forceReloadTemplates();
 
         const template = this.templateEngine.getTemplateByPath(templatePath);
@@ -73,7 +85,7 @@ export class DocumentationProvider {
 
     public async showTopicDocumentation(topic: Topic) {
         // Force reload latest data to ensure we get the most current topic documentation
-        console.log('[DocumentationProvider] Force reloading data before showing topic documentation');
+        this.platform.logInfo('Force reloading data before showing topic documentation', 'DocumentationProvider');
         await this.templateEngine.forceReloadTemplates();
 
         const allTopics = this.templateEngine.getAllTopicConfigs();
@@ -89,21 +101,16 @@ export class DocumentationProvider {
                 const dataPath = path.join(process.cwd(), 'data');
                 const topicFilePath = path.join(dataPath, 'local', topic.name, 'topic.json');
 
-                console.log('[DocumentationProvider] Attempting direct file read from:', topicFilePath);
+                this.platform.logInfo(`Attempting direct file read from: ${topicFilePath}`, 'DocumentationProvider');
                 const topicFileContent = await fs.readFile(topicFilePath, 'utf8');
                 latestTopic = JSON.parse(topicFileContent);
-                console.log('[DocumentationProvider] Direct file read successful');
+                this.platform.logInfo('Direct file read successful', 'DocumentationProvider');
             } catch (error) {
-                console.error('[DocumentationProvider] Direct file read failed:', error);
+                this.platform.logError(error as Error, 'DocumentationProvider.showTopicDocumentation');
             }
         }
 
-        console.log('[DocumentationProvider] Latest topic data:', {
-            name: latestTopic?.name,
-            description: latestTopic?.description,
-            documentationLength: latestTopic?.documentation?.length,
-            documentationPreview: latestTopic?.documentation?.substring(0, 100)
-        });
+        this.platform.logInfo(`Latest topic data: ${latestTopic?.name}, doc length: ${latestTopic?.documentation?.length}`, 'DocumentationProvider');
 
         if (!latestTopic || !latestTopic.documentation) {
             vscode.window.showWarningMessage(`主題 "${topic.name}" 沒有說明文檔`);
@@ -158,8 +165,8 @@ export class DocumentationProvider {
         }
     }
 
-    private async _handleMessage(message: any) {
-        console.log('[DOCUMENTATION] Received message:', message.type, message);
+    private async _handleMessage(message: DocumentationMessage & Record<string, any>) {
+        this.platform.logInfo(`Received message: ${message.type}`, 'DocumentationProvider');
         
         switch (message.type) {
             case 'refresh':
@@ -172,20 +179,20 @@ export class DocumentationProvider {
                 }
                 break;
             case 'copyCodeBlock':
-                console.log('[DOCUMENTATION] Handling copyCodeBlock with code:', message.code?.substring(0, 50) + '...');
+                this.platform.logInfo(`Handling copyCodeBlock, code length: ${message.code?.length}`, 'DocumentationProvider');
                 if (message.code) {
                     await this.codeOperationService.copyCodeSnippet(message.code, message.templateId);
                 } else {
-                    console.error('[DOCUMENTATION] No code in copyCodeBlock message');
+                    this.platform.logWarning('No code in copyCodeBlock message', 'DocumentationProvider');
                     vscode.window.showErrorMessage('沒有程式碼可複製');
                 }
                 break;
             case 'insertCodeBlock':
-                console.log('[DOCUMENTATION] Handling insertCodeBlock with code:', message.code?.substring(0, 50) + '...');
+                this.platform.logInfo(`Handling insertCodeBlock, code length: ${message.code?.length}`, 'DocumentationProvider');
                 if (message.code) {
                     await this.codeOperationService.insertCodeSnippet(message.code, message.templateId);
                 } else {
-                    console.error('[DOCUMENTATION] No code in insertCodeBlock message');
+                    this.platform.logWarning('No code in insertCodeBlock message', 'DocumentationProvider');
                     vscode.window.showErrorMessage('沒有程式碼可插入');
                 }
                 break;
@@ -195,7 +202,7 @@ export class DocumentationProvider {
                 }
                 break;
             default:
-                console.log('[DOCUMENTATION] Unknown message type:', message.type);
+                this.platform.logWarning(`Unknown message type: ${message.type}`, 'DocumentationProvider');
         }
     }
 
@@ -226,7 +233,7 @@ export class DocumentationProvider {
             }, 100); // Small delay to ensure HTML is loaded
 
         } catch (error) {
-            console.error('Documentation loading error:', error);
+            this.platform.logError(error as Error, 'DocumentationProvider._updateWebview');
             this._panel.webview.html = this._getErrorHtml(`載入說明文檔時發生錯誤：${error}`);
         }
     }
@@ -260,7 +267,7 @@ export class DocumentationProvider {
             }, 100); // Small delay to ensure HTML is loaded
 
         } catch (error) {
-            console.error('Topic documentation loading error:', error);
+            this.platform.logError(error as Error, 'DocumentationProvider._updateTopicWebview');
             this._panel.webview.html = this._getErrorHtml(`載入主題說明文檔時發生錯誤：${error}`);
         }
     }
@@ -346,7 +353,7 @@ export class DocumentationProvider {
 </html>`;
     }
 
-    private _getDocumentationHtml(docResult: any, template: Template): string {
+    private _getDocumentationHtml(docResult: DocumentationResult, template: Template): string {
         const styleUri = this._panel!.webview.asWebviewUri(
             vscode.Uri.joinPath(this._extensionUri, 'assets', 'css', 'documentation.css')
         );
@@ -360,15 +367,16 @@ export class DocumentationProvider {
 
         const nonce = this._getNonce();
 
+        const result = docResult as any;
         let contentHtml = '';
-        
-        if (docResult.error) {
+
+        if (result.error) {
             contentHtml = `<div class="error">
                 <h2>⚠️ 載入錯誤</h2>
-                <p>${docResult.error}</p>
+                <p>${result.error}</p>
             </div>`;
         } else {
-            contentHtml = this.markdownToHtml(docResult.content, template.name);
+            contentHtml = this.markdownToHtml(result.content, template.name);
         }
 
         return `<!DOCTYPE html>
@@ -413,7 +421,7 @@ export class DocumentationProvider {
             </div>
             <div class="info-item">
                 <span class="label">文檔類型：</span>
-                <span class="value doc-type">${this._getDocTypeDisplay(docResult.type)}</span>
+                <span class="value doc-type">${this._getDocTypeDisplay(result.type)}</span>
             </div>
         </div>
 
@@ -568,7 +576,7 @@ export class DocumentationProvider {
         return html;
     }
 
-    private _getTopicDocumentationHtml(docResult: any, topic: Topic): string {
+    private _getTopicDocumentationHtml(docResult: DocumentationResult, topic: Topic): string {
         const styleUri = this._panel!.webview.asWebviewUri(
             vscode.Uri.joinPath(this._extensionUri, 'assets', 'css', 'documentation.css')
         );
@@ -582,16 +590,17 @@ export class DocumentationProvider {
 
         const nonce = this._getNonce();
 
+        const result = docResult as any;
         let contentHtml = '';
 
-        if (docResult.error) {
+        if (result.error) {
             contentHtml = `<div class="error">
                 <h2>⚠️ 載入錯誤</h2>
-                <p>${docResult.error}</p>
+                <p>${result.error}</p>
             </div>`;
         } else {
             // Convert markdown to HTML for topic documentation
-            contentHtml = this.markdownToHtml(docResult.content, topic.name);
+            contentHtml = this.markdownToHtml(result.content, topic.name);
         }
 
         return `<!DOCTYPE html>

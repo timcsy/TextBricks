@@ -18,7 +18,7 @@ export class VSCodeUI implements IUI {
     
     // ==================== 消息通知 ====================
 
-    async showMessage(message: string, type: MessageType = 'info', options?: any): Promise<string | undefined> {
+    async showMessage(message: string, type: MessageType = 'info', options?: unknown): Promise<string | undefined> {
         switch (type) {
             case 'info':
                 return await vscode.window.showInformationMessage(message);
@@ -86,7 +86,7 @@ export class VSCodeUI implements IUI {
 
     // ==================== 選擇器 ====================
 
-    async showQuickPick(items: QuickPickItem[], options?: any): Promise<QuickPickItem | QuickPickItem[] | undefined> {
+    async showQuickPick(items: QuickPickItem[], options?: unknown): Promise<QuickPickItem | QuickPickItem[] | undefined> {
         const vscodeItems: vscode.QuickPickItem[] = items.map(item => ({
             label: item.label,
             description: item.description,
@@ -104,18 +104,19 @@ export class VSCodeUI implements IUI {
         );
     }
 
-    async showOpenDialog(options?: any): Promise<string[] | undefined> {
+    async showOpenDialog(options?: unknown): Promise<string[] | undefined> {
         const vscodeOptions: vscode.OpenDialogOptions = {};
-        
+
         if (options) {
-            if (options.canSelectFiles !== undefined) vscodeOptions.canSelectFiles = options.canSelectFiles;
-            if (options.canSelectFolders !== undefined) vscodeOptions.canSelectFolders = options.canSelectFolders;
-            if (options.canSelectMany !== undefined) vscodeOptions.canSelectMany = options.canSelectMany;
-            if (options.defaultPath) vscodeOptions.defaultUri = vscode.Uri.file(options.defaultPath);
-            if (options.title) vscodeOptions.title = options.title;
-            
-            if (options.filters) {
-                vscodeOptions.filters = options.filters;
+            const opts = options as any;
+            if (opts.canSelectFiles !== undefined) vscodeOptions.canSelectFiles = opts.canSelectFiles;
+            if (opts.canSelectFolders !== undefined) vscodeOptions.canSelectFolders = opts.canSelectFolders;
+            if (opts.canSelectMany !== undefined) vscodeOptions.canSelectMany = opts.canSelectMany;
+            if (opts.defaultPath) vscodeOptions.defaultUri = vscode.Uri.file(opts.defaultPath);
+            if (opts.title) vscodeOptions.title = opts.title;
+
+            if (opts.filters) {
+                vscodeOptions.filters = opts.filters;
             }
         }
 
@@ -143,20 +144,21 @@ export class VSCodeUI implements IUI {
 
     // ==================== WebView 支援 ====================
 
-    async createWebviewPanel(options: any): Promise<IWebviewPanel> {
+    async createWebviewPanel(options: unknown): Promise<IWebviewPanel> {
+        const opts = options as any;
         const panel = vscode.window.createWebviewPanel(
-            options.viewType,
-            options.title,
+            opts.viewType,
+            opts.title,
             vscode.ViewColumn.One,
             {
-                enableScripts: options.enableScripts || false,
-                retainContextWhenHidden: options.retainContextWhenHidden || false,
-                localResourceRoots: options.localResourceRoots?.map((path: string) => vscode.Uri.file(path))
+                enableScripts: opts.enableScripts || false,
+                retainContextWhenHidden: opts.retainContextWhenHidden || false,
+                localResourceRoots: opts.localResourceRoots?.map((path: string) => vscode.Uri.file(path))
             }
         );
 
-        if (options.html) {
-            panel.webview.html = options.html;
+        if (opts.html) {
+            panel.webview.html = opts.html;
         }
 
         // 創建適配器包裝
@@ -164,34 +166,34 @@ export class VSCodeUI implements IUI {
             webview: {
                 html: panel.webview.html,
                 options: {
-                    enableScripts: options.enableScripts || false,
-                    retainContextWhenHidden: options.retainContextWhenHidden || false
+                    enableScripts: opts.enableScripts || false,
+                    retainContextWhenHidden: opts.retainContextWhenHidden || false
                 },
-                
-                postMessage: (message: any) => Promise.resolve(panel.webview.postMessage(message)),
-                
-                onDidReceiveMessage: (listener: (message: any) => any) => 
+
+                postMessage: (message: unknown) => Promise.resolve(panel.webview.postMessage(message)),
+
+                onDidReceiveMessage: (listener: (message: unknown) => unknown) =>
                     panel.webview.onDidReceiveMessage(listener),
-                
-                asWebviewUri: (localResource: string) => 
+
+                asWebviewUri: (localResource: string) =>
                     panel.webview.asWebviewUri(vscode.Uri.file(localResource)).toString(),
-                
+
                 cspSource: panel.webview.cspSource
             },
-            
-            viewType: options.viewType,
+
+            viewType: opts.viewType,
             title: panel.title,
-            
-            onDidDispose: (listener: () => any) => panel.onDidDispose(listener),
-            
-            onDidChangeViewState: (listener: (event: { webviewPanel: IWebviewPanel }) => any) => 
+
+            onDidDispose: (listener: () => unknown) => panel.onDidDispose(listener),
+
+            onDidChangeViewState: (listener: (event: { webviewPanel: IWebviewPanel }) => unknown) =>
                 panel.onDidChangeViewState((e) => listener({ webviewPanel: webviewAdapter })),
-            
+
             dispose: () => panel.dispose(),
-            
-            reveal: (viewColumn?: number, preserveFocus?: boolean) => 
+
+            reveal: (viewColumn?: number, preserveFocus?: boolean) =>
                 panel.reveal(viewColumn as vscode.ViewColumn, preserveFocus),
-            
+
             get visible() { return panel.visible; },
             get active() { return panel.active; }
         };
@@ -317,7 +319,7 @@ export class VSCodeUI implements IUI {
 
     // ==================== 新增缺少的方法 ====================
 
-    registerWebviewProvider(viewType: string, provider: any): void {
+    registerWebviewProvider(viewType: string, provider: unknown): void {
         // VS Code specific implementation handled elsewhere
         throw new Error('registerWebviewProvider should be called on VSCodePlatform');
     }
@@ -328,18 +330,24 @@ export class VSCodeUI implements IUI {
         command?: string;
         alignment?: 'left' | 'right';
         priority?: number;
-    }): any {
-        const alignment = options.alignment === 'right' ? 
-            vscode.StatusBarAlignment.Right : 
+    }): { text: string; tooltip?: string; command?: string; dispose(): void; show(): void; hide(): void } {
+        const alignment = options.alignment === 'right' ?
+            vscode.StatusBarAlignment.Right :
             vscode.StatusBarAlignment.Left;
-        
+
         const item = vscode.window.createStatusBarItem(alignment, options.priority);
         item.text = options.text;
         if (options.tooltip) item.tooltip = options.tooltip;
         if (options.command) item.command = options.command;
         item.show();
-        
+
         return {
+            get text() { return item.text; },
+            set text(value: string) { item.text = value; },
+            get tooltip() { return item.tooltip as string | undefined; },
+            set tooltip(value: string | undefined) { item.tooltip = value; },
+            get command() { return item.command as string | undefined; },
+            set command(value: string | undefined) { item.command = value; },
             dispose: () => item.dispose(),
             show: () => item.show(),
             hide: () => item.hide()

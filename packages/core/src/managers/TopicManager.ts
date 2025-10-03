@@ -7,6 +7,8 @@ import { IPlatform } from '../interfaces/IPlatform';
 import { DataPathService } from '../services/DataPathService';
 import {
     TopicConfig,
+    RuntimeTopicConfig,
+    TopicLink,
     TopicHierarchy,
     TopicNode,
     TopicCreateData,
@@ -47,13 +49,14 @@ export class TopicManager {
 
             // 使用 DataPathService 獲取正確的 scope 路徑
             const scopePath = await this.dataPathService.getScopePath(this.scopeId);
-            console.log('[TopicManager] Using scope path:', scopePath);
+            this.platform.logInfo(`Using scope path: ${scopePath}`, 'TopicManager');
 
             // 檢查 scope 是否存在
             try {
                 await stat(scopePath);
-            } catch {
-                // 創建空的階層結構
+            } catch (error) {
+                // Scope 路徑不存在，創建空的階層結構
+                this.platform.logInfo(`Scope path does not exist: ${scopePath}`, 'TopicManager');
                 this.hierarchy = {
                     roots: [],
                     topicsMap: new Map(),
@@ -118,7 +121,8 @@ export class TopicManager {
                 }
             }
         } catch (error) {
-            // 目錄不存在或無法讀取，忽略
+            // 目錄不存在或無法讀取，這是正常情況（掃描過程中可能遇到）
+            // 不需要記錄，因為這不是錯誤
         }
     }
 
@@ -126,33 +130,37 @@ export class TopicManager {
         const { join } = await import('path');
         const { readdir, readFile } = await import('fs/promises');
 
+        // 將 topicConfig 視為 RuntimeTopicConfig 以存取 loadedLinks
+        const runtimeConfig = topicConfig as RuntimeTopicConfig;
+
         try {
             const linksPath = join(topicPath, 'links');
             const linkFiles = await readdir(linksPath);
 
-            const links: any[] = [];
+            const links: TopicLink[] = [];
 
             for (const linkFile of linkFiles) {
                 if (linkFile.endsWith('.json')) {
                     try {
                         const linkFilePath = join(linksPath, linkFile);
                         const linkData = await readFile(linkFilePath, 'utf-8');
-                        const link = JSON.parse(linkData);
+                        const link: TopicLink = JSON.parse(linkData);
                         links.push(link);
                     } catch (error) {
-                        console.warn(`Failed to load link file ${linkFile}:`, error);
+                        this.platform.logWarning(`Failed to load link file ${linkFile}`, 'TopicManager');
                     }
                 }
             }
 
             // 將連結添加到主題配置中
-            (topicConfig as any).loadedLinks = links;
-            console.log(`[TopicManager] Loaded ${links.length} links for topic ${topicConfig.name}:`, links.map(l => l.title));
+            runtimeConfig.loadedLinks = links;
+            if (links.length > 0) {
+                this.platform.logInfo(`Loaded ${links.length} links for topic ${topicConfig.name}`, 'TopicManager');
+            }
 
         } catch (error) {
             // 連結目錄不存在或無法讀取，忽略
-            (topicConfig as any).loadedLinks = [];
-            console.log(`[TopicManager] No links directory for topic ${topicConfig.name}`);
+            runtimeConfig.loadedLinks = [];
         }
     }
 
@@ -615,14 +623,16 @@ export class TopicManager {
         // 創建初始模板和連結（如果提供）
         if (createData.templates && createData.templates.length > 0) {
             for (const template of createData.templates) {
-                const templateFilePath = join(fullTopicPath, 'templates', `${template.name}.json`);
+                const t = template as any;
+                const templateFilePath = join(fullTopicPath, 'templates', `${t.name}.json`);
                 await writeFile(templateFilePath, JSON.stringify(template, null, 2), 'utf-8');
             }
         }
 
         if (createData.links && createData.links.length > 0) {
             for (const link of createData.links) {
-                const linkFilePath = join(fullTopicPath, 'links', `${link.name}.json`);
+                const l = link as any;
+                const linkFilePath = join(fullTopicPath, 'links', `${l.name}.json`);
                 await writeFile(linkFilePath, JSON.stringify(link, null, 2), 'utf-8');
             }
         }
@@ -637,13 +647,7 @@ export class TopicManager {
         const fullTopicPath = join(scopePath, ...topicPath.split('/'));
         const configPath = join(fullTopicPath, 'topic.json');
 
-        console.log('[TopicManager] Saving topic to:', configPath);
-        console.log('[TopicManager] Topic data being saved:', {
-            name: topic.name,
-            description: topic.description,
-            documentationLength: topic.documentation?.length,
-            documentationPreview: topic.documentation?.substring(0, 100)
-        });
+        this.platform.logInfo(`Saving topic to: ${configPath}`, 'TopicManager');
 
         // 確保目錄存在
         await mkdir(fullTopicPath, { recursive: true });
@@ -700,7 +704,7 @@ export class TopicManager {
             try {
                 listener(event);
             } catch (error) {
-                console.error('Error in topic event listener:', error);
+                this.platform.logError(error as Error, 'notifyListeners');
             }
         });
     }

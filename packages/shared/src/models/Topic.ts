@@ -25,6 +25,24 @@ export interface TopicConfig {
     // - path: 從檔案系統路徑推導
 }
 
+/** Link 介面定義 */
+export interface TopicLink {
+    type: 'link';
+    name: string;
+    title: string;
+    target: string;
+    description: string;
+}
+
+/**
+ * Runtime Topic 配置
+ * 擴展 TopicConfig，加入運行時推導的欄位
+ */
+export interface RuntimeTopicConfig extends TopicConfig {
+    /** 運行時載入的連結列表 */
+    loadedLinks?: TopicLink[];
+}
+
 export interface TopicDisplayConfig {
     /** 圖示 */
     icon: string;
@@ -76,9 +94,9 @@ export interface TopicCreateData {
     /** 顯示配置 */
     display: Partial<TopicDisplayConfig>;
     /** 初始模板資料 */
-    templates?: any[];
+    templates?: unknown[];
     /** 初始連結資料 */
-    links?: any[];
+    links?: unknown[];
 }
 
 export interface TopicUpdateData {

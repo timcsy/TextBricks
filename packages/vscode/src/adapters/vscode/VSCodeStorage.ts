@@ -528,7 +528,7 @@ export class VSCodeStorage implements IStorage {
  * 簡單的 VS Code 存儲事務實現
  */
 class VSCodeStorageTransaction implements IStorageTransaction {
-    private operations: Array<{ type: 'set' | 'delete'; key: string; value?: any; options?: StorageOptions }> = [];
+    private operations: Array<{ type: 'set' | 'delete'; key: string; value?: unknown; options?: StorageOptions }> = [];
     private _isCommitted = false;
     private _isRolledBack = false;
 
@@ -542,9 +542,9 @@ class VSCodeStorageTransaction implements IStorageTransaction {
         // 先檢查待提交的操作
         const lastOp = this.operations.slice().reverse().find(op => op.key === key);
         if (lastOp) {
-            return lastOp.type === 'set' ? lastOp.value : defaultValue;
+            return lastOp.type === 'set' ? (lastOp.value as T) : defaultValue;
         }
-        
+
         return await this.storage.get(key, defaultValue, options);
     }
 

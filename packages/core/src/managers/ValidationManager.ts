@@ -2,6 +2,27 @@ import { IPlatform } from '../interfaces/IPlatform';
 import { ExtendedTemplate, Language, TemplateImportData } from '@textbricks/shared';
 
 /**
+ * 未驗證的模板資料（從外部輸入）
+ * 使用 any 因為需要驗證未知結構的資料
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type UnvalidatedTemplate = any;
+
+/**
+ * 未驗證的語言資料（從外部輸入）
+ * 使用 any 因為需要驗證未知結構的資料
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type UnvalidatedLanguage = any;
+
+/**
+ * 未驗證的匯入資料（從外部輸入）
+ * 使用 any 因為需要驗證未知結構的資料
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type UnvalidatedImportData = any;
+
+/**
  * 驗證結果介面
  */
 export interface ValidationResult {
@@ -46,7 +67,7 @@ export class ValidationManager {
      * 驗證單個模板
      */
     validateTemplate(
-        template: any,
+        template: UnvalidatedTemplate,
         options: TemplateValidationOptions = {}
     ): ValidationResult {
         try {
@@ -91,7 +112,7 @@ export class ValidationManager {
      * 驗證模板陣列
      */
     validateTemplates(
-        templates: any[],
+        templates: UnvalidatedTemplate[],
         options: TemplateValidationOptions = {}
     ): { results: ValidationResult[]; summary: { valid: number; invalid: number; warnings: number } } {
         const results = templates.map(template => this.validateTemplate(template, options));
@@ -109,7 +130,7 @@ export class ValidationManager {
      * 驗證匯入資料
      */
     validateImportData(
-        importData: any,
+        importData: UnvalidatedImportData,
         options: ImportValidationOptions = {}
     ): ValidationResult {
         try {
@@ -175,7 +196,7 @@ export class ValidationManager {
     /**
      * 驗證語言設定
      */
-    validateLanguage(language: any): ValidationResult {
+    validateLanguage(language: UnvalidatedLanguage): ValidationResult {
         const errors: ValidationError[] = [];
         const warnings: ValidationWarning[] = [];
 
@@ -212,7 +233,7 @@ export class ValidationManager {
 
     // ==================== 私有驗證方法 ====================
 
-    private validateBasicFields(template: any, errors: ValidationError[]): void {
+    private validateBasicFields(template: UnvalidatedTemplate, errors: ValidationError[]): void {
         if (!template.title || typeof template.title !== 'string') {
             errors.push({
                 field: 'title',
@@ -245,17 +266,11 @@ export class ValidationManager {
             });
         }
 
-        if (!template.topic || typeof template.topic !== 'string') {
-            errors.push({
-                field: 'topic',
-                message: '模板主題不能為空且必須是字串',
-                code: 'TOPIC_REQUIRED'
-            });
-        }
+        // topicPath 由檔案系統結構推導，不需要驗證
     }
 
     private validateCode(
-        template: any,
+        template: UnvalidatedTemplate,
         options: TemplateValidationOptions,
         errors: ValidationError[],
         warnings: ValidationWarning[]
@@ -290,7 +305,7 @@ export class ValidationManager {
     }
 
     private validateMetadata(
-        template: any,
+        template: UnvalidatedTemplate,
         options: TemplateValidationOptions,
         errors: ValidationError[],
         warnings: ValidationWarning[]
@@ -304,20 +319,30 @@ export class ValidationManager {
                 });
             }
 
-            if (template.metadata.createdAt && isNaN(Date.parse(template.metadata.createdAt))) {
-                errors.push({
-                    field: 'metadata.createdAt',
-                    message: '創建時間格式無效',
-                    code: 'CREATED_AT_INVALID'
-                });
+            if (template.metadata.createdAt) {
+                const createdAt = template.metadata.createdAt instanceof Date
+                    ? template.metadata.createdAt.toISOString()
+                    : String(template.metadata.createdAt);
+                if (isNaN(Date.parse(createdAt))) {
+                    errors.push({
+                        field: 'metadata.createdAt',
+                        message: '創建時間格式無效',
+                        code: 'CREATED_AT_INVALID'
+                    });
+                }
             }
 
-            if (template.metadata.lastUsedAt && isNaN(Date.parse(template.metadata.lastUsedAt))) {
-                errors.push({
-                    field: 'metadata.lastUsedAt',
-                    message: '最後使用時間格式無效',
-                    code: 'LAST_USED_AT_INVALID'
-                });
+            if (template.metadata.lastUsedAt) {
+                const lastUsedAt = template.metadata.lastUsedAt instanceof Date
+                    ? template.metadata.lastUsedAt.toISOString()
+                    : String(template.metadata.lastUsedAt);
+                if (isNaN(Date.parse(lastUsedAt))) {
+                    errors.push({
+                        field: 'metadata.lastUsedAt',
+                        message: '最後使用時間格式無效',
+                        code: 'LAST_USED_AT_INVALID'
+                    });
+                }
             }
         } else if (options.requireTags) {
             warnings.push({
@@ -329,7 +354,7 @@ export class ValidationManager {
     }
 
     private validateLanguageAndTopic(
-        template: any,
+        template: UnvalidatedTemplate,
         options: TemplateValidationOptions,
         errors: ValidationError[],
         warnings: ValidationWarning[]
@@ -344,11 +369,11 @@ export class ValidationManager {
             }
         }
 
-        if (options.allowedTopics && template.topic) {
-            if (!options.allowedTopics.includes(template.topic)) {
+        if (options.allowedTopics && template.topicPath) {
+            if (!options.allowedTopics.includes(template.topicPath)) {
                 errors.push({
-                    field: 'topic',
-                    message: `不支援的主題：${template.topic}`,
+                    field: 'topicPath',
+                    message: `不支援的主題：${template.topicPath}`,
                     code: 'TOPIC_NOT_ALLOWED'
                 });
             }
@@ -356,12 +381,13 @@ export class ValidationManager {
     }
 
     private validateDocumentation(
-        template: any,
+        template: UnvalidatedTemplate,
         options: TemplateValidationOptions,
         warnings: ValidationWarning[]
     ): void {
         if (options.requireDocumentation) {
-            if (!template.documentation || template.documentation.trim().length === 0) {
+            const doc = template.documentation ? String(template.documentation) : '';
+            if (!doc || doc.trim().length === 0) {
                 warnings.push({
                     field: 'documentation',
                     message: '建議提供模板說明文檔',
@@ -371,7 +397,7 @@ export class ValidationManager {
         }
     }
 
-    private validateImportStructure(importData: any, errors: ValidationError[]): void {
+    private validateImportStructure(importData: UnvalidatedImportData, errors: ValidationError[]): void {
         if (!importData || typeof importData !== 'object') {
             errors.push({
                 field: 'root',
@@ -390,7 +416,7 @@ export class ValidationManager {
         }
     }
 
-    private validateVersionCompatibility(importData: any, warnings: ValidationWarning[]): void {
+    private validateVersionCompatibility(importData: UnvalidatedImportData, warnings: ValidationWarning[]): void {
         if (importData.version) {
             // 這裡可以加入版本兼容性檢查邏輯
             const currentVersion = '1.0.0';
@@ -405,7 +431,7 @@ export class ValidationManager {
     }
 
     private validateImportMetadata(
-        importData: any,
+        importData: UnvalidatedImportData,
         errors: ValidationError[],
         warnings: ValidationWarning[]
     ): void {
@@ -415,12 +441,17 @@ export class ValidationManager {
                 message: '缺少匯出時間資訊',
                 code: 'EXPORT_DATE_MISSING'
             });
-        } else if (isNaN(Date.parse(importData.exportedAt))) {
-            errors.push({
-                field: 'exportedAt',
-                message: '匯出時間格式無效',
-                code: 'EXPORT_DATE_INVALID'
-            });
+        } else {
+            const exportedAt = importData.exportedAt instanceof Date
+                ? importData.exportedAt.toISOString()
+                : String(importData.exportedAt);
+            if (isNaN(Date.parse(exportedAt))) {
+                errors.push({
+                    field: 'exportedAt',
+                    message: '匯出時間格式無效',
+                    code: 'EXPORT_DATE_INVALID'
+                });
+            }
         }
 
         if (!importData.exportedBy) {

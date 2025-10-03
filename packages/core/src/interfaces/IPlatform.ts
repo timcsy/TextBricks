@@ -201,6 +201,20 @@ export interface IPlatform {
      * 記錄調試信息
      */
     logDebug(message: string, context?: string): void;
+
+    // ==================== VS Code 特定方法 (可選) ====================
+
+    /**
+     * 獲取擴展路徑（VS Code 特定）
+     * 其他平台可返回 undefined
+     */
+    getExtensionPath?(): string;
+
+    /**
+     * 獲取擴展上下文（VS Code 特定）
+     * 其他平台可返回 undefined
+     */
+    getExtensionContext?(): any;
 }
 
 /**

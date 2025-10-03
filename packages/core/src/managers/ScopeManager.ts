@@ -62,12 +62,12 @@ export class ScopeManager {
                             const scopeConfig: ScopeConfig = JSON.parse(scopeData);
                             this.availableScopes.set(scopeConfig.id, scopeConfig);
                         } catch (error) {
-                            console.warn(`Failed to load scope config for ${entry.name}:`, error);
+                            this.platform.logWarning(`Failed to load scope config for ${entry.name}`, 'ScopeManager');
                         }
                     }
                 }
             } catch (error) {
-                console.warn('Data directory not found, using default scope');
+                this.platform.logWarning('Data directory not found, using default scope', 'ScopeManager');
                 // 創建默認 local scope
                 await this.createDefaultLocalScope();
             }
@@ -396,7 +396,7 @@ export class ScopeManager {
             try {
                 listener(event);
             } catch (error) {
-                console.error('Error in scope event listener:', error);
+                this.platform.logError(error as Error, 'notifyListeners');
             }
         });
     }
@@ -409,7 +409,7 @@ export class ScopeManager {
      */
     async updateUsage(itemPath: string): Promise<void> {
         if (!this.currentScope) {
-            console.warn('[ScopeManager] No current scope to update usage');
+            this.platform.logWarning('No current scope to update usage', 'ScopeManager');
             return;
         }
 

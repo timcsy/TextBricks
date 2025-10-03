@@ -94,6 +94,6 @@ export type DataLocationEventType =
 export interface DataLocationEvent {
     type: DataLocationEventType;
     timestamp: Date;
-    data: any;
+    data: unknown;
     message?: string;
 }

@@ -20,6 +20,13 @@ import {
 } from '@textbricks/shared';
 import { VSCodePlatform } from '../adapters/vscode/VSCodePlatform';
 import { WebviewProvider } from './WebviewProvider';
+import { DocumentationProvider } from './DocumentationProvider';
+
+// Message type definition with index signature for flexibility
+interface WebviewMessage {
+    type: string;
+    [key: string]: unknown;
+}
 
 export class TextBricksManagerProvider {
     public static readonly viewType = 'textbricks-manager';
@@ -45,7 +52,7 @@ export class TextBricksManagerProvider {
         topicManager?: TopicManager,
         dataPathService?: DataPathService,
         private readonly webviewProvider?: WebviewProvider,
-        private readonly documentationProvider?: any
+        private readonly documentationProvider?: DocumentationProvider
     ) {
         this.platform = new VSCodePlatform(context);
         this.dataPathService = dataPathService || DataPathService.getInstance(this.platform);
@@ -53,7 +60,7 @@ export class TextBricksManagerProvider {
         this.topicManager = topicManager || new TopicManager(this.platform, this.dataPathService);
 
         // 初始化新的 Services
-        this.pathTransformService = new PathTransformService();
+        this.pathTransformService = new PathTransformService(this.platform);
         this.displayNameService = new DisplayNameService();
 
         // 啟動初始化但不等待
@@ -81,7 +88,7 @@ export class TextBricksManagerProvider {
                 }
             });
         } catch (error) {
-            console.error('Failed to initialize managers:', error);
+            this.platform.logError(error as Error, 'TextBricksManagerProvider.initializeManagers');
         }
     }
 
@@ -136,9 +143,9 @@ export class TextBricksManagerProvider {
         }
     }
 
-    private async _handleMessage(message: any) {
+    private async _handleMessage(message: WebviewMessage & Record<string, any>) {
         try {
-            console.log('Received message from WebView:', message);
+            this.platform.logInfo(`Received message from WebView: ${message.type}`, 'TextBricksManagerProvider');
             switch (message.type) {
                 // 數據載入
                 case 'loadData':
@@ -147,7 +154,7 @@ export class TextBricksManagerProvider {
 
                 // Scope 管理
                 case 'switchScope':
-                    await this._switchScope(message.scopeId);
+                    await this._switchScope(message.scopeId as string);
                     break;
 
                 case 'createScope':
@@ -155,7 +162,7 @@ export class TextBricksManagerProvider {
                     break;
 
                 case 'updateScope':
-                    await this._updateScope(message.scopeId, message.data);
+                    await this._updateScope(message.scopeId as string, message.data);
                     break;
 
                 case 'deleteScope':
@@ -353,14 +360,14 @@ export class TextBricksManagerProvider {
     }
 
     private async _sendData() {
-        console.log('_sendData called');
+        this.platform.logInfo('_sendData called', 'TextBricksManagerProvider');
 
         // 等待初始化完成
         try {
             await this.initializationPromise;
-            console.log('Managers initialized successfully');
+            this.platform.logInfo('Managers initialized successfully', 'TextBricksManagerProvider');
         } catch (initError) {
-            console.error('Manager initialization failed:', initError);
+            this.platform.logError(initError as Error, 'TextBricksManagerProvider._sendData.init');
         }
 
         if (this._panel) {
@@ -375,19 +382,19 @@ export class TextBricksManagerProvider {
 
                 // 嘗試獲取新的管理器數據，如果失敗則使用默認值
                 let currentScope = null;
-                let availableScopes: any[] = [];
+                let availableScopes: unknown[] = [];
                 let usageStats = null;
-                let favorites: any[] = [];
+                let favorites: unknown[] = [];
                 let topicHierarchy = null;
                 let topicStats = null;
 
                 try {
                     currentScope = this.cleanCircularReferences(this.scopeManager.getCurrentScope());
-                    availableScopes = this.cleanCircularReferences(this.scopeManager.getAvailableScopes());
+                    availableScopes = this.cleanCircularReferences(this.scopeManager.getAvailableScopes()) as unknown[];
                     usageStats = this.cleanCircularReferences(this.scopeManager.getUsageStats());
-                    favorites = this.cleanCircularReferences(this.scopeManager.getFavorites());
+                    favorites = this.cleanCircularReferences(this.scopeManager.getFavorites()) as unknown[];
                 } catch (scopeError) {
-                    console.warn('ScopeManager error:', scopeError);
+                    this.platform.logWarning(`ScopeManager error: ${scopeError}`, 'TextBricksManagerProvider');
                     // 使用默認的 scope 數據
                     currentScope = { id: 'local', name: '本機範圍', type: 'local' };
                     availableScopes = [currentScope];
@@ -396,19 +403,19 @@ export class TextBricksManagerProvider {
 
                 try {
                     const rawHierarchy = this.topicManager.getHierarchy();
-                    console.log('[ManagerProvider] Raw hierarchy roots:', rawHierarchy?.roots?.length);
+                    this.platform.logInfo(`Raw hierarchy roots: ${rawHierarchy?.roots?.length}`, 'TextBricksManagerProvider');
                     if (rawHierarchy?.roots?.[0]) {
-                        console.log('[ManagerProvider] First root topic:', rawHierarchy.roots[0].topic.name, 'loadedLinks:', (rawHierarchy.roots[0].topic as any).loadedLinks?.length);
+                        this.platform.logInfo(`First root topic: ${rawHierarchy.roots[0].topic.name}, loadedLinks: ${(rawHierarchy.roots[0].topic as any).loadedLinks?.length}`, 'TextBricksManagerProvider');
                     }
                     // 清理循環引用：移除 parent 屬性，保留結構
                     topicHierarchy = this.cleanCircularReferences(rawHierarchy);
-                    console.log('[ManagerProvider] Cleaned hierarchy roots:', topicHierarchy?.roots?.length);
+                    this.platform.logInfo(`Cleaned hierarchy roots: ${topicHierarchy?.roots?.length}`, 'TextBricksManagerProvider');
                     if (topicHierarchy?.roots?.[0]) {
-                        console.log('[ManagerProvider] First cleaned root topic:', topicHierarchy.roots[0].topic.name, 'loadedLinks:', (topicHierarchy.roots[0].topic as any).loadedLinks?.length);
+                        this.platform.logInfo(`First cleaned root topic: ${topicHierarchy.roots[0].topic.name}, loadedLinks: ${(topicHierarchy.roots[0].topic as any).loadedLinks?.length}`, 'TextBricksManagerProvider');
                     }
                     topicStats = this.cleanCircularReferences(this.topicManager.getStatistics());
                 } catch (topicError) {
-                    console.warn('TopicManager error:', topicError);
+                    this.platform.logWarning(`TopicManager error: ${topicError}`, 'TextBricksManagerProvider');
                     // 從現有模板數據構建簡單的主題統計
                     const topics = [...new Set(templates.map(t => (t as any).topicPath || t.language))];
                     topicStats = {
@@ -417,7 +424,7 @@ export class TextBricksManagerProvider {
                     };
                 }
 
-                console.log('Sending dataLoaded message with fallback data...');
+                this.platform.logInfo('Sending dataLoaded message with fallback data...', 'TextBricksManagerProvider');
 
                 const dataToSend = {
                     type: 'dataLoaded',
@@ -445,9 +452,9 @@ export class TextBricksManagerProvider {
                     // 先測試是否可以序列化
                     JSON.stringify(dataToSend);
                     this._panel.webview.postMessage(dataToSend);
-                    console.log('dataLoaded message sent successfully');
+                    this.platform.logInfo('dataLoaded message sent successfully', 'TextBricksManagerProvider');
                 } catch (jsonError) {
-                    console.error('JSON serialization error:', jsonError);
+                    this.platform.logError(jsonError as Error, 'TextBricksManagerProvider._sendData.serialize');
                     // 發送簡化版本
                     this._panel.webview.postMessage({
                         type: 'dataLoaded',
@@ -466,10 +473,10 @@ export class TextBricksManagerProvider {
                             }
                         }
                     });
-                    console.log('Simplified dataLoaded message sent');
+                    this.platform.logInfo('Simplified dataLoaded message sent', 'TextBricksManagerProvider');
                 }
             } catch (error) {
-                console.error('Critical error in _sendData:', error);
+                this.platform.logError(error as Error, 'TextBricksManagerProvider._sendData');
 
                 // 發送錯誤消息，但仍嘗試提供基本數據
                 this._panel.webview.postMessage({
@@ -496,11 +503,11 @@ export class TextBricksManagerProvider {
                 });
             }
         } else {
-            console.log('No panel available');
+            this.platform.logInfo('No panel available', 'TextBricksManagerProvider');
         }
     }
 
-    private cleanCircularReferences(obj: any): any {
+    private cleanCircularReferences(obj: unknown): unknown {
         if (!obj || typeof obj !== 'object') {
             return obj;
         }
@@ -509,7 +516,7 @@ export class TextBricksManagerProvider {
             return obj.map(item => this.cleanCircularReferences(item));
         }
 
-        const cleaned: any = {};
+        const cleaned: Record<string, unknown> = {};
         for (const [key, value] of Object.entries(obj)) {
             // 跳過可能造成循環引用的屬性
             if (key === 'parent') {
@@ -531,24 +538,24 @@ export class TextBricksManagerProvider {
 
     private async _createTemplate(templateData: Omit<ExtendedTemplate, 'type'>) {
         try {
-            console.log('Creating template with data:', templateData);
+            this.platform.logInfo(`Creating template: ${(templateData as any).title}`, 'TextBricksManagerProvider');
             const topicPath = (templateData as any).topicPath || (templateData as any).topic || 'default';
             const newTemplate = await this.templateEngine.createTemplate(templateData, topicPath);
-            console.log('Template created successfully:', newTemplate);
+            this.platform.logInfo(`Template created successfully: ${newTemplate.name}`, 'TextBricksManagerProvider');
             vscode.window.showInformationMessage(`模板 "${newTemplate.title}" 已創建成功`);
             await this._sendData();
         } catch (error) {
-            console.error('Error creating template:', error);
+            this.platform.logError(error as Error, 'TextBricksManagerProvider._createTemplate');
             vscode.window.showErrorMessage(`創建模板失敗: ${error}`);
         }
     }
 
     private async _updateTemplate(templateId: string, updates: Partial<ExtendedTemplate>) {
         try {
-            console.log('Updating template with ID:', templateId, 'Updates:', updates);
+            this.platform.logInfo(`Updating template: ${templateId}`, 'TextBricksManagerProvider');
             const updated = await this.templateEngine.updateTemplate(templateId, updates);
             if (updated) {
-                console.log('Template updated successfully:', updated);
+                this.platform.logInfo(`Template updated successfully: ${updated.name}`, 'TextBricksManagerProvider');
 
                 // 等待一小段時間確保文件操作完成
                 await new Promise(resolve => setTimeout(resolve, 100));
@@ -558,19 +565,17 @@ export class TextBricksManagerProvider {
 
                 // 通知 WebviewProvider 刷新顯示，並保持導航狀態
                 if (this.webviewProvider) {
-                    console.log('Notifying WebviewProvider to refresh with preserved navigation state...');
-                    console.log('[Debug] Template ID being updated:', templateId);
-                    console.log('[Debug] Template updates:', updates);
+                    this.platform.logInfo('Notifying WebviewProvider to refresh with preserved navigation state', 'TextBricksManagerProvider');
                     await this.webviewProvider.refresh(true);
                 }
 
                 vscode.window.showInformationMessage(`模板 "${updated.title}" 已更新成功`);
             } else {
-                console.warn('Template not found for ID:', templateId);
+                this.platform.logWarning(`Template not found for ID: ${templateId}`, 'TextBricksManagerProvider');
                 vscode.window.showErrorMessage('找不到指定的模板');
             }
         } catch (error) {
-            console.error('Error updating template:', error);
+            this.platform.logError(error as Error, 'TextBricksManagerProvider._updateTemplate');
             vscode.window.showErrorMessage(`更新模板失敗: ${error}`);
         }
     }
@@ -619,7 +624,7 @@ export class TextBricksManagerProvider {
         }
     }
 
-    private async _exportTemplates(filters?: any) {
+    private async _exportTemplates(filters?: unknown) {
         const saveUri = await vscode.window.showSaveDialog({
             defaultUri: vscode.Uri.file('templates-export.json'),
             filters: {
@@ -699,7 +704,7 @@ export class TextBricksManagerProvider {
         }
     }
 
-    private async _batchCreateTemplates(templates: any[]) {
+    private async _batchCreateTemplates(templates: unknown[]) {
         if (!templates || !Array.isArray(templates) || templates.length === 0) {
             vscode.window.showErrorMessage('沒有提供有效的模板資料');
             return;
@@ -798,15 +803,15 @@ export class TextBricksManagerProvider {
         };
     }
 
-    private async _createTopic(topicData: any) {
+    private async _createTopic(topicData: unknown) {
         try {
-            const newTopic = await this.topicManager.createTopic(topicData);
+            const newTopic = await this.topicManager.createTopic(topicData as any);
             vscode.window.showInformationMessage(`主題 "${newTopic.title}" 已創建成功`);
             await this._sendData();
 
             // 通知 WebviewProvider 刷新顯示
             if (this.webviewProvider) {
-                console.log('Notifying WebviewProvider to refresh after topic creation...');
+                this.platform.logInfo('Notifying WebviewProvider to refresh after topic creation', 'TextBricksManagerProvider');
                 await this.webviewProvider.refresh();
             }
         } catch (error) {
@@ -814,7 +819,7 @@ export class TextBricksManagerProvider {
         }
     }
 
-    private async _updateTopic(topicId: string, updates: any) {
+    private async _updateTopic(topicId: string, updates: unknown) {
         try {
             const updated = await this.topicManager.updateTopic(topicId, updates);
             vscode.window.showInformationMessage(`主題 "${updated.title}" 已更新成功`);
@@ -822,7 +827,7 @@ export class TextBricksManagerProvider {
 
             // 通知 WebviewProvider 刷新顯示，保持導航狀態
             if (this.webviewProvider) {
-                console.log('Notifying WebviewProvider to refresh after topic update...');
+                this.platform.logInfo('Notifying WebviewProvider to refresh after topic update', 'TextBricksManagerProvider');
                 await this.webviewProvider.refresh(true);
             }
         } catch (error) {
@@ -851,7 +856,7 @@ export class TextBricksManagerProvider {
 
                 // 通知 WebviewProvider 刷新顯示
                 if (this.webviewProvider) {
-                    console.log('Notifying WebviewProvider to refresh after topic deletion...');
+                    this.platform.logInfo('Notifying WebviewProvider to refresh after topic deletion', 'TextBricksManagerProvider');
                     await this.webviewProvider.refresh();
                 }
             }
@@ -872,9 +877,9 @@ export class TextBricksManagerProvider {
         }
     }
 
-    private async _createScope(scopeData: any) {
+    private async _createScope(scopeData: unknown) {
         try {
-            const newScope = await this.scopeManager.createScope(scopeData);
+            const newScope = await this.scopeManager.createScope(scopeData as any);
             vscode.window.showInformationMessage(`範圍 "${newScope.name}" 已創建成功`);
             await this._sendData();
         } catch (error) {
@@ -882,7 +887,7 @@ export class TextBricksManagerProvider {
         }
     }
 
-    private async _updateScope(scopeId: string, updates: any) {
+    private async _updateScope(scopeId: string, updates: unknown) {
         try {
             const updatedScope = await this.scopeManager.updateScope(scopeId, updates);
             vscode.window.showInformationMessage(`範圍 "${updatedScope.name}" 已更新成功`);
@@ -910,7 +915,7 @@ export class TextBricksManagerProvider {
         }
     }
 
-    private async _exportScope(options: any) {
+    private async _exportScope(options: unknown) {
         try {
             const saveUri = await vscode.window.showSaveDialog({
                 defaultUri: vscode.Uri.file('scope-export.json'),
@@ -921,9 +926,10 @@ export class TextBricksManagerProvider {
             });
 
             if (saveUri) {
+                const opts = options as any;
                 const exportData = await this.scopeManager.exportScope(
-                    options.includeTemplates || true,
-                    options.includeStats || true
+                    opts.includeTemplates || true,
+                    opts.includeStats || true
                 );
                 const content = JSON.stringify(exportData, null, 2);
 
@@ -1037,9 +1043,9 @@ export class TextBricksManagerProvider {
 
     // ==================== 主題管理方法 ====================
 
-    private async _moveTopic(operation: any) {
+    private async _moveTopic(operation: unknown) {
         try {
-            await this.topicManager.moveTopic(operation);
+            await this.topicManager.moveTopic(operation as any);
             vscode.window.showInformationMessage('主題已移動');
             await this._sendData();
         } catch (error) {
@@ -1047,9 +1053,9 @@ export class TextBricksManagerProvider {
         }
     }
 
-    private async _reorderTopics(operations: any[]) {
+    private async _reorderTopics(operations: unknown[]) {
         try {
-            await this.topicManager.reorderTopics(operations);
+            await this.topicManager.reorderTopics(operations as any);
             vscode.window.showInformationMessage('主題順序已更新');
             await this._sendData();
         } catch (error) {
@@ -1739,9 +1745,9 @@ export class TextBricksManagerProvider {
 </html>`;
     }
 
-    private async _createLink(linkData: any) {
+    private async _createLink(linkData: unknown) {
         try {
-            console.log('Creating link with data:', linkData);
+            this.platform.logInfo(`Creating link: ${(linkData as any).title}`, 'TextBricksManagerProvider');
 
             // Create link JSON file in the appropriate topic's links directory
             const linkPath = await this._getLinkPath(linkData);
@@ -1751,18 +1757,18 @@ export class TextBricksManagerProvider {
                 Buffer.from(JSON.stringify(linkData, null, 2))
             );
 
-            console.log('Link created successfully at:', linkPath);
-            vscode.window.showInformationMessage(`連結 "${linkData.title}" 已創建成功`);
+            this.platform.logInfo(`Link created successfully at: ${linkPath}`, 'TextBricksManagerProvider');
+            vscode.window.showInformationMessage(`連結 "${(linkData as any).title}" 已創建成功`);
             await this._sendData();
         } catch (error) {
-            console.error('Error creating link:', error);
+            this.platform.logError(error as Error, 'TextBricksManagerProvider._createLink');
             vscode.window.showErrorMessage(`創建連結失敗: ${error}`);
         }
     }
 
-    private async _updateLink(linkId: string, linkData: any) {
+    private async _updateLink(linkId: string, linkData: unknown) {
         try {
-            console.log('Updating link with ID:', linkId, 'Data:', linkData);
+            this.platform.logInfo(`Updating link: ${linkId}`, 'TextBricksManagerProvider');
 
             // Find and update the link JSON file
             const linkPath = await this._getLinkPath(linkData);
@@ -1772,31 +1778,22 @@ export class TextBricksManagerProvider {
                 Buffer.from(JSON.stringify(linkData, null, 2))
             );
 
-            console.log('Link updated successfully at:', linkPath);
+            this.platform.logInfo(`Link updated successfully at: ${linkPath}`, 'TextBricksManagerProvider');
             vscode.window.showInformationMessage(`連結已更新成功`);
             await this._sendData();
         } catch (error) {
-            console.error('Error updating link:', error);
+            this.platform.logError(error as Error, 'TextBricksManagerProvider._updateLink');
             vscode.window.showErrorMessage(`更新連結失敗: ${error}`);
         }
     }
 
-    private async _getLinkPath(linkData: any): Promise<string> {
+    private async _getLinkPath(linkData: unknown): Promise<string> {
         // Get the current data location
         const locationInfo = await this.dataPathService.getCurrentLocationInfo();
 
-        // TODO: Determine the current topic context from the manager UI
-        // For now, we need to get this information from the frontend
-        // This should be passed along with the linkData in the future
-
-        // Default to a root links directory for now
-        // In a complete implementation, this should come from the current topic selection
-        let currentTopicPath = 'general'; // Default fallback
-
-        // If linkData contains information about the current topic context, use it
-        if (linkData.currentTopic) {
-            currentTopicPath = linkData.currentTopic;
-        }
+        // Get current topic context from linkData (passed from frontend)
+        // Fallback to 'general' if no topic context is provided
+        const currentTopicPath = (linkData as any).currentTopic || 'general';
 
         // Build the links directory path under the current topic
         const linksDirPath = vscode.Uri.joinPath(
@@ -1815,13 +1812,13 @@ export class TextBricksManagerProvider {
         }
 
         // Create the link file path (using name instead of id)
-        const linkFilePath = vscode.Uri.joinPath(linksDirPath, `${linkData.name}.json`);
+        const linkFilePath = vscode.Uri.joinPath(linksDirPath, `${(linkData as any).name}.json`);
         return linkFilePath.fsPath;
     }
 
     private async _deleteLink(linkId: string) {
         try {
-            console.log('Deleting link with ID:', linkId);
+            this.platform.logInfo(`Deleting link with ID: ${linkId}`, 'TextBricksManagerProvider');
 
             // Find the link file by searching through all topics
             const locationInfo = await this.dataPathService.getCurrentLocationInfo();
@@ -1833,6 +1830,7 @@ export class TextBricksManagerProvider {
 
             // Search for the link file recursively
             let linkFilePath: vscode.Uri | null = null;
+            const platform = this.platform;
 
             async function searchForLinkFile(dir: vscode.Uri): Promise<vscode.Uri | null> {
                 try {
@@ -1860,7 +1858,7 @@ export class TextBricksManagerProvider {
                         }
                     }
                 } catch (error) {
-                    console.warn('Error searching directory:', dir.fsPath, error);
+                    platform.logWarning(`Error searching directory: ${dir.fsPath}`, 'TextBricksManagerProvider');
                 }
                 return null;
             }
@@ -1875,17 +1873,17 @@ export class TextBricksManagerProvider {
             // Delete the link file
             await vscode.workspace.fs.delete(linkFilePath);
 
-            console.log('Link deleted successfully at:', linkFilePath.fsPath);
+            this.platform.logInfo(`Link deleted successfully at: ${linkFilePath.fsPath}`, 'TextBricksManagerProvider');
             vscode.window.showInformationMessage(`連結已刪除成功`);
             await this._sendData();
 
             // 通知 WebviewProvider 刷新顯示
             if (this.webviewProvider) {
-                console.log('Notifying WebviewProvider to refresh after link deletion...');
+                this.platform.logInfo('Notifying WebviewProvider to refresh after link deletion', 'TextBricksManagerProvider');
                 await this.webviewProvider.refresh();
             }
         } catch (error) {
-            console.error('Error deleting link:', error);
+            this.platform.logError(error as Error, 'TextBricksManagerProvider._deleteLink');
             vscode.window.showErrorMessage(`刪除連結失敗: ${error}`);
         }
     }
@@ -1920,7 +1918,7 @@ export class TextBricksManagerProvider {
             this.displayNameService.updateLanguages(languages);
             this.displayNameService.updateTopics(topics);
         } catch (error) {
-            console.error('[TextBricksManagerProvider] Error updating services data:', error);
+            this.platform.logError(error as Error, 'TextBricksManagerProvider._updateServicesData');
         }
     }
 
@@ -1971,7 +1969,7 @@ export class TextBricksManagerProvider {
     /**
      * 構建模板路徑
      */
-    private _buildTemplatePath(template: any, requestId?: string) {
+    private _buildTemplatePath(template: unknown, requestId?: string) {
         try {
             const path = this.pathTransformService.buildTemplatePath(template);
             this._panel?.webview.postMessage({
@@ -1993,9 +1991,9 @@ export class TextBricksManagerProvider {
     /**
      * 獲取項目識別符
      */
-    private _getItemIdentifier(item: any, itemType: string, requestId?: string) {
+    private _getItemIdentifier(item: unknown, itemType: string, requestId?: string) {
         try {
-            const identifier = this.pathTransformService.getItemIdentifier(item, itemType as any);
+            const identifier = this.pathTransformService.getItemIdentifier(item as any, itemType as any);
             this._panel?.webview.postMessage({
                 type: 'serviceResponse',
                 requestId,

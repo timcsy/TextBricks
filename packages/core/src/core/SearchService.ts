@@ -179,9 +179,11 @@ export class SearchService {
         }
 
         if (filters.topic) {
-            // TODO: topic 過濾需要從檔案路徑推導
-            // 暫時跳過 topic 過濾
-            console.warn('[SearchService] Topic filtering not yet implemented with path-based system');
+            // Filter by topicPath (supports nested paths like "c/basic")
+            result = result.filter(t => {
+                return t.topicPath === filters.topic ||
+                       t.topicPath?.startsWith(filters.topic + '/');
+            });
         }
 
         if (filters.tags && filters.tags.length > 0) {

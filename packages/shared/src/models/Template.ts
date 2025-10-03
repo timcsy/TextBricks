@@ -81,6 +81,8 @@ export interface TemplateManagementMetadata {
 
 export interface ExtendedTemplate extends Template {
   metadata?: TemplateManagementMetadata;
+  /** 主題路徑（運行時添加，用於前端顯示和分組） */
+  topicPath?: string;
 }
 
 // Documentation type enumeration
@@ -95,13 +97,14 @@ export interface DocumentationContent {
   type: DocumentationType;
   content: string;
   processedAt?: Date;
-  metadata?: any;
+  metadata?: Record<string, unknown>;
   error?: string;
 }
 
 export interface TemplateImportData {
   templates: ExtendedTemplate[];
   languages?: Language[];
+  topics?: import('./Topic').TopicConfig[];
   version?: string;
   exportedAt?: Date;
   exportedBy?: string;

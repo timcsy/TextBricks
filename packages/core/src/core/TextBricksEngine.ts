@@ -109,22 +109,18 @@ export class TextBricksEngine {
 
     // 強制重新載入數據，清除緩存
     async forceReloadTemplates(): Promise<void> {
-        console.log('[TextBricksEngine] Force reloading templates - clearing cache first');
+        this.platform.logInfo('Force reloading templates - clearing cache first', 'TextBricksEngine');
         await this.invalidateCache();
         await this.loadTemplates();
-        console.log('[TextBricksEngine] Force reload completed. Topics loaded:', this.topics.length);
+        this.platform.logInfo(`Force reload completed. Topics loaded: ${this.topics.length}`, 'TextBricksEngine');
         if (this.topics.length > 0) {
-            console.log('[TextBricksEngine] Sample topic:', {
-                name: this.topics[0].name,
-                description: this.topics[0].description,
-                docLength: this.topics[0].documentation?.length
-            });
+            this.platform.logInfo(`Sample topic: ${this.topics[0].name} (${this.topics[0].description})`, 'TextBricksEngine');
         }
     }
 
     private async saveTemplateData(data: TemplateData): Promise<void> {
         // 不再保存到緩存，直接從檔案系統讀取
-        console.log('[TextBricksEngine] Cache disabled, data loaded from filesystem');
+        this.platform.logInfo('Cache disabled, data loaded from filesystem', 'TextBricksEngine');
     }
 
     /**
@@ -136,9 +132,9 @@ export class TextBricksEngine {
             await this.platform.storage.set('templates.version', null);
             await this.platform.storage.set('templates.json', null);
 
-            console.log('[TextBricksEngine] Cache invalidated');
+            this.platform.logInfo('Cache invalidated', 'TextBricksEngine');
         } catch (error) {
-            console.error('[TextBricksEngine] Error invalidating cache:', error);
+            this.platform.logError(error as Error, 'invalidateCache');
         }
     }
 
@@ -171,7 +167,8 @@ export class TextBricksEngine {
 
             // 回退到舊的 templates.json 結構
             return await this.loadFromLegacyTemplatesJson();
-        } catch {
+        } catch (error) {
+            this.platform.logInfo(`Failed to load from filesystem: ${error}`, 'TextBricksEngine');
             return null;
         }
     }
@@ -182,33 +179,32 @@ export class TextBricksEngine {
 
             // 使用動態資料目錄
             if (!this.dataDirectory) {
-                console.log('[TextBricksEngine] No data directory configured');
+                this.platform.logWarning('No data directory configured', 'TextBricksEngine');
                 return null;
             }
 
-            console.log(`[TextBricksEngine] Using data directory: ${this.dataDirectory}`);
+            this.platform.logInfo(`Using data directory: ${this.dataDirectory}`, 'TextBricksEngine');
 
             // 檢查資料目錄是否存在
             try {
                 await stat(this.dataDirectory);
-                console.log(`[TextBricksEngine] Data directory found: ${this.dataDirectory}`);
+                this.platform.logInfo(`Data directory found: ${this.dataDirectory}`, 'TextBricksEngine');
             } catch (error) {
-                console.log(`[TextBricksEngine] Data directory not found: ${this.dataDirectory}, error:`, error);
+                this.platform.logWarning(`Data directory not found: ${this.dataDirectory}`, 'TextBricksEngine');
                 return null; // 資料目錄不存在
             }
 
             // 使用管理器載入資料並構建內部結構
             const templateData = await this.buildFromManagers();
 
-            console.log(`[TextBricksEngine] Loaded data summary:`);
-            console.log(`  - Topics: ${templateData.topics.length}`);
-            console.log(`  - Languages: ${templateData.languages.length}`);
-            console.log(`  - Templates: ${templateData.templates.length}`);
-            console.log(`  - Cards: ${templateData.cards.length}`);
+            this.platform.logInfo(
+                `Loaded data: ${templateData.topics.length} topics, ${templateData.languages.length} languages, ${templateData.templates.length} templates, ${templateData.cards.length} cards`,
+                'TextBricksEngine'
+            );
 
             return JSON.stringify(templateData, null, 2);
         } catch (error) {
-            console.error('Error loading from new data structure:', error);
+            this.platform.logError(error as Error, 'loadFromNewDataStructure');
             return null;
         }
     }
@@ -219,7 +215,7 @@ export class TextBricksEngine {
      */
     private async buildFromManagers(): Promise<{
         languages: Language[];
-        topics: any[];
+        topics: TopicConfig[];
         templates: ExtendedTemplate[];
         cards: ExtendedCard[];
     }> {
@@ -227,16 +223,16 @@ export class TextBricksEngine {
         await this.topicManager.initialize();
         const allTopics = this.topicManager.getAllTopics();
 
-        console.log(`[TextBricksEngine] TopicManager loaded ${allTopics.length} topics`);
+        this.platform.logInfo(`TopicManager loaded ${allTopics.length} topics`, 'TextBricksEngine');
 
         // 2. 使用 TemplateRepository 載入模板
         await this.templateRepository.initialize();
         const templates = this.templateRepository.getAll();
-        console.log(`[TextBricksEngine] TemplateRepository loaded ${templates.length} templates`);
+        this.platform.logInfo(`TemplateRepository loaded ${templates.length} templates`, 'TextBricksEngine');
 
         // 3. 從 scope.json 載入語言列表
         const languages = await this.loadLanguagesFromScope();
-        console.log(`[TextBricksEngine] Loaded ${languages.length} languages from scope.json`);
+        this.platform.logInfo(`Loaded ${languages.length} languages from scope.json`, 'TextBricksEngine');
 
         // 4. Cards - Phase 2 將從 TopicManager 和 TemplateRepository 構建
         const cards = await this.loadCardsFromFileSystem();
@@ -259,7 +255,7 @@ export class TextBricksEngine {
 
             const scopePath = await this.dataPathService.getScopePath('local');
             if (!scopePath) {
-                console.warn('[TextBricksEngine] No scope path available, using empty languages array');
+                this.platform.logWarning('No scope path available, using empty languages array', 'TextBricksEngine');
                 return [];
             }
 
@@ -270,7 +266,7 @@ export class TextBricksEngine {
 
             return scopeData.languages || [];
         } catch (error) {
-            console.error('[TextBricksEngine] Error loading languages from scope.json:', error);
+            this.platform.logError(error as Error, 'loadLanguagesFromScope');
             return [];
         }
     }
@@ -364,7 +360,7 @@ export class TextBricksEngine {
                 try {
                     await stat(linksPath);
                     const linkFiles = await readdir(linksPath);
-                    console.log(`[TextBricksEngine] Loading links for topic "${topicPath}": found ${linkFiles.length} files in ${linksPath}`);
+                    this.platform.logInfo(`Loading ${linkFiles.length} links for topic "${topicPath}"`, 'TextBricksEngine');
 
                     for (const file of linkFiles) {
                         if (file.endsWith('.json')) {
@@ -383,20 +379,18 @@ export class TextBricksEngine {
                                     originalTopicPath: topicPath,
                                     target: link.target
                                 });
-                                console.log(`[TextBricksEngine] Loaded link "${link.title}" (name: ${link.name}) for topic "${topicPath}"`);
                             } catch (error) {
-                                console.warn(`Failed to load link ${file}:`, error);
+                                this.platform.logWarning(`Failed to load link ${file}`, 'TextBricksEngine');
                             }
                         }
                     }
-                } catch {
-                    // links 資料夾不存在，跳過
-                    console.log(`[TextBricksEngine] No links directory for topic "${topicPath}"`);
+                } catch (error) {
+                    // links 資料夾不存在或無法讀取，跳過
+                    this.platform.logInfo(`No links directory for topic "${topicPath}": ${error}`, 'TextBricksEngine');
                 }
 
                 // 3. 從 TemplateRepository 載入模板作為 template 卡片
                 const topicTemplates = this.templateRepository.findByTopic(topicPath);
-                console.log(`[TextBricksEngine] Loading templates for topic "${topicPath}": found ${topicTemplates.length} templates`);
 
                 for (const template of topicTemplates) {
                     const templatePath = `${topicPath}/templates/${template.name}`;
@@ -414,7 +408,7 @@ export class TextBricksEngine {
                 }
             }
         } catch (error) {
-            console.error('Error loading cards from filesystem:', error);
+            this.platform.logError(error as Error, 'loadCardsFromFileSystem');
         }
 
         return cards;
@@ -448,13 +442,15 @@ export class TextBricksEngine {
                 try {
                     const content = await readFile(templatePath, 'utf8');
                     return content;
-                } catch {
-                    // Continue to next path
+                } catch (error) {
+                    // 路徑不存在，繼續嘗試下一個路徑
+                    this.platform.logInfo(`Template path not found: ${templatePath}`, 'TextBricksEngine');
                 }
             }
 
             return null;
-        } catch {
+        } catch (error) {
+            this.platform.logError(error as Error, 'loadFromLegacyTemplatesJson');
             return null;
         }
     }
@@ -464,7 +460,7 @@ export class TextBricksEngine {
     getTemplateByPath(path: string): ExtendedTemplate | undefined {
         // 統一使用 topicPath/templates/name 格式 (例如: c/basic/templates/hello-world)
         return this.templates.find(t => {
-            const templatePath = (t as any).topicPath ? `${(t as any).topicPath}/templates/${t.name}` : null;
+            const templatePath = t.topicPath ? `${t.topicPath}/templates/${t.name}` : null;
             return templatePath === path || t.name === path;
         });
     }
@@ -515,9 +511,7 @@ export class TextBricksEngine {
 
     getTopicPaths(): string[] {
         const hierarchy = this.topicManager.getHierarchy();
-        const result = Array.from(hierarchy.topicsMap.keys());
-        console.log('TextBricksEngine.getTopicPaths() returning', result.length, 'topic paths');
-        return result;
+        return Array.from(hierarchy.topicsMap.keys());
     }
 
     getTopicConfigs(): TopicConfig[] {
@@ -562,7 +556,7 @@ export class TextBricksEngine {
 
 
     // context property for compatibility
-    get context(): any {
+    get context(): unknown {
         return null;
     }
 
@@ -774,6 +768,10 @@ export class TextBricksEngine {
 
     getTemplateManager(): TextBricksEngine {
         return this;
+    }
+
+    getPlatform(): IPlatform {
+        return this.platform;
     }
 
     // === 私有輔助方法 ===

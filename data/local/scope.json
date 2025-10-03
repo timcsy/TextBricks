@@ -43,7 +43,7 @@
     "c/basic/templates/hello-world": 17,
     "python/templates/hello-world": 12,
     "javascript/templates/hello-world": 8,
-    "c/basic/templates/variables": 10,
+    "c/basic/templates/variables": 11,
     "python/templates/variables": 7,
     "c/advanced/templates/pointers": 5
   },

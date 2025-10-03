@@ -3,7 +3,7 @@
  * 處理模板文檔的解析、格式化和生成
  */
 
-import { DocumentationType, DocumentationContent, Template } from '@textbricks/shared';
+import { DocumentationType, DocumentationContent, Template, ExtendedTemplate } from '@textbricks/shared';
 import { IPlatform } from '../interfaces/IPlatform';
 
 export class DocumentationService {
@@ -166,8 +166,8 @@ export class DocumentationService {
     /**
      * 生成文檔元資訊
      */
-    private generateDocumentationMetadata(template: Template): Record<string, any> {
-        const metadata: Record<string, any> = {};
+    private generateDocumentationMetadata(template: Template | ExtendedTemplate): Record<string, unknown> {
+        const metadata: Record<string, unknown> = {};
 
         if (template.language) {
             metadata.language = template.language;
@@ -175,20 +175,20 @@ export class DocumentationService {
 
         // topic 從檔案路徑推導，不再儲存於 template
 
-        if ((template as any).metadata?.tags && (template as any).metadata.tags.length > 0) {
-            metadata.tags = (template as any).metadata.tags;
+        const extTemplate = template as ExtendedTemplate;
+        if (extTemplate.metadata?.tags && extTemplate.metadata.tags.length > 0) {
+            metadata.tags = extTemplate.metadata.tags;
         }
 
-        if ('metadata' in template && template.metadata) {
-            const metadataObj = template.metadata as any;
-            if (metadataObj.version) {
-                metadata.version = metadataObj.version;
+        if (extTemplate.metadata) {
+            if (extTemplate.metadata.version) {
+                metadata.version = extTemplate.metadata.version;
             }
-            if (metadataObj.author) {
-                metadata.author = metadataObj.author;
+            if (extTemplate.metadata.author) {
+                metadata.author = extTemplate.metadata.author;
             }
-            if (metadataObj.usage) {
-                metadata.usage = metadataObj.usage;
+            if (extTemplate.metadata.usage) {
+                metadata.usage = extTemplate.metadata.usage;
             }
         }
 
@@ -198,7 +198,7 @@ export class DocumentationService {
     /**
      * 生成元資訊區段
      */
-    private generateMetadataSection(metadata: Record<string, any>): string {
+    private generateMetadataSection(metadata: Record<string, unknown>): string {
         let section = '## Template Information\n\n';
 
         for (const [key, value] of Object.entries(metadata)) {
@@ -230,7 +230,7 @@ export class DocumentationService {
 
             for (const template of topicTemplates) {
                 content += `### ${template.title}\n\n`;
-                
+
                 if (template.description) {
                     content += `${template.description}\n\n`;
                 }
@@ -239,8 +239,9 @@ export class DocumentationService {
                 content += template.code;
                 content += '\n```\n\n';
 
-                if ((template as any).metadata?.tags && (template as any).metadata.tags.length > 0) {
-                    content += `**Tags:** ${(template as any).metadata.tags.join(', ')}\n\n`;
+                const extTemplate = template as ExtendedTemplate;
+                if (extTemplate.metadata?.tags && extTemplate.metadata.tags.length > 0) {
+                    content += `**Tags:** ${extTemplate.metadata.tags.join(', ')}\n\n`;
                 }
 
                 content += '---\n\n';
@@ -266,8 +267,9 @@ export class DocumentationService {
         const grouped: Record<string, Template[]> = {};
 
         for (const template of templates) {
-            // TODO: topic 需要從檔案路徑推導，暫時使用 language 分組
-            const topic = template.language || 'Uncategorized';
+            // Use topicPath if available, fallback to language for grouping
+            const extendedTemplate = template as ExtendedTemplate;
+            const topic = extendedTemplate.topicPath || template.language || 'Uncategorized';
             if (!grouped[topic]) {
                 grouped[topic] = [];
             }

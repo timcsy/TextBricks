@@ -12,7 +12,7 @@ export interface ClipboardData {
         format?: string;
         encoding?: string;
         mimeType?: string;
-        [key: string]: any;
+        [key: string]: unknown;
     };
 }
 

@@ -35,8 +35,8 @@ export class TemplateLoader {
                 template = Buffer.from(templateBytes).toString('utf8');
                 this.templateCache.set(templateName, template);
             } catch (error) {
-                console.error(`Failed to load template ${templateName}:`, error);
-                throw new Error(`Template not found: ${templateName}`);
+                // TODO: 考慮加入 IPlatform 依賴以使用統一日誌系統
+                throw new Error(`Template not found: ${templateName}. Error: ${error}`);
             }
         }
 

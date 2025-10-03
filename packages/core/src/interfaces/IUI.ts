@@ -202,10 +202,10 @@ export interface IWebview {
         enableCommandUris?: boolean;
         retainContextWhenHidden?: boolean;
     };
-    
-    postMessage(message: any): Promise<boolean>;
-    onDidReceiveMessage: (listener: (message: any) => void) => void;
-    
+
+    postMessage(message: unknown): Promise<boolean>;
+    onDidReceiveMessage: (listener: (message: unknown) => void) => void;
+
     asWebviewUri(localResource: string): string;
     cspSource: string;
 }

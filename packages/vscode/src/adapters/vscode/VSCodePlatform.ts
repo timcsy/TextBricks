@@ -145,7 +145,7 @@ export class VSCodePlatform extends PlatformAdapter {
     /**
      * 註冊 VS Code 命令
      */
-    registerCommand(command: string, callback: (...args: any[]) => any): vscode.Disposable {
+    registerCommand(command: string, callback: (...args: unknown[]) => unknown): vscode.Disposable {
         const disposable = vscode.commands.registerCommand(command, callback);
         this.context.subscriptions.push(disposable);
         
@@ -213,7 +213,7 @@ export class VSCodePlatform extends PlatformAdapter {
     /**
      * 執行 VS Code 命令
      */
-    async executeCommand<T>(command: string, ...args: any[]): Promise<T | undefined> {
+    async executeCommand<T>(command: string, ...args: unknown[]): Promise<T | undefined> {
         try {
             return await vscode.commands.executeCommand<T>(command, ...args);
         } catch (error) {
@@ -326,7 +326,7 @@ export class VSCodePlatform extends PlatformAdapter {
         id: string;
         version: string;
         isActive: boolean;
-        packageJSON: any;
+        packageJSON: Record<string, unknown>;
     } {
         const extension = vscode.extensions.getExtension('textbricks.textbricks');
         

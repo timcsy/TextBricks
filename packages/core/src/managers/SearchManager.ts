@@ -205,8 +205,12 @@ export class SearchManager {
         }
 
         if (filters.topic) {
-            // TODO: topic 過濾需要從檔案路徑推導
-            console.warn('[SearchManager] Topic filtering not yet implemented with path-based system');
+            // Filter by topicPath (supports nested paths like "c/basic")
+            result = result.filter(t => {
+                const topicPath = t.topicPath;
+                return topicPath === filters.topic ||
+                       topicPath?.startsWith(filters.topic + '/');
+            });
         }
 
         if (filters.tags && filters.tags.length > 0) {

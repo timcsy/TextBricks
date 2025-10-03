@@ -31,7 +31,7 @@ export class CommandService {
 
         // 初始化 DataPathService
         this.dataPathService.initialize().catch(error => {
-            console.error('Failed to initialize DataPathService:', error);
+            this.platform.logError(error as Error, 'CommandService.initialize');
         });
     }
 
@@ -382,7 +382,7 @@ export class CommandService {
 
             const templates = this.templateEngine.getAllTemplates();
             const languages = this.templateEngine.getLanguages();
-            const topics = this.templateEngine.getTopics().map(topic => ({ name: topic }));
+            const topics = this.templateEngine.getAllTopicConfigs();
 
             const exportData = await this.importExportManager.exportTemplates(templates, languages, topics);
             const content = this.importExportManager.formatExportData(exportData);
@@ -426,8 +426,11 @@ export class CommandService {
                 });
 
                 if (!selected) return;
-                // Use template path instead of ID
-                templateId = selected.template.name; // TODO: This should use full path
+                // Build full template path (topicPath/templates/name)
+                const template = selected.template as any;
+                templateId = template.topicPath
+                    ? `${template.topicPath}/templates/${template.name}`
+                    : template.name;
             }
 
             await this.documentationProvider.showDocumentation(templateId);

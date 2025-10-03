@@ -9,6 +9,7 @@
  */
 
 import { ExtendedTemplate, TopicConfig, Language } from '@textbricks/shared';
+import { IPlatform } from '../interfaces/IPlatform';
 
 export interface PathTransformOptions {
     /** 主題數據源（用於路徑到顯示名稱的轉換） */
@@ -32,8 +33,13 @@ export interface PathItem {
  */
 export class PathTransformService {
     private topicsMap: Map<string, TopicConfig>;
+    private platform: IPlatform;
 
-    constructor(topicsMap?: Map<string, TopicConfig> | Record<string, TopicConfig>) {
+    constructor(
+        platform: IPlatform,
+        topicsMap?: Map<string, TopicConfig> | Record<string, TopicConfig>
+    ) {
+        this.platform = platform;
         this.topicsMap = new Map();
         if (topicsMap) {
             this.updateTopicsMap(topicsMap);
@@ -85,7 +91,7 @@ export class PathTransformService {
                 return item.name || null;
 
             default:
-                console.warn(`Unknown item type: ${type}`);
+                this.platform.logWarning(`Unknown item type: ${type}`, 'PathTransformService');
                 return null;
         }
     }
@@ -294,10 +300,11 @@ export class PathTransformService {
 let instance: PathTransformService | null = null;
 
 export function getPathTransformService(
+    platform: IPlatform,
     topicsMap?: Map<string, TopicConfig> | Record<string, TopicConfig>
 ): PathTransformService {
     if (!instance || topicsMap) {
-        instance = new PathTransformService(topicsMap);
+        instance = new PathTransformService(platform, topicsMap);
     }
     return instance;
 }

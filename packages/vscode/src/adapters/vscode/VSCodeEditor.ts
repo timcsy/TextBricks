@@ -411,15 +411,15 @@ export class VSCodeEditor implements IEditor {
 
     // ==================== 編輯器事件 ====================
 
-    onDidChangeActiveEditor(listener: (editor: any) => void): { dispose(): void } {
+    onDidChangeActiveEditor(listener: (editor: unknown) => void): { dispose(): void } {
         return vscode.window.onDidChangeActiveTextEditor(listener);
     }
 
-    onDidChangeTextDocument(listener: (event: any) => void): { dispose(): void } {
+    onDidChangeTextDocument(listener: (event: unknown) => void): { dispose(): void } {
         return vscode.workspace.onDidChangeTextDocument(listener);
     }
 
-    onDidSaveTextDocument(listener: (document: any) => void): { dispose(): void } {
+    onDidSaveTextDocument(listener: (document: unknown) => void): { dispose(): void } {
         return vscode.workspace.onDidSaveTextDocument(listener);
     }
 }

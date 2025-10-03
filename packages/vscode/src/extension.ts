@@ -123,9 +123,10 @@ export async function activate(context: vscode.ExtensionContext) {
             }
         });
 
-        console.log('TextBricks activated successfully with new architecture');
-        
+        platform.logInfo('TextBricks activated successfully with new architecture', 'Extension');
+
     } catch (error) {
+        // 啟動失敗時直接使用 console.error (此時 platform 可能未初始化)
         console.error('Failed to activate TextBricks:', error);
         vscode.window.showErrorMessage(`TextBricks activation failed: ${error instanceof Error ? error.message : String(error)}`);
     }

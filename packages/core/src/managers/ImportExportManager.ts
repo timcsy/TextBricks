@@ -1,5 +1,6 @@
 import { IPlatform } from '../interfaces/IPlatform';
-import { TemplateImportData, ExtendedTemplate } from '@textbricks/shared';
+import { TemplateImportData, ExtendedTemplate, Language, TopicConfig } from '@textbricks/shared';
+import { UnvalidatedTemplate } from './ValidationManager';
 
 /**
  * 匯入匯出管理器 - 平台無關的核心邏輯
@@ -12,22 +13,18 @@ export class ImportExportManager {
      */
     async exportTemplates(
         templates: ExtendedTemplate[],
-        languages?: any[],
-        topics?: any[]
+        languages?: Language[],
+        topics?: TopicConfig[]
     ): Promise<TemplateImportData> {
         try {
             const exportData: TemplateImportData = {
                 templates,
                 languages: languages || [],
+                topics: topics,
                 version: '1.0.0',
                 exportedAt: new Date(),
                 exportedBy: 'TextBricks Manager'
             };
-
-            // 添加 topics 如果提供
-            if (topics) {
-                (exportData as any).topics = topics;
-            }
 
             return exportData;
         } catch (error) {
@@ -86,7 +83,7 @@ export class ImportExportManager {
     /**
      * 驗證模板資料
      */
-    private validateTemplate(template: any): void {
+    private validateTemplate(template: UnvalidatedTemplate): void {
         if (!template.title || typeof template.title !== 'string') {
             throw new Error('模板標題不能為空');
         }
@@ -103,9 +100,7 @@ export class ImportExportManager {
             throw new Error('模板語言不能為空');
         }
 
-        if (!template.topic || typeof template.topic !== 'string') {
-            throw new Error('模板主題不能為空');
-        }
+        // topicPath 由檔案系統結構推導，不需要驗證
     }
 
     /**

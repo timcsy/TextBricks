@@ -71,6 +71,12 @@ jspm_packages/
 *.tmp
 *.temp
 
+# Backup files
+*.bak
+*.bak*
+*.backup
+*.backup_*
+
 # Test files (keep source tests but ignore generated ones)
 /test-results/
 /test-coverage/

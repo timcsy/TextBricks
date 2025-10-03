@@ -38,7 +38,7 @@ export interface StorageQuery {
 export interface StorageMigration {
     from: string;
     to: string;
-    transform: (oldData: any) => any;
+    transform: (oldData: unknown) => unknown;
 }
 
 /**
@@ -295,9 +295,9 @@ export interface IStorageFactory {
  */
 export interface IStorageProvider {
     name: string;
-    initialize(config?: any): Promise<void>;
-    read(key: string): Promise<any>;
-    write(key: string, value: any): Promise<void>;
+    initialize(config?: unknown): Promise<void>;
+    read(key: string): Promise<unknown>;
+    write(key: string, value: unknown): Promise<void>;
     delete(key: string): Promise<boolean>;
     list(prefix?: string): Promise<string[]>;
     clear(): Promise<void>;
