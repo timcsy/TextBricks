@@ -1454,7 +1454,7 @@
 ### 2025-09-05 - v0.2.0 多編輯器平台轉型完成
 - **執行者**：Claude Code
 - **變更**：
-  - ✅ **專案轉型**：TextBricks-VSCode → textbricks-extensions 多編輯器平台
+  - ✅ **專案轉型**：TextBricks-VSCode → TextBricks 多編輯器平台
   - ✅ **統一建置系統**：完整 dist/ 目錄結構支援多平台外掛
   - ✅ **文檔全面更新**：多編輯器支援說明，VS Code/Vim/Sublime Text 規劃
   - ✅ **版本發佈**：v0.1.8 → v0.2.0 重大版本更新

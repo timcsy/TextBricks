@@ -62,7 +62,7 @@ Templates organized with complete customization freedom:
 #### Other Editors (Coming Soon)
 - **Vim/NeoVim**: Plugin installation via package managers
 - **Sublime Text**: Package Control integration
-- **Manual Installation**: Download from [GitHub Releases](https://github.com/timcsy/textbricks-extensions/releases)
+- **Manual Installation**: Download from [GitHub Releases](https://github.com/timcsy/TextBricks/releases)
 
 ### Basic Usage (VS Code)
 1. **Open a code file** (`.c`, `.py`, `.js`, etc.)
@@ -166,7 +166,7 @@ Access settings via `File > Preferences > Settings > Extensions > TextBricks`:
 ### Reporting Issues
 - Include VS Code and extension version
 - Describe steps to reproduce
-- Check [GitHub Issues](https://github.com/timcsy/textbricks-extensions/issues)
+- Check [GitHub Issues](https://github.com/timcsy/TextBricks/issues)
 
 ## 🔧 What's New in v0.2.4
 
@@ -192,7 +192,7 @@ Access settings via `File > Preferences > Settings > Extensions > TextBricks`:
 
 ## 🤝 Contributing
 
-We welcome contributions! See our [GitHub repository](https://github.com/timcsy/textbricks-extensions) for:
+We welcome contributions! See our [GitHub repository](https://github.com/timcsy/TextBricks) for:
 - Source code and multi-editor development
 - Issue reporting and bug fixes
 - Feature requests for new editors

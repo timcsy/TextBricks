@@ -9,12 +9,12 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/timcsy/textbricks-extensions.git"
+    "url": "https://github.com/timcsy/TextBricks.git"
   },
   "bugs": {
-    "url": "https://github.com/timcsy/textbricks-extensions/issues"
+    "url": "https://github.com/timcsy/TextBricks/issues"
   },
-  "homepage": "https://github.com/timcsy/textbricks-extensions#readme",
+  "homepage": "https://github.com/timcsy/TextBricks#readme",
   "icon": "assets/icons/TextBricks.ico",
   "engines": {
     "vscode": "^1.74.0"
