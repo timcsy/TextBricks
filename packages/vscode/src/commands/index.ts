@@ -96,7 +96,7 @@ textBricksManagerProvider
                 placeHolder: '選擇要查看說明文檔的模板'
             });
 
-            if (!selected) return;
+            if (!selected) {return;}
             const template = selected.template;
             templateId = (template as any).topicPath ? `${(template as any).topicPath}/templates/${template.name}` : template.name;
         }

@@ -58,10 +58,10 @@ export class VSCodeUI implements IUI {
         const vscodeOptions: vscode.InputBoxOptions = {};
         
         if (options) {
-            if (options.prompt) vscodeOptions.prompt = options.prompt;
-            if (options.placeholder) vscodeOptions.placeHolder = options.placeholder;
-            if (options.value) vscodeOptions.value = options.value;
-            if (options.password) vscodeOptions.password = options.password;
+            if (options.prompt) {vscodeOptions.prompt = options.prompt;}
+            if (options.placeholder) {vscodeOptions.placeHolder = options.placeholder;}
+            if (options.value) {vscodeOptions.value = options.value;}
+            if (options.password) {vscodeOptions.password = options.password;}
             
             if (options.validation) {
                 vscodeOptions.validateInput = (value: string) => {
@@ -95,7 +95,7 @@ export class VSCodeUI implements IUI {
         }));
 
         const selected = await vscode.window.showQuickPick(vscodeItems);
-        if (!selected) return undefined;
+        if (!selected) { return undefined; }
 
         // Find original item
         return items.find(item => 
@@ -109,11 +109,11 @@ export class VSCodeUI implements IUI {
 
         if (options) {
             const opts = options as any;
-            if (opts.canSelectFiles !== undefined) vscodeOptions.canSelectFiles = opts.canSelectFiles;
-            if (opts.canSelectFolders !== undefined) vscodeOptions.canSelectFolders = opts.canSelectFolders;
-            if (opts.canSelectMany !== undefined) vscodeOptions.canSelectMany = opts.canSelectMany;
-            if (opts.defaultPath) vscodeOptions.defaultUri = vscode.Uri.file(opts.defaultPath);
-            if (opts.title) vscodeOptions.title = opts.title;
+            if (opts.canSelectFiles !== undefined) {vscodeOptions.canSelectFiles = opts.canSelectFiles;}
+            if (opts.canSelectFolders !== undefined) {vscodeOptions.canSelectFolders = opts.canSelectFolders;}
+            if (opts.canSelectMany !== undefined) {vscodeOptions.canSelectMany = opts.canSelectMany;}
+            if (opts.defaultPath) {vscodeOptions.defaultUri = vscode.Uri.file(opts.defaultPath);}
+            if (opts.title) {vscodeOptions.title = opts.title;}
 
             if (opts.filters) {
                 vscodeOptions.filters = opts.filters;
@@ -133,9 +133,9 @@ export class VSCodeUI implements IUI {
         const vscodeOptions: vscode.SaveDialogOptions = {};
         
         if (options) {
-            if (options.defaultUri) vscodeOptions.defaultUri = vscode.Uri.file(options.defaultUri);
-            if (options.title) vscodeOptions.title = options.title;
-            if (options.filters) vscodeOptions.filters = options.filters;
+            if (options.defaultUri) {vscodeOptions.defaultUri = vscode.Uri.file(options.defaultUri);}
+            if (options.title) {vscodeOptions.title = options.title;}
+            if (options.filters) {vscodeOptions.filters = options.filters;}
         }
 
         const result = await vscode.window.showSaveDialog(vscodeOptions);
@@ -337,8 +337,8 @@ export class VSCodeUI implements IUI {
 
         const item = vscode.window.createStatusBarItem(alignment, options.priority);
         item.text = options.text;
-        if (options.tooltip) item.tooltip = options.tooltip;
-        if (options.command) item.command = options.command;
+        if (options.tooltip) {item.tooltip = options.tooltip;}
+        if (options.command) {item.command = options.command;}
         item.show();
 
         return {

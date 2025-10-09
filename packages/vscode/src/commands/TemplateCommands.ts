@@ -22,14 +22,14 @@ export class TemplateCommands {
             placeHolder: '例如：Hello World'
         });
 
-        if (!title) return;
+        if (!title) {return;}
 
         const description = await vscode.window.showInputBox({
             prompt: '輸入模板描述',
             placeHolder: '例如：顯示 Hello World 的基本程式'
         });
 
-        if (!description) return;
+        if (!description) {return;}
 
         // 獲取可用的語言和主題
         const languages = this.templateEngine.getLanguages();
@@ -52,7 +52,7 @@ export class TemplateCommands {
             placeHolder: '選擇程式語言'
         });
 
-        if (!selectedLanguage) return;
+        if (!selectedLanguage) {return;}
 
         // 讓使用者輸入 topic
         const topicInput = await vscode.window.showInputBox({

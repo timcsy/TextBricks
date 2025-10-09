@@ -1853,7 +1853,7 @@ export class TextBricksManagerProvider {
                             } else {
                                 // Recursively search subdirectories
                                 const found = await searchForLinkFile(fullPath);
-                                if (found) return found;
+                                if (found) { return found; }
                             }
                         }
                     }

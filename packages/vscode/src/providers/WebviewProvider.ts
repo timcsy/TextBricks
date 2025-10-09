@@ -135,7 +135,7 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
         // 顯示當前主題及其子主題的項目
         return items.filter(item => {
             const itemTopicPath = 'topicPath' in item ? item.topicPath : undefined;
-            if (!itemTopicPath) return false;
+            if (!itemTopicPath) { return false; }
             return itemTopicPath === this._currentTopicPath || subtopicIds.has(itemTopicPath);
         });
     }
@@ -259,7 +259,7 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
 
             // When in a specific topic, only show favorites under current topic
             return allFavoriteItems.filter(item => {
-                if (!item.topicPath) return true; // Main topics have empty topic, show them at root
+                if (!item.topicPath) { return true; } // Main topics have empty topic, show them at root
                 return item.topicPath === this._currentTopicPath || subtopicIds.has(item.topicPath);
             });
         }
@@ -1343,9 +1343,9 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
 
     private _generateCardCountText(topicCount: number, templateCount: number, linkCount: number): string {
         const counts = [];
-        if (topicCount > 0) counts.push(`${topicCount} 個主題`);
-        if (templateCount > 0) counts.push(`${templateCount} 個模板`);
-        if (linkCount > 0) counts.push(`${linkCount} 個連結`);
+        if (topicCount > 0) {counts.push(`${topicCount} 個主題`);}
+        if (templateCount > 0) {counts.push(`${templateCount} 個模板`);}
+        if (linkCount > 0) {counts.push(`${linkCount} 個連結`);}
         return counts.join('、');
     }
 
@@ -1366,9 +1366,9 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
 
     private _generateMainTopicCountText(topicCount: number, templateCount: number, linkCount: number, subtopicCounts: {[key: string]: number}): string {
         const counts = [];
-        if (topicCount > 0) counts.push(`${topicCount} 個主題`);
-        if (templateCount > 0) counts.push(`${templateCount} 個模板`);
-        if (linkCount > 0) counts.push(`${linkCount} 個連結`);
+        if (topicCount > 0) {counts.push(`${topicCount} 個主題`);}
+        if (templateCount > 0) {counts.push(`${templateCount} 個模板`);}
+        if (linkCount > 0) {counts.push(`${linkCount} 個連結`);}
 
         const subtopicTemplateCount = Object.values(subtopicCounts).reduce((sum, count) => sum + count, 0);
         if (subtopicTemplateCount > 0) {
@@ -1380,9 +1380,9 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
 
     private _generateSubTopicCountText(templateCount: number, linkCount: number, topicCount?: number): string {
         const counts = [];
-        if (topicCount && topicCount > 0) counts.push(`${topicCount} 個主題`);
-        if (templateCount > 0) counts.push(`${templateCount} 個模板`);
-        if (linkCount > 0) counts.push(`${linkCount} 個連結`);
+        if (topicCount && topicCount > 0) {counts.push(`${topicCount} 個主題`);}
+        if (templateCount > 0) {counts.push(`${templateCount} 個模板`);}
+        if (linkCount > 0) {counts.push(`${linkCount} 個連結`);}
         return counts.join('、') || '無內容';
     }
 

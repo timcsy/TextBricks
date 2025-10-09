@@ -259,7 +259,7 @@ export class TopicManager {
     }
 
     getTopicNode(topicPath: string): TopicNode | undefined {
-        if (!this.hierarchy) return undefined;
+        if (!this.hierarchy) { return undefined; }
 
         const findNode = (nodes: TopicNode[], path: string): TopicNode | undefined => {
             for (const node of nodes) {
@@ -270,7 +270,7 @@ export class TopicManager {
                     }
                 }
                 const found = findNode(node.children, path);
-                if (found) return found;
+                if (found) { return found; }
             }
             return undefined;
         };
@@ -285,7 +285,7 @@ export class TopicManager {
      */
     getTopicPath(topicPath: string): TopicConfig[] {
         const node = this.getTopicNode(topicPath);
-        if (!node) return [];
+        if (!node) { return []; }
 
         const path: TopicConfig[] = [];
         let current: TopicNode | undefined = node;
@@ -576,7 +576,7 @@ export class TopicManager {
     private wouldCreateCycle(topicPath: string, newParentPath: string): boolean {
         const isDescendant = (ancestorPath: string, descendantPath: string): boolean => {
             const node = this.getTopicNode(descendantPath);
-            if (!node) return false;
+            if (!node) { return false; }
 
             let current: TopicNode | undefined = node.parent;
             while (current) {

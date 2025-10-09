@@ -96,7 +96,7 @@ export class VSCodeStorage implements IStorage {
         for (const key of keys) {
             const existed = storage.get(key) !== undefined;
             await storage.update(key, undefined);
-            if (existed) deleted++;
+            if (existed) {deleted++;}
         }
         return deleted;
     }

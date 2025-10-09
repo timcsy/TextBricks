@@ -29,7 +29,7 @@ export class CodeOperationService {
      */
     async copyTemplate(templatePath: string, options?: OperationOptions): Promise<void> {
         const template = await this._getTemplate(templatePath);
-        if (!template) return;
+        if (!template) { return; }
 
         try {
             const isEditorActive = this.platform.editor.isEditorActive();
@@ -63,7 +63,7 @@ export class CodeOperationService {
      */
     async insertTemplate(templatePath: string, options?: OperationOptions): Promise<void> {
         const template = await this._getTemplate(templatePath);
-        if (!template) return;
+        if (!template) { return; }
 
         try {
             const isEditorActive = this.platform.editor.isEditorActive();
@@ -206,7 +206,7 @@ export class CodeOperationService {
     }
 
     private _showFeedback(message: string, type: 'info' | 'warning' | 'error', options?: OperationOptions): void {
-        if (options?.silent) return;
+        if (options?.silent) { return; }
 
         switch (type) {
             case 'info':

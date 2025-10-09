@@ -4,6 +4,15 @@
 # Unified build output - ignore all generated files
 dist/
 
+# TypeScript compiled files in source directories
+packages/*/src/**/*.js
+packages/*/src/**/*.js.map
+packages/*/src/**/*.d.ts
+!packages/*/src/**/*.test.js
+!packages/vscode/jest.config.js
+!packages/core/jest.config.js
+!packages/shared/jest.config.js
+
 # Backup directories
 src_backup_*
 

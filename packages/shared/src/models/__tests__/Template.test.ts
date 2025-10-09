@@ -1,14 +1,14 @@
-import { Template, TemplateCategory, TemplateItem } from '../Template';
+import { Template, TemplateItem } from '../Template';
 
 describe('Template Model', () => {
   describe('TemplateItem', () => {
     const mockTemplate: Template = {
-      id: 'hello-world',
+      type: 'template',
+      name: 'hello-world',
       title: 'Hello World',
       description: 'Basic Hello World program',
       code: '#include <stdio.h>\n\nint main() {\n    printf("Hello, World!\\n");\n    return 0;\n}',
-      language: 'c',
-      categoryId: 'basic-syntax'
+      language: 'c'
     };
 
     let templateItem: TemplateItem;
@@ -49,36 +49,20 @@ describe('Template Model', () => {
   describe('Template interface', () => {
     it('should have all required properties', () => {
       const template: Template = {
-        id: 'test-id',
+        type: 'template',
+        name: 'test-template',
         title: 'Test Template',
         description: 'Test description',
         code: 'test code',
-        language: 'c',
-        categoryId: 'test-category'
+        language: 'c'
       };
 
-      expect(template.id).toBe('test-id');
+      expect(template.type).toBe('template');
+      expect(template.name).toBe('test-template');
       expect(template.title).toBe('Test Template');
       expect(template.description).toBe('Test description');
       expect(template.code).toBe('test code');
       expect(template.language).toBe('c');
-      expect(template.categoryId).toBe('test-category');
-    });
-  });
-
-  describe('TemplateCategory interface', () => {
-    it('should have all required properties', () => {
-      const category: TemplateCategory = {
-        id: 'basic-syntax',
-        name: 'Basic Syntax',
-        description: 'Fundamental C language syntax',
-        topic: '基礎概念'
-      };
-
-      expect(category.id).toBe('basic-syntax');
-      expect(category.name).toBe('Basic Syntax');
-      expect(category.description).toBe('Fundamental C language syntax');
-      expect(category.topic).toBe('基礎概念');
     });
   });
 });

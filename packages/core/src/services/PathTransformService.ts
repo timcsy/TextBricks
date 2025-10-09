@@ -65,7 +65,7 @@ export class PathTransformService {
      * @returns 唯一識別路徑
      */
     getItemIdentifier(item: PathItem, type: ItemType): string | null {
-        if (!item) return null;
+        if (!item) { return null; }
 
         switch (type) {
             case 'template':
@@ -77,9 +77,9 @@ export class PathTransformService {
 
             case 'topic':
                 // Topic 用 path（字串格式）
-                if (typeof item.path === 'string') return item.path;
+                if (typeof item.path === 'string') { return item.path; }
                 // 如果 path 是陣列，轉換為字串
-                if (Array.isArray(item.path)) return item.path.join('/');
+                if (Array.isArray(item.path)) { return item.path.join('/'); }
                 return item.name || null;
 
             case 'link':
@@ -119,7 +119,7 @@ export class PathTransformService {
      * @returns 顯示路徑，如 "C 語言/基礎語法"
      */
     pathToDisplayPath(pathString: string): string {
-        if (!pathString) return '';
+        if (!pathString) { return ''; }
 
         const topics = Array.from(this.topicsMap.values());
         const pathParts = pathString.split('/');
@@ -157,7 +157,7 @@ export class PathTransformService {
      * @returns 內部路徑，如 "c/basic"
      */
     displayPathToPath(displayPath: string): string {
-        if (!displayPath) return '';
+        if (!displayPath) { return ''; }
 
         const topics = Array.from(this.topicsMap.values());
         const displayParts = displayPath.split('/');
@@ -184,9 +184,9 @@ export class PathTransformService {
      * @returns 標準化的字串路徑
      */
     normalizePath(path: string | string[] | undefined): string {
-        if (!path) return '';
-        if (typeof path === 'string') return path;
-        if (Array.isArray(path)) return path.join('/');
+        if (!path) { return ''; }
+        if (typeof path === 'string') { return path; }
+        if (Array.isArray(path)) { return path.join('/'); }
         return '';
     }
 
@@ -197,7 +197,7 @@ export class PathTransformService {
      * @returns 路徑部分陣列
      */
     splitPath(path: string): string[] {
-        if (!path) return [];
+        if (!path) { return []; }
         return path.split('/').filter(part => part.length > 0);
     }
 
@@ -221,7 +221,7 @@ export class PathTransformService {
      * @returns 是否為子路徑
      */
     isSubPath(path: string, parentPath: string): boolean {
-        if (!path || !parentPath) return false;
+        if (!path || !parentPath) { return false; }
         return path.startsWith(parentPath + '/') || path === parentPath;
     }
 
@@ -232,9 +232,9 @@ export class PathTransformService {
      * @returns 父路徑，如果沒有則返回 null
      */
     getParentPath(path: string): string | null {
-        if (!path) return null;
+        if (!path) { return null; }
         const parts = this.splitPath(path);
-        if (parts.length <= 1) return null;
+        if (parts.length <= 1) { return null; }
         return this.joinPath(...parts.slice(0, -1));
     }
 
@@ -245,7 +245,7 @@ export class PathTransformService {
      * @returns 最後一部分
      */
     getPathName(path: string): string {
-        if (!path) return '';
+        if (!path) { return ''; }
         const parts = this.splitPath(path);
         return parts[parts.length - 1] || '';
     }
@@ -258,7 +258,7 @@ export class PathTransformService {
      * @returns 主題路徑
      */
     extractTopicPath(fullPath: string): string {
-        if (!fullPath) return '';
+        if (!fullPath) { return ''; }
 
         // 移除 /templates/* 部分
         const templatesIndex = fullPath.indexOf('/templates/');
@@ -285,7 +285,7 @@ export class PathTransformService {
      * @returns 清理後的路徑
      */
     sanitizePath(path: string): string {
-        if (!path) return '';
+        if (!path) { return ''; }
 
         return path
             .trim()

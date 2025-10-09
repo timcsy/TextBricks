@@ -116,7 +116,7 @@ export class CommandService {
                 }
             });
 
-            if (!title) return;
+            if (!title) {return;}
 
             const description = await vscode.window.showInputBox({
                 prompt: '輸入模板描述',
@@ -129,7 +129,7 @@ export class CommandService {
                 }
             });
 
-            if (!description) return;
+            if (!description) {return;}
 
             // 獲取語言選擇
             const languages = this.templateEngine.getLanguages();
@@ -148,7 +148,7 @@ export class CommandService {
                 placeHolder: '選擇程式語言'
             });
 
-            if (!selectedLanguage) return;
+            if (!selectedLanguage) {return;}
 
             // 獲取主題選擇
             const topics = this.templateEngine.getTopics();
@@ -216,7 +216,7 @@ export class CommandService {
                     '繼續',
                     '取消'
                 );
-                if (proceed !== '繼續') return;
+                if (proceed !== '繼續') {return;}
             }
 
             // 創建模板
@@ -245,7 +245,7 @@ export class CommandService {
                 placeHolder: '搜尋模板標題、描述或標籤...'
             });
 
-            if (!query) return;
+            if (!query) {return;}
 
             const templates = this.templateEngine.getAllTemplates();
             const searchResult = await this.searchManager.searchTemplates(templates, query);
@@ -334,7 +334,7 @@ export class CommandService {
                 openLabel: '選擇要匯入的模板檔案'
             });
 
-            if (!files || files.length === 0) return;
+            if (!files || files.length === 0) {return;}
 
             const content = await vscode.workspace.fs.readFile(files[0]);
             const importData = this.importExportManager.parseImportData(content.toString());
@@ -353,7 +353,7 @@ export class CommandService {
 
             // 詢問匯入選項
             const options = await this.getImportOptions();
-            if (!options) return;
+            if (!options) {return;}
 
             const targetTopicPath = 'imported';
             const result = await this.templateEngine.importTemplates(importData, targetTopicPath, options);
@@ -378,7 +378,7 @@ export class CommandService {
                 saveLabel: '匯出模板'
             });
 
-            if (!saveUri) return;
+            if (!saveUri) {return;}
 
             const templates = this.templateEngine.getAllTemplates();
             const languages = this.templateEngine.getLanguages();
@@ -425,7 +425,7 @@ export class CommandService {
                     placeHolder: '選擇要查看說明文檔的模板'
                 });
 
-                if (!selected) return;
+                if (!selected) {return;}
                 // Build full template path (topicPath/templates/name)
                 const template = selected.template as any;
                 templateId = template.topicPath
@@ -452,21 +452,21 @@ export class CommandService {
             { placeHolder: '是否覆蓋現有的模板？' }
         );
 
-        if (overwriteExisting === undefined) return null;
+        if (overwriteExisting === undefined) { return null; }
 
         const mergeTopics = await vscode.window.showQuickPick(
             ['是', '否'],
             { placeHolder: '是否合併主題？' }
         );
 
-        if (mergeTopics === undefined) return null;
+        if (mergeTopics === undefined) { return null; }
 
         const mergeLanguages = await vscode.window.showQuickPick(
             ['是', '否'],
             { placeHolder: '是否合併語言？' }
         );
 
-        if (mergeLanguages === undefined) return null;
+        if (mergeLanguages === undefined) { return null; }
 
         return {
             overwriteExisting: overwriteExisting === '是',
@@ -538,7 +538,7 @@ export class CommandService {
                 placeHolder: '選擇資料存儲位置'
             });
 
-            if (!selected) return;
+            if (!selected) {return;}
 
             let targetPath: string;
 
@@ -553,7 +553,7 @@ export class CommandService {
                     openLabel: '選擇資料夾'
                 });
 
-                if (!folder || folder.length === 0) return;
+                if (!folder || folder.length === 0) {return;}
                 targetPath = folder[0].fsPath;
             }
 
@@ -563,14 +563,14 @@ export class CommandService {
                 { placeHolder: '是否遷移現有資料？' }
             );
 
-            if (migrateData === undefined) return;
+            if (migrateData === undefined) {return;}
 
             const createBackup = await vscode.window.showQuickPick(
                 ['是', '否'],
                 { placeHolder: '是否建立備份？' }
             );
 
-            if (createBackup === undefined) return;
+            if (createBackup === undefined) {return;}
 
             // 確認變更
             const confirmed = await vscode.window.showWarningMessage(

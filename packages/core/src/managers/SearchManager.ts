@@ -222,11 +222,11 @@ export class SearchManager {
         if (filters.dateRange) {
             const { start, end } = filters.dateRange;
             result = result.filter(t => {
-                if (!t.metadata?.createdAt) return true;
+                if (!t.metadata?.createdAt) { return true; }
                 const createdAt = new Date(t.metadata.createdAt);
 
-                if (start && createdAt < start) return false;
-                if (end && createdAt > end) return false;
+                if (start && createdAt < start) { return false; }
+                if (end && createdAt > end) { return false; }
 
                 return true;
             });
@@ -237,8 +237,8 @@ export class SearchManager {
             result = result.filter(t => {
                 const usage = t.metadata?.usage || 0;
 
-                if (min !== undefined && usage < min) return false;
-                if (max !== undefined && usage > max) return false;
+                if (min !== undefined && usage < min) { return false; }
+                if (max !== undefined && usage > max) { return false; }
 
                 return true;
             });
@@ -249,8 +249,8 @@ export class SearchManager {
             result = result.filter(t => {
                 const popularity = t.metadata?.popularity || 0;
 
-                if (min !== undefined && popularity < min) return false;
-                if (max !== undefined && popularity > max) return false;
+                if (min !== undefined && popularity < min) { return false; }
+                if (max !== undefined && popularity > max) { return false; }
 
                 return true;
             });

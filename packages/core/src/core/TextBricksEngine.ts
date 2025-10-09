@@ -776,26 +776,13 @@ export class TextBricksEngine {
 
     // === 私有輔助方法 ===
 
+    /**
+     * 更新模板的人氣分數
+     * 委派給 RecommendationService 處理
+     */
     private updatePopularity(template: ExtendedTemplate): void {
-        if (!template.metadata) return;
-        
-        const usage = template.metadata.usage || 0;
-        const lastUsedAt = template.metadata.lastUsedAt ? new Date(template.metadata.lastUsedAt) : null;
-        
-        let popularity = Math.min(usage * 5, 100);
-        
-        if (lastUsedAt) {
-            const daysSinceLastUse = (Date.now() - lastUsedAt.getTime()) / (1000 * 60 * 60 * 24);
-            if (daysSinceLastUse <= 1) {
-                popularity = Math.min(popularity * 1.2, 100);
-            } else if (daysSinceLastUse <= 7) {
-                popularity = Math.min(popularity * 1.1, 100);
-            } else if (daysSinceLastUse > 30) {
-                popularity = Math.max(popularity * 0.8, 0);
-            }
-        }
-        
-        template.metadata.popularity = Math.round(popularity);
+        if (!template.metadata) { return; }
+        template.metadata.popularity = this.recommendationService.updatePopularity(template);
     }
 
 

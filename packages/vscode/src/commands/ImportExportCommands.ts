@@ -26,7 +26,7 @@ export class ImportExportCommands {
             openLabel: '選擇要匯入的模板檔案'
         });
 
-        if (!files || files.length === 0) return;
+        if (!files || files.length === 0) {return;}
 
         try {
             const content = await vscode.workspace.fs.readFile(files[0]);
@@ -34,7 +34,7 @@ export class ImportExportCommands {
 
             // 詢問匯入選項
             const options = await this.getImportOptions();
-            if (!options) return;
+            if (!options) {return;}
 
             const targetTopicPath = 'imported';
             const result = await this.templateEngine.importTemplates(importData, targetTopicPath, options);
@@ -61,7 +61,7 @@ export class ImportExportCommands {
             saveLabel: '匯出模板'
         });
 
-        if (!saveUri) return;
+        if (!saveUri) {return;}
 
         try {
             const exportData = await this.templateEngine.exportTemplates();
@@ -95,21 +95,21 @@ export class ImportExportCommands {
             { placeHolder: '是否覆蓋現有的模板？' }
         );
 
-        if (overwriteExisting === undefined) return null;
+        if (overwriteExisting === undefined) { return null; }
 
         const mergeTopics = await vscode.window.showQuickPick(
             ['是', '否'],
             { placeHolder: '是否合併主題？' }
         );
 
-        if (mergeTopics === undefined) return null;
+        if (mergeTopics === undefined) { return null; }
 
         const mergeLanguages = await vscode.window.showQuickPick(
             ['是', '否'],
             { placeHolder: '是否合併語言？' }
         );
 
-        if (mergeLanguages === undefined) return null;
+        if (mergeLanguages === undefined) { return null; }
 
         return {
             overwriteExisting: overwriteExisting === '是',

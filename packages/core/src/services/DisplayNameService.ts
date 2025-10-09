@@ -103,7 +103,7 @@ export class DisplayNameService {
         languageName: string,
         options: DisplayNameOptions = {}
     ): string {
-        if (!languageName) return '';
+        if (!languageName) { return ''; }
 
         const language = this.languages.get(languageName);
 
@@ -136,7 +136,7 @@ export class DisplayNameService {
         topicPath: string,
         options: DisplayNameOptions = {}
     ): string {
-        if (!topicPath) return '';
+        if (!topicPath) { return ''; }
 
         // 嘗試直接查找
         let topic = this.topics.get(topicPath);
@@ -144,7 +144,7 @@ export class DisplayNameService {
         // 如果找不到，嘗試將陣列路徑轉換為字串
         if (!topic) {
             // 檢查是否有任何主題的 path 匹配
-            for (const [_, t] of this.topics) {
+            for (const [, t] of this.topics) {
                 const tPath = this.getTopicPathKey(t);
                 if (tPath === topicPath) {
                     topic = t;
@@ -180,7 +180,7 @@ export class DisplayNameService {
      * @returns 完整顯示路徑
      */
     getFullDisplayPath(pathString: string, separator: string = '/'): string {
-        if (!pathString) return '';
+        if (!pathString) { return ''; }
 
         const pathParts = pathString.split('/');
         const displayParts: string[] = [];
@@ -211,7 +211,7 @@ export class DisplayNameService {
      * @returns 標籤名稱（通常是大寫或簡短形式）
      */
     getLanguageTagName(languageName: string): string {
-        if (!languageName) return '';
+        if (!languageName) { return ''; }
 
         const language = this.languages.get(languageName);
 
@@ -236,8 +236,8 @@ export class DisplayNameService {
      * @returns 格式化字串，如 "5 個模板"
      */
     formatTemplateCount(count: number): string {
-        if (count === 0) return '無模板';
-        if (count === 1) return '1 個模板';
+        if (count === 0) { return '無模板'; }
+        if (count === 1) { return '1 個模板'; }
         return `${count} 個模板`;
     }
 
@@ -248,8 +248,8 @@ export class DisplayNameService {
      * @returns 格式化字串，如 "3 個主題"
      */
     formatTopicCount(count: number): string {
-        if (count === 0) return '無主題';
-        if (count === 1) return '1 個主題';
+        if (count === 0) { return '無主題'; }
+        if (count === 1) { return '1 個主題'; }
         return `${count} 個主題`;
     }
 
@@ -257,7 +257,7 @@ export class DisplayNameService {
      * 首字母大寫
      */
     private capitalize(str: string): string {
-        if (!str) return '';
+        if (!str) { return ''; }
         return str.charAt(0).toUpperCase() + str.slice(1);
     }
 
@@ -265,7 +265,7 @@ export class DisplayNameService {
      * 獲取路徑的最後一部分
      */
     private getLastPathPart(path: string): string {
-        if (!path) return '';
+        if (!path) { return ''; }
         const parts = path.split('/');
         return parts[parts.length - 1] || '';
     }
