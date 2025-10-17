@@ -1217,8 +1217,85 @@ export class TextBricksManagerProvider {
         const treeBuilderServiceUri = webview.asWebviewUri(
             vscode.Uri.joinPath(this._extensionUri, 'assets', 'js', 'tree-builder-service.js')
         );
-        const scriptUri = webview.asWebviewUri(
-            vscode.Uri.joinPath(this._extensionUri, 'assets', 'js', 'textbricks-manager.js')
+
+        // Manager modules - Utils
+        const pathHelpersUri = webview.asWebviewUri(
+            vscode.Uri.joinPath(this._extensionUri, 'assets', 'js', 'manager', 'utils', 'path-helpers.js')
+        );
+        const dataHelpersUri = webview.asWebviewUri(
+            vscode.Uri.joinPath(this._extensionUri, 'assets', 'js', 'manager', 'utils', 'data-helpers.js')
+        );
+
+        // Manager modules - Core
+        const stateManagerUri = webview.asWebviewUri(
+            vscode.Uri.joinPath(this._extensionUri, 'assets', 'js', 'manager', 'core', 'state-manager.js')
+        );
+        const messageHandlerUri = webview.asWebviewUri(
+            vscode.Uri.joinPath(this._extensionUri, 'assets', 'js', 'manager', 'core', 'message-handler.js')
+        );
+
+        // Manager modules - Handlers
+        const templateHandlersUri = webview.asWebviewUri(
+            vscode.Uri.joinPath(this._extensionUri, 'assets', 'js', 'manager', 'handlers', 'template-handlers.js')
+        );
+        const topicHandlersUri = webview.asWebviewUri(
+            vscode.Uri.joinPath(this._extensionUri, 'assets', 'js', 'manager', 'handlers', 'topic-handlers.js')
+        );
+        const favoritesHandlersUri = webview.asWebviewUri(
+            vscode.Uri.joinPath(this._extensionUri, 'assets', 'js', 'manager', 'handlers', 'favorites-handlers.js')
+        );
+        const linkHandlersUri = webview.asWebviewUri(
+            vscode.Uri.joinPath(this._extensionUri, 'assets', 'js', 'manager', 'handlers', 'link-handlers.js')
+        );
+        const contextMenuHandlerUri = webview.asWebviewUri(
+            vscode.Uri.joinPath(this._extensionUri, 'assets', 'js', 'manager', 'handlers', 'context-menu-handler.js')
+        );
+        const treeNavigationHandlerUri = webview.asWebviewUri(
+            vscode.Uri.joinPath(this._extensionUri, 'assets', 'js', 'manager', 'handlers', 'tree-navigation-handler.js')
+        );
+        const documentationHandlerUri = webview.asWebviewUri(
+            vscode.Uri.joinPath(this._extensionUri, 'assets', 'js', 'manager', 'handlers', 'documentation-handler.js')
+        );
+        const buttonHandlerUri = webview.asWebviewUri(
+            vscode.Uri.joinPath(this._extensionUri, 'assets', 'js', 'manager', 'handlers', 'button-handler.js')
+        );
+
+        // Manager modules - Core (Event Coordinator)
+        const eventCoordinatorUri = webview.asWebviewUri(
+            vscode.Uri.joinPath(this._extensionUri, 'assets', 'js', 'manager', 'core', 'event-coordinator.js')
+        );
+
+        // Manager modules - UI
+        const modalManagerUri = webview.asWebviewUri(
+            vscode.Uri.joinPath(this._extensionUri, 'assets', 'js', 'manager', 'ui', 'modal-manager.js')
+        );
+        const formGeneratorUri = webview.asWebviewUri(
+            vscode.Uri.joinPath(this._extensionUri, 'assets', 'js', 'manager', 'ui', 'form-generator.js')
+        );
+
+        // Manager modules - Renderers
+        const overviewRendererUri = webview.asWebviewUri(
+            vscode.Uri.joinPath(this._extensionUri, 'assets', 'js', 'manager', 'ui', 'renderers', 'overview-renderer.js')
+        );
+        const statsRendererUri = webview.asWebviewUri(
+            vscode.Uri.joinPath(this._extensionUri, 'assets', 'js', 'manager', 'ui', 'renderers', 'stats-renderer.js')
+        );
+        const favoritesRendererUri = webview.asWebviewUri(
+            vscode.Uri.joinPath(this._extensionUri, 'assets', 'js', 'manager', 'ui', 'renderers', 'favorites-renderer.js')
+        );
+        const contentRendererUri = webview.asWebviewUri(
+            vscode.Uri.joinPath(this._extensionUri, 'assets', 'js', 'manager', 'ui', 'renderers', 'content-renderer.js')
+        );
+        const languagesRendererUri = webview.asWebviewUri(
+            vscode.Uri.joinPath(this._extensionUri, 'assets', 'js', 'manager', 'ui', 'renderers', 'languages-renderer.js')
+        );
+        const settingsRendererUri = webview.asWebviewUri(
+            vscode.Uri.joinPath(this._extensionUri, 'assets', 'js', 'manager', 'ui', 'renderers', 'settings-renderer.js')
+        );
+
+        // Manager main coordinator
+        const managerUri = webview.asWebviewUri(
+            vscode.Uri.joinPath(this._extensionUri, 'assets', 'js', 'manager', 'manager.js')
         );
 
         const nonce = this._getNonce();
@@ -1657,6 +1734,19 @@ export class TextBricksManagerProvider {
         </div>
     </div>
 
+    <!-- Context Menu -->
+    <div id="context-menu" class="context-menu" style="display: none;">
+        <div class="context-menu-item" data-action="edit">✏️ 編輯</div>
+        <div class="context-menu-item" data-action="copy">📋 複製</div>
+        <div class="context-menu-item" data-action="delete">🗑️ 刪除</div>
+        <div class="context-menu-separator"></div>
+        <div class="context-menu-item" data-action="add-template">📄 新增模板</div>
+        <div class="context-menu-item" data-action="add-topic">🏷️ 新增子主題</div>
+        <div class="context-menu-item" data-action="add-link">🔗 建立連結</div>
+        <div class="context-menu-separator"></div>
+        <div class="context-menu-item" data-action="toggle-favorite">❤️ 加入收藏</div>
+    </div>
+
     <!-- Modal for editing -->
     <div id="modal" class="modal">
         <div class="modal-content">
@@ -1734,13 +1824,49 @@ export class TextBricksManagerProvider {
         </div>
     </div>
 
+    <!-- Common utilities -->
     <script nonce="${nonce}" src="${utilsUri}"></script>
     <script nonce="${nonce}" src="${eventDelegatorUri}"></script>
     <script nonce="${nonce}" src="${cardTemplatesUri}"></script>
     <script nonce="${nonce}" src="${servicesBridgeUri}"></script>
     <script nonce="${nonce}" src="${uiStateServiceUri}"></script>
     <script nonce="${nonce}" src="${treeBuilderServiceUri}"></script>
-    <script nonce="${nonce}" src="${scriptUri}"></script>
+
+    <!-- Manager modules - Utils (must load first) -->
+    <script nonce="${nonce}" src="${pathHelpersUri}"></script>
+    <script nonce="${nonce}" src="${dataHelpersUri}"></script>
+
+    <!-- Manager modules - Core -->
+    <script nonce="${nonce}" src="${stateManagerUri}"></script>
+    <script nonce="${nonce}" src="${messageHandlerUri}"></script>
+
+    <!-- Manager modules - Handlers -->
+    <script nonce="${nonce}" src="${templateHandlersUri}"></script>
+    <script nonce="${nonce}" src="${topicHandlersUri}"></script>
+    <script nonce="${nonce}" src="${favoritesHandlersUri}"></script>
+    <script nonce="${nonce}" src="${linkHandlersUri}"></script>
+    <script nonce="${nonce}" src="${contextMenuHandlerUri}"></script>
+    <script nonce="${nonce}" src="${treeNavigationHandlerUri}"></script>
+    <script nonce="${nonce}" src="${documentationHandlerUri}"></script>
+    <script nonce="${nonce}" src="${buttonHandlerUri}"></script>
+
+    <!-- Manager modules - Core (Event Coordinator) -->
+    <script nonce="${nonce}" src="${eventCoordinatorUri}"></script>
+
+    <!-- Manager modules - UI -->
+    <script nonce="${nonce}" src="${modalManagerUri}"></script>
+    <script nonce="${nonce}" src="${formGeneratorUri}"></script>
+
+    <!-- Manager modules - Renderers -->
+    <script nonce="${nonce}" src="${overviewRendererUri}"></script>
+    <script nonce="${nonce}" src="${statsRendererUri}"></script>
+    <script nonce="${nonce}" src="${favoritesRendererUri}"></script>
+    <script nonce="${nonce}" src="${contentRendererUri}"></script>
+    <script nonce="${nonce}" src="${languagesRendererUri}"></script>
+    <script nonce="${nonce}" src="${settingsRendererUri}"></script>
+
+    <!-- Manager main coordinator (must load last) -->
+    <script nonce="${nonce}" src="${managerUri}"></script>
 </body>
 </html>`;
     }
