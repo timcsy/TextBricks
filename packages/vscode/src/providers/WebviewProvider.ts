@@ -490,9 +490,14 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
         const componentsUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'assets', 'css', 'common', 'components.css'));
         const styleUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'assets', 'css', 'style.css'));
         const utilsUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'assets', 'js', 'common', 'utils.js'));
-        const eventDelegatorUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'assets', 'js', 'common', 'event-delegator.js'));
-        const cardTemplatesUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'assets', 'js', 'common', 'card-templates.js'));
-        const scriptUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'assets', 'js', 'main.js'));
+
+        // Templates Panel Modular Scripts
+        const templateOperationsUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'assets', 'js', 'templates-panel', 'template-operations.js'));
+        const dragDropHandlerUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'assets', 'js', 'templates-panel', 'drag-drop-handler.js'));
+        const navigationHandlerUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'assets', 'js', 'templates-panel', 'navigation-handler.js'));
+        const panelEventHandlersUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'assets', 'js', 'templates-panel', 'panel-event-handlers.js'));
+        const tooltipManagerUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'assets', 'js', 'templates-panel', 'tooltip-manager.js'));
+        const templatesPanelUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'assets', 'js', 'templates-panel', 'templates-panel.js'));
 
         const nonce = this.getNonce();
 
@@ -530,10 +535,16 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
         ${this._generateTopicsHtml(topics)}
     </div>
 
+    <!-- Common utilities -->
     <script nonce="${nonce}" src="${utilsUri}"></script>
-    <script nonce="${nonce}" src="${eventDelegatorUri}"></script>
-    <script nonce="${nonce}" src="${cardTemplatesUri}"></script>
-    <script nonce="${nonce}" src="${scriptUri}"></script>
+
+    <!-- Templates Panel modular scripts (loaded in dependency order) -->
+    <script nonce="${nonce}" src="${templateOperationsUri}"></script>
+    <script nonce="${nonce}" src="${dragDropHandlerUri}"></script>
+    <script nonce="${nonce}" src="${navigationHandlerUri}"></script>
+    <script nonce="${nonce}" src="${panelEventHandlersUri}"></script>
+    <script nonce="${nonce}" src="${tooltipManagerUri}"></script>
+    <script nonce="${nonce}" src="${templatesPanelUri}"></script>
 </body>
 </html>`;
     }
