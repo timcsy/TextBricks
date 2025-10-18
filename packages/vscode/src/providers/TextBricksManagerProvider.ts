@@ -1202,100 +1202,91 @@ export class TextBricksManagerProvider {
         const utilsUri = webview.asWebviewUri(
             vscode.Uri.joinPath(this._extensionUri, 'assets', 'js', 'common', 'utils.js')
         );
-        const eventDelegatorUri = webview.asWebviewUri(
-            vscode.Uri.joinPath(this._extensionUri, 'assets', 'js', 'common', 'event-delegator.js')
-        );
-        const cardTemplatesUri = webview.asWebviewUri(
-            vscode.Uri.joinPath(this._extensionUri, 'assets', 'js', 'common', 'card-templates.js')
-        );
-        const servicesBridgeUri = webview.asWebviewUri(
-            vscode.Uri.joinPath(this._extensionUri, 'assets', 'js', 'services-bridge.js')
-        );
         const uiStateServiceUri = webview.asWebviewUri(
-            vscode.Uri.joinPath(this._extensionUri, 'assets', 'js', 'ui-state-service.js')
+            vscode.Uri.joinPath(this._extensionUri, 'assets', 'js', 'manager-panel', 'utils', 'ui-state-service.js')
         );
         const treeBuilderServiceUri = webview.asWebviewUri(
-            vscode.Uri.joinPath(this._extensionUri, 'assets', 'js', 'tree-builder-service.js')
+            vscode.Uri.joinPath(this._extensionUri, 'assets', 'js', 'manager-panel', 'utils', 'tree-builder-service.js')
         );
 
         // Manager modules - Utils
         const pathHelpersUri = webview.asWebviewUri(
-            vscode.Uri.joinPath(this._extensionUri, 'assets', 'js', 'manager', 'utils', 'path-helpers.js')
+            vscode.Uri.joinPath(this._extensionUri, 'assets', 'js', 'manager-panel', 'utils', 'path-helpers.js')
         );
         const dataHelpersUri = webview.asWebviewUri(
-            vscode.Uri.joinPath(this._extensionUri, 'assets', 'js', 'manager', 'utils', 'data-helpers.js')
+            vscode.Uri.joinPath(this._extensionUri, 'assets', 'js', 'manager-panel', 'utils', 'data-helpers.js')
         );
 
         // Manager modules - Core
         const stateManagerUri = webview.asWebviewUri(
-            vscode.Uri.joinPath(this._extensionUri, 'assets', 'js', 'manager', 'core', 'state-manager.js')
+            vscode.Uri.joinPath(this._extensionUri, 'assets', 'js', 'manager-panel', 'core', 'state-manager.js')
         );
         const messageHandlerUri = webview.asWebviewUri(
-            vscode.Uri.joinPath(this._extensionUri, 'assets', 'js', 'manager', 'core', 'message-handler.js')
+            vscode.Uri.joinPath(this._extensionUri, 'assets', 'js', 'manager-panel', 'core', 'message-handler.js')
         );
 
         // Manager modules - Handlers
         const templateHandlersUri = webview.asWebviewUri(
-            vscode.Uri.joinPath(this._extensionUri, 'assets', 'js', 'manager', 'handlers', 'template-handlers.js')
+            vscode.Uri.joinPath(this._extensionUri, 'assets', 'js', 'manager-panel', 'handlers', 'template-handlers.js')
         );
         const topicHandlersUri = webview.asWebviewUri(
-            vscode.Uri.joinPath(this._extensionUri, 'assets', 'js', 'manager', 'handlers', 'topic-handlers.js')
+            vscode.Uri.joinPath(this._extensionUri, 'assets', 'js', 'manager-panel', 'handlers', 'topic-handlers.js')
         );
         const favoritesHandlersUri = webview.asWebviewUri(
-            vscode.Uri.joinPath(this._extensionUri, 'assets', 'js', 'manager', 'handlers', 'favorites-handlers.js')
+            vscode.Uri.joinPath(this._extensionUri, 'assets', 'js', 'manager-panel', 'handlers', 'favorites-handlers.js')
         );
         const linkHandlersUri = webview.asWebviewUri(
-            vscode.Uri.joinPath(this._extensionUri, 'assets', 'js', 'manager', 'handlers', 'link-handlers.js')
+            vscode.Uri.joinPath(this._extensionUri, 'assets', 'js', 'manager-panel', 'handlers', 'link-handlers.js')
         );
         const contextMenuHandlerUri = webview.asWebviewUri(
-            vscode.Uri.joinPath(this._extensionUri, 'assets', 'js', 'manager', 'handlers', 'context-menu-handler.js')
+            vscode.Uri.joinPath(this._extensionUri, 'assets', 'js', 'manager-panel', 'handlers', 'context-menu-handler.js')
         );
         const treeNavigationHandlerUri = webview.asWebviewUri(
-            vscode.Uri.joinPath(this._extensionUri, 'assets', 'js', 'manager', 'handlers', 'tree-navigation-handler.js')
+            vscode.Uri.joinPath(this._extensionUri, 'assets', 'js', 'manager-panel', 'handlers', 'tree-navigation-handler.js')
         );
         const documentationHandlerUri = webview.asWebviewUri(
-            vscode.Uri.joinPath(this._extensionUri, 'assets', 'js', 'manager', 'handlers', 'documentation-handler.js')
+            vscode.Uri.joinPath(this._extensionUri, 'assets', 'js', 'manager-panel', 'handlers', 'documentation-handler.js')
         );
         const buttonHandlerUri = webview.asWebviewUri(
-            vscode.Uri.joinPath(this._extensionUri, 'assets', 'js', 'manager', 'handlers', 'button-handler.js')
+            vscode.Uri.joinPath(this._extensionUri, 'assets', 'js', 'manager-panel', 'handlers', 'button-handler.js')
         );
 
         // Manager modules - Core (Event Coordinator)
         const eventCoordinatorUri = webview.asWebviewUri(
-            vscode.Uri.joinPath(this._extensionUri, 'assets', 'js', 'manager', 'core', 'event-coordinator.js')
+            vscode.Uri.joinPath(this._extensionUri, 'assets', 'js', 'manager-panel', 'core', 'event-coordinator.js')
         );
 
         // Manager modules - UI
         const modalManagerUri = webview.asWebviewUri(
-            vscode.Uri.joinPath(this._extensionUri, 'assets', 'js', 'manager', 'ui', 'modal-manager.js')
+            vscode.Uri.joinPath(this._extensionUri, 'assets', 'js', 'manager-panel', 'ui', 'modal-manager.js')
         );
         const formGeneratorUri = webview.asWebviewUri(
-            vscode.Uri.joinPath(this._extensionUri, 'assets', 'js', 'manager', 'ui', 'form-generator.js')
+            vscode.Uri.joinPath(this._extensionUri, 'assets', 'js', 'manager-panel', 'ui', 'form-generator.js')
         );
 
         // Manager modules - Renderers
         const overviewRendererUri = webview.asWebviewUri(
-            vscode.Uri.joinPath(this._extensionUri, 'assets', 'js', 'manager', 'ui', 'renderers', 'overview-renderer.js')
+            vscode.Uri.joinPath(this._extensionUri, 'assets', 'js', 'manager-panel', 'ui', 'renderers', 'overview-renderer.js')
         );
         const statsRendererUri = webview.asWebviewUri(
-            vscode.Uri.joinPath(this._extensionUri, 'assets', 'js', 'manager', 'ui', 'renderers', 'stats-renderer.js')
+            vscode.Uri.joinPath(this._extensionUri, 'assets', 'js', 'manager-panel', 'ui', 'renderers', 'stats-renderer.js')
         );
         const favoritesRendererUri = webview.asWebviewUri(
-            vscode.Uri.joinPath(this._extensionUri, 'assets', 'js', 'manager', 'ui', 'renderers', 'favorites-renderer.js')
+            vscode.Uri.joinPath(this._extensionUri, 'assets', 'js', 'manager-panel', 'ui', 'renderers', 'favorites-renderer.js')
         );
         const contentRendererUri = webview.asWebviewUri(
-            vscode.Uri.joinPath(this._extensionUri, 'assets', 'js', 'manager', 'ui', 'renderers', 'content-renderer.js')
+            vscode.Uri.joinPath(this._extensionUri, 'assets', 'js', 'manager-panel', 'ui', 'renderers', 'content-renderer.js')
         );
         const languagesRendererUri = webview.asWebviewUri(
-            vscode.Uri.joinPath(this._extensionUri, 'assets', 'js', 'manager', 'ui', 'renderers', 'languages-renderer.js')
+            vscode.Uri.joinPath(this._extensionUri, 'assets', 'js', 'manager-panel', 'ui', 'renderers', 'languages-renderer.js')
         );
         const settingsRendererUri = webview.asWebviewUri(
-            vscode.Uri.joinPath(this._extensionUri, 'assets', 'js', 'manager', 'ui', 'renderers', 'settings-renderer.js')
+            vscode.Uri.joinPath(this._extensionUri, 'assets', 'js', 'manager-panel', 'ui', 'renderers', 'settings-renderer.js')
         );
 
         // Manager main coordinator
         const managerUri = webview.asWebviewUri(
-            vscode.Uri.joinPath(this._extensionUri, 'assets', 'js', 'manager', 'manager.js')
+            vscode.Uri.joinPath(this._extensionUri, 'assets', 'js', 'manager-panel', 'manager.js')
         );
 
         const nonce = this._getNonce();
@@ -1826,9 +1817,6 @@ export class TextBricksManagerProvider {
 
     <!-- Common utilities -->
     <script nonce="${nonce}" src="${utilsUri}"></script>
-    <script nonce="${nonce}" src="${eventDelegatorUri}"></script>
-    <script nonce="${nonce}" src="${cardTemplatesUri}"></script>
-    <script nonce="${nonce}" src="${servicesBridgeUri}"></script>
     <script nonce="${nonce}" src="${uiStateServiceUri}"></script>
     <script nonce="${nonce}" src="${treeBuilderServiceUri}"></script>
 

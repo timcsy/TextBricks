@@ -1,8 +1,7 @@
 /**
  * TextBricks UI 共享工具函數庫
  *
- * 此文件包含所有 UI 組件共用的工具函數
- * 避免在 main.js 和 textbricks-manager.js 中重複定義
+ * 此文件包含所有 UI 面板（Templates Panel、Manager Panel）共用的工具函數
  */
 
 console.log('[TextBricks] Loading utils.js');

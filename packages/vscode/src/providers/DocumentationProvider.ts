@@ -358,7 +358,7 @@ export class DocumentationProvider {
             vscode.Uri.joinPath(this._extensionUri, 'assets', 'css', 'documentation.css')
         );
         const scriptUri = this._panel!.webview.asWebviewUri(
-            vscode.Uri.joinPath(this._extensionUri, 'assets', 'js', 'documentation.js')
+            vscode.Uri.joinPath(this._extensionUri, 'assets', 'js', 'documentation-panel', 'documentation.js')
         );
 
         // Import highlight.js for code syntax highlighting
@@ -581,7 +581,7 @@ export class DocumentationProvider {
             vscode.Uri.joinPath(this._extensionUri, 'assets', 'css', 'documentation.css')
         );
         const scriptUri = this._panel!.webview.asWebviewUri(
-            vscode.Uri.joinPath(this._extensionUri, 'assets', 'js', 'documentation.js')
+            vscode.Uri.joinPath(this._extensionUri, 'assets', 'js', 'documentation-panel', 'documentation.js')
         );
 
         // Import highlight.js for code syntax highlighting
