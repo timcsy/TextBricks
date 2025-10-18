@@ -354,8 +354,14 @@ export class DocumentationProvider {
     }
 
     private _getDocumentationHtml(docResult: DocumentationResult, template: Template): string {
+        const variablesUri = this._panel!.webview.asWebviewUri(
+            vscode.Uri.joinPath(this._extensionUri, 'assets', 'css', 'common', 'variables.css')
+        );
+        const componentsUri = this._panel!.webview.asWebviewUri(
+            vscode.Uri.joinPath(this._extensionUri, 'assets', 'css', 'common', 'components.css')
+        );
         const styleUri = this._panel!.webview.asWebviewUri(
-            vscode.Uri.joinPath(this._extensionUri, 'assets', 'css', 'documentation.css')
+            vscode.Uri.joinPath(this._extensionUri, 'assets', 'css', 'documentation-panel', 'documentation-panel.css')
         );
         const scriptUri = this._panel!.webview.asWebviewUri(
             vscode.Uri.joinPath(this._extensionUri, 'assets', 'js', 'documentation-panel', 'documentation.js')
@@ -390,6 +396,8 @@ export class DocumentationProvider {
         img-src ${this._panel!.webview.cspSource} data: https:;">
     
     <title>${template.title} - 說明文檔</title>
+    <link href="${variablesUri}" rel="stylesheet">
+    <link href="${componentsUri}" rel="stylesheet">
     <link href="${styleUri}" rel="stylesheet">
     <link rel="stylesheet" href="${highlightCssUri}">
 </head>
@@ -577,8 +585,14 @@ export class DocumentationProvider {
     }
 
     private _getTopicDocumentationHtml(docResult: DocumentationResult, topic: Topic): string {
+        const variablesUri = this._panel!.webview.asWebviewUri(
+            vscode.Uri.joinPath(this._extensionUri, 'assets', 'css', 'common', 'variables.css')
+        );
+        const componentsUri = this._panel!.webview.asWebviewUri(
+            vscode.Uri.joinPath(this._extensionUri, 'assets', 'css', 'common', 'components.css')
+        );
         const styleUri = this._panel!.webview.asWebviewUri(
-            vscode.Uri.joinPath(this._extensionUri, 'assets', 'css', 'documentation.css')
+            vscode.Uri.joinPath(this._extensionUri, 'assets', 'css', 'documentation-panel', 'documentation-panel.css')
         );
         const scriptUri = this._panel!.webview.asWebviewUri(
             vscode.Uri.joinPath(this._extensionUri, 'assets', 'js', 'documentation-panel', 'documentation.js')
@@ -614,6 +628,8 @@ export class DocumentationProvider {
         img-src ${this._panel!.webview.cspSource} data: https:;">
 
     <title>${topic.name}</title>
+    <link href="${variablesUri}" rel="stylesheet">
+    <link href="${componentsUri}" rel="stylesheet">
     <link href="${styleUri}" rel="stylesheet">
     <link rel="stylesheet" href="${highlightCssUri}">
 </head>

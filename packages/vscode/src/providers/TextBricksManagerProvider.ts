@@ -1197,7 +1197,7 @@ export class TextBricksManagerProvider {
             vscode.Uri.joinPath(this._extensionUri, 'assets', 'css', 'common', 'components.css')
         );
         const styleUri = webview.asWebviewUri(
-            vscode.Uri.joinPath(this._extensionUri, 'assets', 'css', 'textbricks-manager.css')
+            vscode.Uri.joinPath(this._extensionUri, 'assets', 'css', 'manager-panel', 'manager-panel.css')
         );
         const utilsUri = webview.asWebviewUri(
             vscode.Uri.joinPath(this._extensionUri, 'assets', 'js', 'common', 'utils.js')

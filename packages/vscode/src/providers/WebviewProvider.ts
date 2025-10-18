@@ -488,7 +488,7 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
         // Get CSS and JS URIs
         const variablesUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'assets', 'css', 'common', 'variables.css'));
         const componentsUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'assets', 'css', 'common', 'components.css'));
-        const styleUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'assets', 'css', 'style.css'));
+        const styleUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'assets', 'css', 'templates-panel', 'templates-panel.css'));
         const utilsUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'assets', 'js', 'common', 'utils.js'));
 
         // Templates Panel Modular Scripts

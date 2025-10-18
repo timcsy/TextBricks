@@ -156,6 +156,13 @@
 
                 // Documentation helpers (delegate to DocumentationHandler)
                 getDocumentationType: (documentation) => this.documentationHandler.getDocumentationType(documentation),
+                handleDocumentationTypeChange: (type) => this.documentationHandler.handleTemplateDocumentationTypeChange(type),
+                handleTemplateDocumentationTypeChange: (type) => this.documentationHandler.handleTemplateDocumentationTypeChange(type),
+                handleTopicDocumentationTypeChange: (type) => this.documentationHandler.handleTopicDocumentationTypeChange(type),
+                previewTemplateDocumentation: () => this.documentationHandler.previewTemplateDocumentation(),
+                previewTopicDocumentation: () => this.documentationHandler.previewTopicDocumentation(),
+                generateTemplateDocumentationTemplate: () => this.documentationHandler.generateTemplateDocumentationTemplate(),
+                generateTopicDocumentationTemplate: () => this.documentationHandler.generateTopicDocumentationTemplate(),
 
                 // UI Navigation - delegate to appropriate handlers
                 renderTemplates: () => { console.warn('renderTemplates not fully implemented'); },
