@@ -15,11 +15,11 @@
   - [ ] 測試模板在編輯器中的插入功能
   - [ ] 完善 TEMPLATE_GUIDE.md 的範例
 
-- [ ] **Provider 模組化拆分**
+- ✅ **Provider 模組化拆分**（全部完成）
   - ✅ Step 1: Manager.js 模組化拆分 (5,753 行 → 21 個模組)
   - ✅ Step 2: Templates Panel 模組化拆分 (12 個功能模組)
-  - [ ] Step 3: ManagerWebviewProvider 拆分 (2,088 行 → 模組化)
-  - [ ] Step 4: TemplateWebviewProvider 拆分 (1,410 行 → 模組化)
+  - ✅ Step 3: ManagerPanelProvider 拆分 (2,088 行 → 1,226 行 + 8 個 action 模組)
+  - ✅ Step 4: TemplatesPanelProvider 拆分 (1,410 行 → 434 行 + 4 個 action + 4 個 renderer 模組)
 
 ### 中優先級
 
