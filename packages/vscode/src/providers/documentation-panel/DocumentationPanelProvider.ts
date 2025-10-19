@@ -250,10 +250,25 @@ export class DocumentationPanelProvider {
             // Update title
             this._panel.title = `📖 ${topic.name}`;
 
+            // Extract documentation content - handle both string and object formats
+            let documentationContent: string;
+            if (typeof topic.documentation === 'string') {
+                documentationContent = topic.documentation;
+            } else if (typeof topic.documentation === 'object' && topic.documentation !== null) {
+                const docObj = topic.documentation as any;
+                if (docObj.content && typeof docObj.content === 'string') {
+                    documentationContent = docObj.content;
+                } else {
+                    throw new Error('Documentation object must have a content property');
+                }
+            } else {
+                throw new Error('Invalid documentation format');
+            }
+
             // Generate HTML for topic documentation (simple markdown content)
             const docResult = {
                 type: 'markdown' as DocumentationType,
-                content: topic.documentation,
+                content: documentationContent,
                 processedAt: new Date(),
                 metadata: {}
             };

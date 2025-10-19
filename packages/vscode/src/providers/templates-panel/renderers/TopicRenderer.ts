@@ -29,7 +29,12 @@ export class TopicRenderer {
             return documentation.trim().length > 0;
         }
         if (typeof documentation === 'object') {
-            return !!(documentation.content || documentation.path || documentation.url);
+            // Check if content exists and is non-empty
+            if (documentation.content && typeof documentation.content === 'string') {
+                return documentation.content.trim().length > 0;
+            }
+            // Also check for path or url
+            return !!(documentation.path || documentation.url);
         }
         return false;
     }
@@ -197,7 +202,9 @@ export class TopicRenderer {
 
                 // 獲取子主題資訊
                 const allTopics = this.templateEngine.getAllTopicConfigs?.() || [];
-                const managedTopic = allTopics.find(t => t.name === topicCard.target);
+                // Extract topic name from target path (e.g., "c/00-beginner" -> "00-beginner")
+                const topicName = topicCard.target?.split('/').pop() || topicCard.target;
+                const managedTopic = allTopics.find(t => t.name === topicName);
                 const topicDisplayName = topicCard.title;
                 const topicDescription = topicCard.description;
 

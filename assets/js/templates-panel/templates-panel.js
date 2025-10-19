@@ -113,6 +113,9 @@
         // Topic toggle - delegated to NavigationHandler
         document.addEventListener('click', (e) => navigationHandler.handleTopicToggle(e));
 
+        // Collapse controls - delegated to NavigationHandler
+        document.addEventListener('click', (e) => navigationHandler.handleCollapseControlClick(e));
+
         // Tabs and favorites - delegated to PanelEventHandlers
         document.addEventListener('click', (e) => panelEventHandlers.handleTabClick(e));
         document.addEventListener('click', (e) => panelEventHandlers.handleFavoriteClick(e));
@@ -192,7 +195,87 @@
     function initialize() {
         setupEventListeners();
         setupEnvironmentSpecificFeatures();
+        scrollBreadcrumbToEnd();
+
+        // Collapse all topics by default
+        collapseAllTopicsOnInit();
+
         console.log(`TextBricks templates panel initialized (Codespaces: ${isCodespaces}, Drag Support: ${supportsDrag})`);
+    }
+
+    /**
+     * 獲取當前主題路徑（從麵包屑的 active 項目）
+     */
+    function getCurrentTopicPath() {
+        const activeBreadcrumb = document.querySelector('.breadcrumb-item.active');
+        if (!activeBreadcrumb) return null;
+
+        // Get the current topic path from the data attribute
+        const currentPath = activeBreadcrumb.dataset.currentTopicPath;
+        return currentPath || null;
+    }
+
+    /**
+     * 初始化時設定收合狀態
+     * 規則：
+     * - 當前主題的剩餘模板區域（data-topic 與導航路徑相同）：展開
+     * - 其他所有主題組：收合
+     */
+    function collapseAllTopicsOnInit() {
+        // Use setTimeout to ensure DOM is ready
+        setTimeout(() => {
+            const currentTopicPath = getCurrentTopicPath();
+            const topicHeaders = document.querySelectorAll('.topic-header');
+
+            topicHeaders.forEach(header => {
+                const topicGroup = header.closest('.topic-group');
+                const templatesGrid = topicGroup.querySelector('.templates-grid');
+                const recommendedContainer = topicGroup.querySelector('.recommended-templates-container');
+                const topicDataPath = topicGroup.dataset.topic;
+
+                // Check if this topic group matches the current navigation path
+                // If yes, it represents the "remaining templates" for the current topic - expand it
+                // Otherwise, collapse it
+                const isCurrentTopicRemainingTemplates = currentTopicPath && topicDataPath === currentTopicPath;
+
+                if (isCurrentTopicRemainingTemplates) {
+                    // This is the current topic's remaining templates area: expand it and remove height limit
+                    header.classList.remove('collapsed');
+                    topicGroup.classList.add('current-topic-remaining');
+                    if (templatesGrid) {
+                        templatesGrid.classList.remove('collapsed');
+                    }
+                    if (recommendedContainer) {
+                        recommendedContainer.classList.remove('collapsed');
+                    }
+                } else {
+                    // All other topics: collapse them and ensure height limit
+                    header.classList.add('collapsed');
+                    topicGroup.classList.remove('current-topic-remaining');
+                    if (templatesGrid) {
+                        templatesGrid.classList.add('collapsed');
+                    }
+                    if (recommendedContainer) {
+                        recommendedContainer.classList.add('collapsed');
+                    }
+                }
+            });
+
+            console.log(`Set initial collapse state (current topic: ${currentTopicPath})`);
+        }, 0);
+    }
+
+    /**
+     * 滾動麵包屑到最右邊（顯示當前位置）
+     */
+    function scrollBreadcrumbToEnd() {
+        // 使用 setTimeout 確保 DOM 已經渲染完成
+        setTimeout(() => {
+            const breadcrumb = document.querySelector('.breadcrumb');
+            if (breadcrumb) {
+                breadcrumb.scrollLeft = breadcrumb.scrollWidth;
+            }
+        }, 100);
     }
 
     // Handle window messages from extension
@@ -200,6 +283,8 @@
         const message = event.data;
         switch (message.type) {
             case 'refresh':
+                // 在重新載入前滾動麵包屑（如果是局部刷新）
+                scrollBreadcrumbToEnd();
                 location.reload();
                 break;
             case 'theme-changed':

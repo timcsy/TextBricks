@@ -211,6 +211,82 @@
 
             console.log('Toggle topic:', topicGroup.dataset.topic);
         }
+
+        /**
+         * 展開所有主題
+         */
+        expandAllTopics() {
+            const topicHeaders = document.querySelectorAll('.topic-header.collapsed');
+            topicHeaders.forEach(header => {
+                header.classList.remove('collapsed');
+                const topicGroup = header.closest('.topic-group');
+                const templatesGrid = topicGroup.querySelector('.templates-grid');
+                const recommendedContainer = topicGroup.querySelector('.recommended-templates-container');
+
+                if (templatesGrid) {
+                    templatesGrid.classList.remove('collapsed');
+                }
+                if (recommendedContainer) {
+                    recommendedContainer.classList.remove('collapsed');
+                }
+            });
+            console.log('Expanded all topics');
+        }
+
+        /**
+         * 收合所有主題
+         */
+        collapseAllTopics() {
+            const topicHeaders = document.querySelectorAll('.topic-header:not(.collapsed)');
+            topicHeaders.forEach(header => {
+                header.classList.add('collapsed');
+                const topicGroup = header.closest('.topic-group');
+                const templatesGrid = topicGroup.querySelector('.templates-grid');
+                const recommendedContainer = topicGroup.querySelector('.recommended-templates-container');
+
+                if (templatesGrid) {
+                    templatesGrid.classList.add('collapsed');
+                }
+                if (recommendedContainer) {
+                    recommendedContainer.classList.add('collapsed');
+                }
+            });
+            console.log('Collapsed all topics');
+        }
+
+        /**
+         * 處理展開/收合控制按鈕點擊
+         */
+        handleCollapseControlClick(event) {
+            const controlBtn = event.target.closest('.collapse-control-btn');
+            if (!controlBtn) return;
+
+            event.stopPropagation();
+            event.preventDefault();
+
+            const action = controlBtn.dataset.action;
+            if (action === 'expandAll') {
+                this.expandAllTopics();
+                // Visual feedback
+                const originalText = controlBtn.textContent;
+                controlBtn.textContent = '✓ 已展開';
+                controlBtn.style.opacity = '0.6';
+                setTimeout(() => {
+                    controlBtn.textContent = originalText;
+                    controlBtn.style.opacity = '1';
+                }, 500);
+            } else if (action === 'collapseAll') {
+                this.collapseAllTopics();
+                // Visual feedback
+                const originalText = controlBtn.textContent;
+                controlBtn.textContent = '✓ 已收合';
+                controlBtn.style.opacity = '0.6';
+                setTimeout(() => {
+                    controlBtn.textContent = originalText;
+                    controlBtn.style.opacity = '1';
+                }, 500);
+            }
+        }
     }
 
     // 導出到全局（用於模組化）

@@ -15,6 +15,26 @@ export class NavigationRenderer {
     ) {}
 
     /**
+     * 檢查文檔是否存在
+     * 處理文檔可能是字串或物件的情況
+     */
+    private hasDocumentation(documentation: any): boolean {
+        if (!documentation) return false;
+        if (typeof documentation === 'string') {
+            return documentation.trim().length > 0;
+        }
+        if (typeof documentation === 'object') {
+            // Check if content exists and is non-empty
+            if (documentation.content && typeof documentation.content === 'string') {
+                return documentation.content.trim().length > 0;
+            }
+            // Also check for path or url
+            return !!(documentation.path || documentation.url);
+        }
+        return false;
+    }
+
+    /**
      * 生成麵包屑導航 HTML
      */
     generateBreadcrumbHtml(): string {
@@ -42,7 +62,16 @@ export class NavigationRenderer {
                 breadcrumbHtml += ` <span class="breadcrumb-separator">></span> `;
 
                 if (isLast) {
-                    breadcrumbHtml += `<span class="breadcrumb-item active">${title}</span>`;
+                    breadcrumbHtml += `<span class="breadcrumb-item active" data-current-topic-path="${currentPath}">${title}</span>`;
+
+                    // Add documentation button if the current topic has documentation
+                    if (topic && this.hasDocumentation(topic.documentation)) {
+                        breadcrumbHtml += `<button class="breadcrumb-doc-btn topic-doc-btn"
+                                                    data-topic-name="${topic.name}"
+                                                    title="查看 ${title} 的詳細說明文件">
+                                                📖
+                                            </button>`;
+                    }
                 } else {
                     breadcrumbHtml += `<span class="breadcrumb-item clickable" data-navigate-path="${currentPath}">${title}</span>`;
                 }
@@ -50,6 +79,22 @@ export class NavigationRenderer {
         }
 
         return breadcrumbHtml;
+    }
+
+    /**
+     * 生成展開/收合控制按鈕 HTML
+     */
+    generateCollapseControlsHtml(): string {
+        return `
+            <div class="collapse-controls">
+                <button class="collapse-control-btn" data-action="expandAll" title="展開所有主題">
+                    全部展開
+                </button>
+                <button class="collapse-control-btn" data-action="collapseAll" title="收合所有主題">
+                    全部收合
+                </button>
+            </div>
+        `;
     }
 
     /**

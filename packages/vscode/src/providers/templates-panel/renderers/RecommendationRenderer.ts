@@ -22,10 +22,8 @@ export class RecommendationRenderer {
         recommendedTemplates: Array<ItemWithPath & { usageCount?: number }>,
         favoriteItems: DisplayItem[]
     ): string {
-        // 如果沒有推薦也沒有最愛，不顯示區域
-        if (recommendedTemplates.length === 0 && favoriteItems.length === 0) {
-            return '';
-        }
+        // 始終顯示推薦和最愛區域（即使是空的）
+        // 這樣用戶可以看到這個功能的存在
 
         const recommendedHtml = recommendedTemplates
             .map(template => this.generateTemplateCardHtml(template, 'recommended'))

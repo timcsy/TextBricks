@@ -42,6 +42,13 @@ body {
     min-width: 0;
 }
 
+.title-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+}
+
 .header h2 {
     font-size: 16px;
     font-weight: 600;
@@ -81,8 +88,25 @@ body {
     display: flex;
     align-items: center;
     gap: 4px;
-    margin-top: 8px;
     font-size: 12px;
+    overflow-x: auto;
+    white-space: nowrap;
+    flex: 1;
+    min-width: 0;
+    scrollbar-width: thin;
+}
+
+.breadcrumb::-webkit-scrollbar {
+    height: 4px;
+}
+
+.breadcrumb::-webkit-scrollbar-thumb {
+    background: var(--vscode-scrollbarSlider-background);
+    border-radius: 2px;
+}
+
+.breadcrumb::-webkit-scrollbar-thumb:hover {
+    background: var(--vscode-scrollbarSlider-hoverBackground);
 }
 
 .breadcrumb-item {
@@ -122,9 +146,10 @@ body {
 .breadcrumb-nav {
     display: flex;
     align-items: center;
-    justify-content: space-between;
     gap: 8px;
     min-width: 0;
+    flex: 1;
+    overflow: hidden;
 }
 
 .navigation-controls {
@@ -132,6 +157,38 @@ body {
     align-items: center;
     gap: 4px;
     flex-shrink: 0;
+}
+
+/* Collapse controls */
+.collapse-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.collapse-control-btn {
+    background: transparent;
+    border: none;
+    color: var(--vscode-textLink-foreground);
+    padding: 2px 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 11px;
+    line-height: 1;
+    opacity: 0.8;
+    white-space: nowrap;
+}
+
+.collapse-control-btn:hover {
+    opacity: 1;
+    text-decoration: underline;
+    background: var(--vscode-list-hoverBackground);
+    border-radius: 3px;
+}
+
+.collapse-control-btn:active {
+    opacity: 0.6;
 }
 
 .nav-btn {
@@ -482,6 +539,25 @@ body {
     transform: scale(0.95);
 }
 
+/* Breadcrumb documentation button */
+.breadcrumb-doc-btn {
+    background: transparent;
+    border: none;
+    padding: 2px 4px;
+    margin-left: 4px;
+    min-width: auto;
+    min-height: auto;
+    font-size: 14px;
+    opacity: 0.7;
+    vertical-align: middle;
+}
+
+.breadcrumb-doc-btn:hover {
+    opacity: 1;
+    background: var(--vscode-list-hoverBackground);
+    animation: docBounce 0.3s ease;
+}
+
 .templates-grid {
     display: grid;
     grid-template-columns: 1fr;
@@ -506,6 +582,11 @@ body {
     padding-top: 0;
     transform: scaleY(0.3);
     overflow: hidden;
+}
+
+/* Remove height limit for current topic's remaining templates */
+.current-topic-remaining .templates-grid:not(.collapsed) {
+    max-height: none;
 }
 
 /* Webkit scrollbar styling for templates-grid */
