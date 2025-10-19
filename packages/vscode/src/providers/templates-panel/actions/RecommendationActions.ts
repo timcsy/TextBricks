@@ -1,9 +1,9 @@
-import { Template } from '@textbricks/shared';
+import { Template, UsageEntry } from '@textbricks/shared';
 
 type ItemWithPath = Template & { topicPath?: string };
 
 interface PartialScopeConfig {
-    usage?: Record<string, number>;
+    usage?: Record<string, UsageEntry>;
 }
 
 /**
@@ -21,7 +21,8 @@ export class RecommendationActions {
      */
     getUsageCount(itemId: string): number {
         const config = this.scopeConfig();
-        return config?.usage?.[itemId] || 0;
+        const entry = config?.usage?.[itemId];
+        return entry?.count || 0;
     }
 
     /**

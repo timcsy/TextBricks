@@ -9,7 +9,8 @@ import {
     ScopeUsageStats,
     ScopeImportOptions,
     ScopeExportData,
-    ScopeEvent
+    ScopeEvent,
+    UsageEntry
 } from '@textbricks/shared';
 import { DataPathService } from '../services/DataPathService';
 
@@ -263,19 +264,40 @@ export class ScopeManager {
         }
 
         const usage = this.currentScope.usage;
-        const sortedUsage = Object.entries(usage)
-            .sort(([, a], [, b]) => b - a)
+
+        // 轉換為統一格式並排序（支援新舊格式）
+        const usageEntries = Object.entries(usage).map(([path, entry]) => ({
+            path,
+            count: typeof entry === 'number' ? entry : entry.count,
+            lastUsedAt: typeof entry === 'number' ? null : entry.lastUsedAt
+        }));
+
+        const sortedByUsage = usageEntries
+            .sort((a, b) => b.count - a.count)
+            .slice(0, 10);
+
+        const sortedByRecent = usageEntries
+            .filter(e => e.lastUsedAt !== null)
+            .sort((a, b) => {
+                const dateA = a.lastUsedAt ? new Date(a.lastUsedAt).getTime() : 0;
+                const dateB = b.lastUsedAt ? new Date(b.lastUsedAt).getTime() : 0;
+                return dateB - dateA;
+            })
             .slice(0, 10);
 
         return {
             totalTemplates: 0, // 這個需要從 TemplateManager 獲取
             totalTopics: 0, // 從檔案系統掃描取得，不再存於 scope
-            mostUsedTemplates: sortedUsage.map(([path, count]) => ({
-                path,
-                title: path, // 這個需要從 TemplateManager 獲取實際標題
-                usage: count
+            mostUsedTemplates: sortedByUsage.map(e => ({
+                path: e.path,
+                title: e.path, // 這個需要從 TemplateManager 獲取實際標題
+                usage: e.count
             })),
-            recentTemplates: [], // 需要額外的時間戳記錄
+            recentTemplates: sortedByRecent.map(e => ({
+                path: e.path,
+                title: e.path, // 這個需要從 TemplateManager 獲取實際標題
+                lastUsed: e.lastUsedAt!
+            })),
             favoritesCount: this.currentScope.favorites.length,
             languageDistribution: {} // 這個需要從 TemplateManager 計算
         };
@@ -435,11 +457,18 @@ export class ScopeManager {
             return;
         }
 
-        // 更新 usage 統計
-        const oldCount = this.currentScope.usage[itemPath] || 0;
-        this.currentScope.usage[itemPath] = oldCount + 1;
+        // 獲取舊的使用次數
+        const oldEntry = this.currentScope.usage[itemPath];
+        const oldCount = oldEntry?.count || 0;
 
-        this.platform.logInfo(`Updating usage for ${itemPath}: ${oldCount} -> ${this.currentScope.usage[itemPath]}`, 'ScopeManager');
+        // 更新使用統計（包含 count 和 lastUsedAt）
+        const newEntry: UsageEntry = {
+            count: oldCount + 1,
+            lastUsedAt: new Date().toISOString()
+        };
+        this.currentScope.usage[itemPath] = newEntry;
+
+        this.platform.logInfo(`Updating usage for ${itemPath}: ${oldCount} -> ${newEntry.count}`, 'ScopeManager');
 
         // 保存到檔案系統
         try {
@@ -454,16 +483,45 @@ export class ScopeManager {
         this.emitEvent({
             type: 'usage-updated',
             itemPath,
-            newCount: this.currentScope.usage[itemPath]
+            newCount: newEntry.count
         });
     }
 
     /**
      * 獲取項目使用次數
      * @param itemPath 項目路徑
+     * @deprecated 使用 getUsageCount 替代
      */
     getUsage(itemPath: string): number {
-        return this.currentScope?.usage[itemPath] || 0;
+        return this.getUsageCount(itemPath);
+    }
+
+    /**
+     * 獲取項目使用次數
+     * @param itemPath 項目路徑
+     */
+    getUsageCount(itemPath: string): number {
+        if (!this.currentScope) {
+            return 0;
+        }
+        const entry = this.currentScope.usage[itemPath];
+        return entry?.count || 0;
+    }
+
+    /**
+     * 獲取項目最後使用時間
+     * @param itemPath 項目路徑
+     * @returns Date 物件或 null
+     */
+    getLastUsedAt(itemPath: string): Date | null {
+        if (!this.currentScope) {
+            return null;
+        }
+        const entry = this.currentScope.usage[itemPath];
+        if (!entry) {
+            return null;
+        }
+        return new Date(entry.lastUsedAt);
     }
 
     /**

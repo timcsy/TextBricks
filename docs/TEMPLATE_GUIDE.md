@@ -300,23 +300,36 @@ scopes/
 
 #### usage 物件
 
-**格式**：`{ "路徑": 使用次數 }`
+**格式**：`{ "路徑": { "count": 使用次數, "lastUsedAt": 最後使用時間 } }`
 
 ```json
 "usage": {
-  "c/basic/templates/hello-world": 17,
-  "python/templates/hello-world": 12,
-  "c/basic/templates/variables": 11
+  "c/basic/templates/hello-world": {
+    "count": 17,
+    "lastUsedAt": "2025-10-19T12:34:56.789Z"
+  },
+  "python/templates/hello-world": {
+    "count": 12,
+    "lastUsedAt": "2025-10-18T09:21:43.123Z"
+  },
+  "c/basic/templates/variables": {
+    "count": 11,
+    "lastUsedAt": "2025-10-17T14:56:32.456Z"
+  }
 }
 ```
 
 **說明**：
-- **記錄內容**：追蹤每個模板的使用次數
-- **自動更新**：每次插入模板時自動增加計數
+- **記錄內容**：追蹤每個模板的使用次數和最後使用時間
+- **數據結構**：每個項目包含：
+  - `count`：使用次數（number）
+  - `lastUsedAt`：最後使用時間（ISO 8601 格式字串）
+- **自動更新**：每次插入模板時自動更新計數和時間戳
 - **用途**：
-  - 生成「推薦模板」列表
+  - 生成「推薦模板」列表（結合頻率和時間）
   - 排序搜尋結果（按使用頻率）
   - 提供使用統計資訊
+  - 追蹤最近使用的模板
 - **重置統計**：可以透過 TextBricks Manager 清空使用記錄
 - **不建議手動編輯**：系統會覆蓋手動修改
 
@@ -339,6 +352,14 @@ const stats = scopeManager.getUsageStats();
 //   ],
 //   favoritesCount: 4
 // }
+
+// 取得特定模板的使用次數
+const count = scopeManager.getUsageCount("c/basic/templates/hello-world");
+// 輸出: 17
+
+// 取得最後使用時間
+const lastUsed = scopeManager.getLastUsedAt("c/basic/templates/hello-world");
+// 輸出: Date object
 ```
 
 ---

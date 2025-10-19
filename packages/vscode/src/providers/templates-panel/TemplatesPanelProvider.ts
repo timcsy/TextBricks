@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import * as path from 'path';
 import { TextBricksEngine, DataPathService, CodeOperationService, DocumentationService } from '@textbricks/core';
 import { DocumentationPanelProvider } from '../documentation-panel/DocumentationPanelProvider';
-import { Template, Language } from '@textbricks/shared';
+import { Template, Language, UsageEntry } from '@textbricks/shared';
 import { VSCodePlatform } from '../../adapters/vscode/VSCodePlatform';
 
 // Actions
@@ -23,7 +23,7 @@ import { TemplateMessageHandler } from './TemplateMessageHandler';
 interface PartialScopeConfig {
     languages?: Language[];
     favorites?: string[];
-    usage?: Record<string, number>;
+    usage?: Record<string, UsageEntry>;
 }
 
 type ItemWithPath = Template & { topicPath?: string };
@@ -195,7 +195,8 @@ export class TemplatesPanelProvider implements vscode.WebviewViewProvider {
      * 獲取使用次數
      */
     private _getUsageCount(itemId: string): number {
-        return this._scopeConfig?.usage?.[itemId] || 0;
+        const entry = this._scopeConfig?.usage?.[itemId];
+        return entry?.count || 0;
     }
 
     /**
@@ -206,17 +207,20 @@ export class TemplatesPanelProvider implements vscode.WebviewViewProvider {
     }
 
     /**
-     * 檢查模板是否被推薦
+     * 檢查模板是否被推薦（基於當前主題）
      */
     private _isTemplateRecommended(templatePath: string): boolean {
-        if (!this.managementService) {
-            return false;
-        }
-
         try {
-            const recommendedTemplates = this.managementService.getRecommendedTemplates(6);
+            // 獲取當前主題的推薦模板（與推薦區域使用相同邏輯）
+            const allTemplates = this.templateEngine.getAllTemplates() as ItemWithPath[];
+            const currentTopicItems = this.navigationActions.filterCurrentTopicItems(allTemplates);
+            const currentTopicTemplates = currentTopicItems.filter((item): item is ItemWithPath =>
+                'type' in item && item.type === 'template'
+            );
+            const recommendedTemplates = this.recommendationActions.getRecommendedByUsage(currentTopicTemplates, 6);
+
             return recommendedTemplates.some(template => {
-                const tPath = (template as any).topicPath ? `${(template as any).topicPath}/templates/${template.name}` : template.name;
+                const tPath = template.topicPath ? `${template.topicPath}/templates/${template.name}` : template.name;
                 return tPath === templatePath;
             });
         } catch (error) {
@@ -355,6 +359,7 @@ export class TemplatesPanelProvider implements vscode.WebviewViewProvider {
         const nonce = this.getNonce();
 
         // Generate recommended templates using RecommendationActions
+        // 只顯示當前主題及其子主題的推薦模板
         const allTemplates = this.templateEngine.getAllTemplates() as ItemWithPath[];
         const currentTopicItems = this.navigationActions.filterCurrentTopicItems(allTemplates);
         // Filter to only include templates (type check and cast)
@@ -379,7 +384,10 @@ export class TemplatesPanelProvider implements vscode.WebviewViewProvider {
     <div class="header">
         <div class="header-top">
             <div class="title-section">
-                <h2><span class="logo"><img src="${webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'assets', 'icons', 'TextBricks.svg'))}" alt="TextBricks"></span>TextBricks</h2>
+                <div class="title-row">
+                    <h2><span class="logo"><img src="${webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'assets', 'icons', 'TextBricks.svg'))}" alt="TextBricks"></span>TextBricks</h2>
+                    ${this.navigationRenderer.generateCollapseControlsHtml()}
+                </div>
                 <p class="subtitle">點擊複製 • 拖曳插入</p>
             </div>
             <div class="breadcrumb-nav">

@@ -5,6 +5,16 @@
 
 import { Language } from './Template';
 
+/**
+ * 使用統計項目
+ */
+export interface UsageEntry {
+    /** 使用次數 */
+    count: number;
+    /** 最後使用時間 */
+    lastUsedAt: string;
+}
+
 export interface ScopeConfig {
     /** Scope 唯一標識（同時作為目錄名稱） */
     name: string;
@@ -16,8 +26,11 @@ export interface ScopeConfig {
     languages: Language[];
     /** 用戶收藏項目（使用路徑格式，如 "python/templates/hello-world" 或 "c/basic"） */
     favorites: string[];
-    /** 集中式使用統計（key 為路徑格式，如 "python/templates/hello-world"） */
-    usage: Record<string, number>;
+    /**
+     * 集中式使用統計（key 為路徑格式，如 "python/templates/hello-world"）
+     * 格式：{ count: number, lastUsedAt: string }
+     */
+    usage: Record<string, UsageEntry>;
     /** 設定選項 */
     settings: ScopeSettings;
     /** 元數據 */
