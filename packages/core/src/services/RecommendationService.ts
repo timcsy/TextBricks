@@ -1,10 +1,14 @@
 /**
  * 推薦服務
  * 負責模板推薦演算法
+ *
+ * 注意：使用次數和最後使用時間統一從 ScopeManager 的 scope.json 讀取，
+ * 不再使用模板 metadata 中的 usage 和 lastUsedAt
  */
 
 import { IPlatform } from '../interfaces/IPlatform';
 import { ExtendedTemplate } from '@textbricks/shared';
+import type { ScopeManager } from '../managers/ScopeManager';
 
 /**
  * 帶分數的模板（用於排序）
@@ -30,9 +34,11 @@ export interface RecommendationConfig {
 export class RecommendationService {
     private platform: IPlatform;
     private config: RecommendationConfig;
+    private scopeManager?: ScopeManager;
 
-    constructor(platform: IPlatform, config?: Partial<RecommendationConfig>) {
+    constructor(platform: IPlatform, config?: Partial<RecommendationConfig>, scopeManager?: ScopeManager) {
         this.platform = platform;
+        this.scopeManager = scopeManager;
         this.config = {
             usageWeight: 10,
             recencyWeight: 50,
@@ -47,6 +53,13 @@ export class RecommendationService {
             defaultLimit: 6,
             ...config
         };
+    }
+
+    /**
+     * 設置 ScopeManager（用於延遲注入，避免循環依賴）
+     */
+    setScopeManager(scopeManager: ScopeManager): void {
+        this.scopeManager = scopeManager;
     }
 
     /**
@@ -76,12 +89,17 @@ export class RecommendationService {
      * 計算模板推薦分數
      * @param template - 模板
      * @returns 推薦分數
+     *
+     * 注意：使用次數從 scope.json 讀取，不再使用 template.metadata.usage
      */
     private calculateScore(template: ExtendedTemplate): number {
-        const usage = template.metadata?.usage || 0;
-        const lastUsedAt = template.metadata?.lastUsedAt
-            ? new Date(template.metadata.lastUsedAt)
-            : null;
+        // 從 ScopeManager 獲取 usage 資料
+        const templatePath = template.topicPath
+            ? `${template.topicPath}/templates/${template.name}`
+            : `templates/${template.name}`;
+
+        const usage = this.scopeManager?.getUsageCount(templatePath) || 0;
+        const lastUsedAt = this.scopeManager?.getLastUsedAt(templatePath) || null;
 
         let score = usage * this.config.usageWeight;
 
@@ -130,14 +148,19 @@ export class RecommendationService {
      * 更新模板的 popularity 分數
      * @param template - 模板
      * @returns 更新後的 popularity 值
+     *
+     * 注意：使用次數從 scope.json 讀取，不再使用 template.metadata.usage
      */
     updatePopularity(template: ExtendedTemplate): number {
         if (!template.metadata) { return 0; }
 
-        const usage = template.metadata.usage || 0;
-        const lastUsedAt = template.metadata.lastUsedAt
-            ? new Date(template.metadata.lastUsedAt)
-            : null;
+        // 從 ScopeManager 獲取 usage 資料
+        const templatePath = template.topicPath
+            ? `${template.topicPath}/templates/${template.name}`
+            : `templates/${template.name}`;
+
+        const usage = this.scopeManager?.getUsageCount(templatePath) || 0;
+        const lastUsedAt = this.scopeManager?.getLastUsedAt(templatePath) || null;
 
         let popularity = Math.min(
             usage * this.config.popularityUsageMultiplier,

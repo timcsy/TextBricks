@@ -188,11 +188,12 @@ export class TemplateRepository {
 
     /**
      * 根據使用次數排序
+     * @deprecated 使用 ScopeManager.getUsageStats() 替代，不再從模板 metadata 讀取
      */
     getMostUsed(limit: number = 10): ExtendedTemplate[] {
-        return this.getAll()
-            .sort((a, b) => (b.metadata?.usage || 0) - (a.metadata?.usage || 0))
-            .slice(0, limit);
+        // 此方法已廢棄，因為 usage 統計已移至 ScopeManager
+        // 返回所有模板（不排序）以保持向後相容
+        return this.getAll().slice(0, limit);
     }
 
     /**

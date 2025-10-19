@@ -1,5 +1,6 @@
 import { IPlatform } from '../interfaces/IPlatform';
 import { ExtendedTemplate } from '@textbricks/shared';
+import type { ScopeManager } from './ScopeManager';
 
 /**
  * 搜尋過濾器介面
@@ -39,7 +40,10 @@ export interface SearchResult {
  * 搜尋管理器 - 平台無關的搜尋邏輯
  */
 export class SearchManager {
-    constructor(private platform: IPlatform) {}
+    constructor(
+        private platform: IPlatform,
+        private scopeManager?: ScopeManager
+    ) {}
 
     /**
      * 搜尋模板
@@ -235,7 +239,9 @@ export class SearchManager {
         if (filters.usageRange) {
             const { min, max } = filters.usageRange;
             result = result.filter(t => {
-                const usage = t.metadata?.usage || 0;
+                // 從 ScopeManager 讀取使用次數
+                const templatePath = t.topicPath ? `${t.topicPath}/templates/${t.name}` : `templates/${t.name}`;
+                const usage = this.scopeManager?.getUsageCount(templatePath) || 0;
 
                 if (min !== undefined && usage < min) { return false; }
                 if (max !== undefined && usage > max) { return false; }
@@ -361,16 +367,22 @@ export class SearchManager {
 
             case 'usage':
                 sorted.sort((a, b) => {
-                    const aUsage = a.metadata?.usage || 0;
-                    const bUsage = b.metadata?.usage || 0;
+                    // 從 ScopeManager 讀取使用次數
+                    const aPath = a.topicPath ? `${a.topicPath}/templates/${a.name}` : `templates/${a.name}`;
+                    const bPath = b.topicPath ? `${b.topicPath}/templates/${b.name}` : `templates/${b.name}`;
+                    const aUsage = this.scopeManager?.getUsageCount(aPath) || 0;
+                    const bUsage = this.scopeManager?.getUsageCount(bPath) || 0;
                     return bUsage - aUsage;
                 });
                 break;
 
             case 'recent':
                 sorted.sort((a, b) => {
-                    const aDate = a.metadata?.lastUsedAt ? new Date(a.metadata.lastUsedAt) : new Date(0);
-                    const bDate = b.metadata?.lastUsedAt ? new Date(b.metadata.lastUsedAt) : new Date(0);
+                    // 從 ScopeManager 讀取最後使用時間
+                    const aPath = a.topicPath ? `${a.topicPath}/templates/${a.name}` : `templates/${a.name}`;
+                    const bPath = b.topicPath ? `${b.topicPath}/templates/${b.name}` : `templates/${b.name}`;
+                    const aDate = this.scopeManager?.getLastUsedAt(aPath) || new Date(0);
+                    const bDate = this.scopeManager?.getLastUsedAt(bPath) || new Date(0);
                     return bDate.getTime() - aDate.getTime();
                 });
                 break;

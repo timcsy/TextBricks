@@ -208,11 +208,13 @@ export class SearchService {
         if (filters.usageRange) {
             const { min, max } = filters.usageRange;
             result = result.filter(t => {
-                const usage = t.metadata?.usage || 0;
+                // 從 ScopeManager 讀取使用次數
+                const templatePath = t.topicPath ? `${t.topicPath}/templates/${t.name}` : `templates/${t.name}`;
+                const usage = this.engine.getScopeManager().getUsageCount(templatePath);
 
                 if (min !== undefined && usage < min) { return false; }
                 if (max !== undefined && usage > max) { return false; }
-                
+
                 return true;
             });
         }
@@ -325,16 +327,24 @@ export class SearchService {
 
             case 'usage':
                 sorted.sort((a, b) => {
-                    const aUsage = a.metadata?.usage || 0;
-                    const bUsage = b.metadata?.usage || 0;
+                    // 從 ScopeManager 讀取使用次數
+                    const scopeManager = this.engine.getScopeManager();
+                    const aPath = a.topicPath ? `${a.topicPath}/templates/${a.name}` : `templates/${a.name}`;
+                    const bPath = b.topicPath ? `${b.topicPath}/templates/${b.name}` : `templates/${b.name}`;
+                    const aUsage = scopeManager.getUsageCount(aPath);
+                    const bUsage = scopeManager.getUsageCount(bPath);
                     return bUsage - aUsage;
                 });
                 break;
 
             case 'recent':
                 sorted.sort((a, b) => {
-                    const aDate = a.metadata?.lastUsedAt ? new Date(a.metadata.lastUsedAt) : new Date(0);
-                    const bDate = b.metadata?.lastUsedAt ? new Date(b.metadata.lastUsedAt) : new Date(0);
+                    // 從 ScopeManager 讀取最後使用時間
+                    const scopeManager = this.engine.getScopeManager();
+                    const aPath = a.topicPath ? `${a.topicPath}/templates/${a.name}` : `templates/${a.name}`;
+                    const bPath = b.topicPath ? `${b.topicPath}/templates/${b.name}` : `templates/${b.name}`;
+                    const aDate = scopeManager.getLastUsedAt(aPath) || new Date(0);
+                    const bDate = scopeManager.getLastUsedAt(bPath) || new Date(0);
                     return bDate.getTime() - aDate.getTime();
                 });
                 break;

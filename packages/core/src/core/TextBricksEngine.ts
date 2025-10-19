@@ -63,7 +63,8 @@ export class TextBricksEngine {
         this.topicManager = topicManager || new TopicManager(platform, this.dataPathService);
         this.scopeManager = scopeManager || new ScopeManager(platform, this.dataPathService);
         this.templateRepository = templateRepository || new TemplateRepository(platform, this.dataPathService, this.topicManager);
-        this.recommendationService = recommendationService || new RecommendationService(platform);
+        // 傳遞 ScopeManager 給 RecommendationService 以讀取 usage 資料
+        this.recommendationService = recommendationService || new RecommendationService(platform, undefined, this.scopeManager);
     }
 
     // === 初始化 ===
@@ -741,15 +742,18 @@ export class TextBricksEngine {
         return result;
     }
 
+    /**
+     * 記錄模板使用（統一使用 ScopeManager，不再更新模板 metadata）
+     * @param templatePath 模板路徑
+     */
     async recordTemplateUsage(templatePath: string): Promise<void> {
+        // 只更新 scope.json 的使用統計，不再修改模板檔案
         await this.scopeManager.updateUsage(templatePath);
 
+        // 更新模板的 popularity 分數（這不會寫入檔案，只是記憶體中的計算）
         const template = this.getTemplateByPath(templatePath);
         if (template && template.metadata) {
-            template.metadata.usage = (template.metadata.usage || 0) + 1;
-            template.metadata.lastUsedAt = new Date();
             this.updatePopularity(template);
-            await this.updateTemplate(templatePath, template);
         }
     }
 
