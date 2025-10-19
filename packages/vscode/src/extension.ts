@@ -1,9 +1,9 @@
 import * as vscode from 'vscode';
 import { VSCodePlatform } from './adapters/vscode';
 import { TextBricksEngine, CodeOperationService, SearchService, DocumentationService, DataPathService, ScopeManager, TopicManager, TemplateRepository } from '@textbricks/core';
-import { WebviewProvider } from './providers/WebviewProvider';
-import { TextBricksManagerProvider } from './providers/TextBricksManagerProvider';
-import { DocumentationProvider } from './providers/DocumentationProvider';
+import { TemplatesPanelProvider } from './providers/templates-panel/TemplatesPanelProvider';
+import { ManagerPanelProvider } from './providers/manager-panel/ManagerPanelProvider';
+import { DocumentationPanelProvider } from './providers/documentation-panel/DocumentationPanelProvider';
 import { CommandService } from './services/CommandService';
 
 export async function activate(context: vscode.ExtensionContext) {
@@ -38,7 +38,7 @@ export async function activate(context: vscode.ExtensionContext) {
         const localScopePath = await dataPathService.getScopePath('local');
 
         // 創建共享的管理器實例
-        const scopeManager = new ScopeManager(platform);
+        const scopeManager = new ScopeManager(platform, dataPathService);
         const topicManager = new TopicManager(platform, dataPathService);
         const templateRepository = new TemplateRepository(platform, dataPathService, topicManager);
 
@@ -63,7 +63,7 @@ export async function activate(context: vscode.ExtensionContext) {
         await textBricksEngine.initialize(localScopePath);
         
         // 初始化提供者（使用新架構）
-        const webviewProvider = new WebviewProvider(
+        const webviewProvider = new TemplatesPanelProvider(
             context.extensionUri,
             textBricksEngine, // 使用新的引擎
             context,
@@ -72,15 +72,15 @@ export async function activate(context: vscode.ExtensionContext) {
             dataPathService, // 傳遞 DataPathService
             textBricksEngine // 向後兼容
         );
-        
-        const documentationProvider = new DocumentationProvider(
+
+        const documentationProvider = new DocumentationPanelProvider(
             context.extensionUri,
             textBricksEngine, // 使用新的引擎
             documentationService,
             codeOperationService
         );
 
-        const textBricksManagerProvider = new TextBricksManagerProvider(
+        const managerWebviewProvider = new ManagerPanelProvider(
             context.extensionUri,
             textBricksEngine, // 使用新的引擎
             context, // 添加 context 參數
@@ -93,7 +93,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
         // 註冊 WebView 視圖
         context.subscriptions.push(
-            platform.registerWebviewViewProvider(WebviewProvider.viewType, webviewProvider)
+            platform.registerWebviewViewProvider(TemplatesPanelProvider.viewType, webviewProvider)
         );
 
         // 註冊所有命令
@@ -101,7 +101,7 @@ export async function activate(context: vscode.ExtensionContext) {
             context,
             textBricksEngine,
             webviewProvider,
-            textBricksManagerProvider,
+            managerWebviewProvider,
             documentationProvider
         );
         commandService.registerAllCommands();

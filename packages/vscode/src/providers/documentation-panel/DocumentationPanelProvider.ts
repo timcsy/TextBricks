@@ -13,7 +13,7 @@ interface DocumentationMessage {
 // Documentation result type (flexible for different documentation formats)
 type DocumentationResult = unknown;
 
-export class DocumentationProvider {
+export class DocumentationPanelProvider {
     public static readonly viewType = 'textbricks-documentation';
 
     private _panel?: vscode.WebviewPanel;
@@ -55,7 +55,7 @@ export class DocumentationProvider {
             this._panel.reveal(column);
         } else {
             this._panel = vscode.window.createWebviewPanel(
-                DocumentationProvider.viewType,
+                DocumentationPanelProvider.viewType,
                 `📖 ${template.title} - 說明文檔`,
                 column,
                 {
@@ -124,7 +124,7 @@ export class DocumentationProvider {
             this._panel.reveal(column);
         } else {
             this._panel = vscode.window.createWebviewPanel(
-                DocumentationProvider.viewType,
+                DocumentationPanelProvider.viewType,
                 `📖 ${latestTopic.name} 主題 - 說明文件`,
                 column,
                 {

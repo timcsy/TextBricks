@@ -1,9 +1,9 @@
 import * as vscode from 'vscode';
 import { TextBricksEngine, DataPathService } from '@textbricks/core';
 import { ImportExportManager, SearchManager, ValidationManager } from '@textbricks/core';
-import { WebviewProvider } from '../providers/WebviewProvider';
-import { TextBricksManagerProvider } from '../providers/TextBricksManagerProvider';
-import { DocumentationProvider } from '../providers/DocumentationProvider';
+import { TemplatesPanelProvider } from '../providers/templates-panel/TemplatesPanelProvider';
+import { ManagerPanelProvider } from '../providers/manager-panel/ManagerPanelProvider';
+import { DocumentationPanelProvider } from '../providers/documentation-panel/DocumentationPanelProvider';
 import { VSCodePlatform } from '../adapters/vscode/VSCodePlatform';
 
 /**
@@ -19,9 +19,9 @@ export class CommandService {
     constructor(
         private context: vscode.ExtensionContext,
         private templateEngine: TextBricksEngine,
-        private webviewProvider: WebviewProvider,
-        private textBricksManagerProvider: TextBricksManagerProvider,
-        private documentationProvider: DocumentationProvider
+        private webviewProvider: TemplatesPanelProvider,
+        private managerWebviewProvider: ManagerPanelProvider,
+        private documentationProvider: DocumentationPanelProvider
     ) {
         this.platform = new VSCodePlatform(this.context);
         this.importExportManager = new ImportExportManager(this.platform);
@@ -98,7 +98,7 @@ export class CommandService {
     }
 
     private openTextBricksManager(): void {
-        this.textBricksManagerProvider.createOrShow();
+        this.managerWebviewProvider.createOrShow();
     }
 
     // ==================== 模板命令 ====================

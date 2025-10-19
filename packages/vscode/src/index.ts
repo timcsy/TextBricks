@@ -9,8 +9,9 @@ export * from './adapters/vscode/VSCodeClipboard';
 export * from './adapters/vscode/VSCodeStorage';
 
 // Providers
-export * from './providers/WebviewProvider';
-export * from './providers/DocumentationProvider';
+export * from './providers/documentation-panel/DocumentationPanelProvider';
+export * from './providers/manager-panel/ManagerPanelProvider';
+export * from './providers/templates-panel/TemplatesPanelProvider';
 
-// Commands
-export * from './commands/index';
+// Services
+export * from './services/CommandService';
