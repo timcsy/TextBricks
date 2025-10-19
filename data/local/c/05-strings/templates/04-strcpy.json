@@ -1,0 +1,9 @@
+{
+  "type": "template",
+  "name": "04-strcpy",
+  "title": "字串複製（範本）",
+  "description": "使用 strcpy() 複製字串範本",
+  "topic": "c/05-strings",
+  "language": "c",
+  "code": "#include <string.h>\n\nchar {{來源}}[] = \"{{來源內容}}\";\nchar {{目標}}[{{緩衝區大小}}];\nstrcpy({{目標}}, {{來源}});\nprintf(\"複製結果: %s\\n\", {{目標}});"
+}

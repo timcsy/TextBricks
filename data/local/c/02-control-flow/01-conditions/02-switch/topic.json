@@ -1,0 +1,14 @@
+{
+  "type": "topic",
+  "name": "02-switch",
+  "title": "switch 條件判斷",
+  "description": "使用 switch 語句進行多重選擇",
+  "documentation": {
+    "content": "# switch 條件判斷\n\n## 語法結構\n\n```c\nswitch (表達式) {\n    case 值1:\n        // 程式碼\n        break;\n    case 值2:\n        // 程式碼\n        break;\n    default:\n        // 預設程式碼\n}\n```\n\n## 重要概念\n\n### break 語句\n- 跳出 switch 區塊\n- 沒有 break 會繼續執行下一個 case（fall-through）\n\n### default 分支\n- 當所有 case 都不匹配時執行\n- 建議總是加上 default\n- 可以放在任何位置，但習慣放最後\n\n### 限制\n- 表達式必須是整數或字元型別\n- case 值必須是常數\n- 不能使用變數或範圍\n\n## 常見模式\n\n### 選單系統\n```c\nswitch (choice) {\n    case 1:\n        printf(\"選項 1\\n\");\n        break;\n    case 2:\n        printf(\"選項 2\\n\");\n        break;\n    default:\n        printf(\"無效選項\\n\");\n}\n```\n\n### 字元判斷\n```c\nswitch (grade) {\n    case 'A':\n        printf(\"優秀\\n\");\n        break;\n    case 'B':\n        printf(\"良好\\n\");\n        break;\n    case 'C':\n        printf(\"及格\\n\");\n        break;\n    default:\n        printf(\"不及格\\n\");\n}\n```\n\n### Fall-through 應用\n```c\nswitch (month) {\n    case 12:\n    case 1:\n    case 2:\n        printf(\"冬季\\n\");\n        break;\n    case 3:\n    case 4:\n    case 5:\n        printf(\"春季\\n\");\n        break;\n    // ...\n}\n```\n"
+  },
+  "display": {
+    "icon": "🔀",
+    "color": "#FF9800",
+    "order": 2
+  }
+}

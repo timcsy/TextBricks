@@ -1,0 +1,9 @@
+{
+  "type": "template",
+  "name": "06-pass-by-reference",
+  "title": "傳址呼叫（範本）",
+  "description": "使用指標進行傳址呼叫範本",
+  "topic": "c/03-functions",
+  "language": "c",
+  "code": "void {{函式名稱}}({{型別}} *{{參數}}) {\n    *{{參數}} = {{新值}};\n}\n\nint main() {\n    {{型別}} {{變數}} = {{初始值}};\n    {{函式名稱}}(&{{變數}});\n    printf(\"{{變數}} = %d\\n\", {{變數}});\n    return 0;\n}"
+}

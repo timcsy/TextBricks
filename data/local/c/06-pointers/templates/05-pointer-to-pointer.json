@@ -1,0 +1,9 @@
+{
+  "type": "template",
+  "name": "05-pointer-to-pointer",
+  "title": "指標的指標（範本）",
+  "description": "二級指標使用範本",
+  "topic": "c/06-pointers",
+  "language": "c",
+  "code": "{{型別}} {{變數}} = {{值}};\n{{型別}} *{{指標1}} = &{{變數}};\n{{型別}} **{{指標2}} = &{{指標1}};\n\nprintf(\"值: %d\\n\", {{變數}});\nprintf(\"透過指標1: %d\\n\", *{{指標1}});\nprintf(\"透過指標2: %d\\n\", **{{指標2}});"
+}

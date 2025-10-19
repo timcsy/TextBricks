@@ -1,0 +1,9 @@
+{
+  "type": "template",
+  "name": "11-static-variable-example",
+  "title": "static 變數（例子）",
+  "description": "函式內 static 變數保留值的範例",
+  "topic": "c/10-advanced",
+  "language": "c",
+  "code": "void counter() {\n    static int count = 0;  // 只初始化一次\n    count++;\n    printf(\"呼叫次數: %d\\n\", count);\n}\n\nint main() {\n    counter();  // 輸出: 呼叫次數: 1\n    counter();  // 輸出: 呼叫次數: 2\n    counter();  // 輸出: 呼叫次數: 3\n    return 0;\n}"
+}

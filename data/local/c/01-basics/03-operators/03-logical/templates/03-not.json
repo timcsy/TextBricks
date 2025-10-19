@@ -1,0 +1,10 @@
+{
+  "type": "template",
+  "name": "03-not",
+  "title": "NOT 邏輯運算（範本）",
+  "description": "反轉條件真假",
+  "topic": "c/01-basics/03-operators/03-logical",
+  "language": "c",
+  "code": "if (!{{條件}}) {\n    {{條件為假時執行}}\n}",
+  "documentation": "NOT 邏輯運算。反轉條件的真假值。"
+}

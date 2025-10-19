@@ -1,0 +1,9 @@
+{
+  "type": "template",
+  "name": "03-realloc-example",
+  "title": "realloc 重新配置（例子）",
+  "description": "realloc 重新配置例子 - 擴展陣列",
+  "topic": "c/09-memory",
+  "language": "c",
+  "code": "#include <stdio.h>\n#include <stdlib.h>\n\nint main() {\n    int *arr = (int*)malloc(3 * sizeof(int));\n    arr[0] = 10; arr[1] = 20; arr[2] = 30;\n    \n    printf(\"原始陣列 (3 個元素):\\n\");\n    for (int i = 0; i < 3; i++) printf(\"%d \", arr[i]);\n    printf(\"\\n\");\n    \n    int *temp = (int*)realloc(arr, 5 * sizeof(int));\n    if (temp == NULL) {\n        free(arr);\n        return 1;\n    }\n    arr = temp;\n    arr[3] = 40; arr[4] = 50;\n    \n    printf(\"擴展後 (5 個元素):\\n\");\n    for (int i = 0; i < 5; i++) printf(\"%d \", arr[i]);\n    printf(\"\\n\");\n    \n    free(arr);\n    return 0;\n}"
+}

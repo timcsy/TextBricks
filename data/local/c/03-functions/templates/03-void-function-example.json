@@ -1,0 +1,10 @@
+{
+  "type": "template",
+  "name": "03-void-function-example",
+  "title": "無回傳值函式（例子）",
+  "description": "無回傳值函式例子",
+  "topic": "c/03-functions",
+  "language": "c",
+  "code": "void printGreeting(char *name) {\n    printf(\"你好，%s！\\n\", name);\n}\n\nint main() {\n    printGreeting(\"小明\");\n    return 0;\n}",
+  "documentation": "printGreeting 函式只執行輸出，不回傳值。"
+}

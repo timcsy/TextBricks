@@ -1,0 +1,9 @@
+{
+  "type": "template",
+  "name": "06-bitwise-or",
+  "title": "位元 OR（範本）",
+  "description": "使用 | 進行位元 OR 運算",
+  "topic": "c/10-advanced",
+  "language": "c",
+  "code": "{{結果}} = {{數值1}} | {{數值2}};"
+}

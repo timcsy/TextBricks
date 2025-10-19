@@ -1,0 +1,10 @@
+{
+  "type": "template",
+  "name": "03-greater-example",
+  "title": "大於比較（例子）",
+  "description": "大於比較例子",
+  "topic": "c/01-basics/03-operators/02-comparison",
+  "language": "c",
+  "code": "if (temperature > 37) {\n    printf(\"發燒了\\n\");\n}",
+  "documentation": "檢查 temperature 是否大於 37。"
+}

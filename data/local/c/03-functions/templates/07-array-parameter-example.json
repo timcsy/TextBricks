@@ -1,0 +1,9 @@
+{
+  "type": "template",
+  "name": "07-array-parameter-example",
+  "title": "陣列參數（例子）",
+  "description": "陣列參數例子 - 計算陣列總和",
+  "topic": "c/03-functions",
+  "language": "c",
+  "code": "int sumArray(int arr[], int size) {\n    int sum = 0;\n    for (int i = 0; i < size; i++) {\n        sum += arr[i];\n    }\n    return sum;\n}\n\nint main() {\n    int numbers[] = {1, 2, 3, 4, 5};\n    int size = sizeof(numbers) / sizeof(numbers[0]);\n    int total = sumArray(numbers, size);\n    printf(\"總和: %d\\n\", total);\n    return 0;\n}"
+}

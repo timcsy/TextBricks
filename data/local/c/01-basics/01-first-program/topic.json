@@ -1,0 +1,14 @@
+{
+  "type": "topic",
+  "name": "01-first-program",
+  "title": "第一個程式",
+  "description": "認識 C 程式的基本結構",
+  "documentation": {
+    "content": "# 第一個程式\n\n## 學習目標\n\n- 理解 C 程式的基本結構\n- 認識 main 函式\n- 了解 #include 指令的作用\n- 學會編譯和執行 C 程式\n\n## C 程式結構\n\n一個基本的 C 程式包含：\n\n```c\n#include <stdio.h>  // 引入標準輸入輸出函式庫\n\nint main() {        // 主函式，程式的進入點\n    // 程式碼\n    return 0;       // 回傳 0 表示程式正常結束\n}\n```\n\n### 重要元素說明\n\n1. **#include <stdio.h>**\n   - 引入標準輸入輸出函式庫\n   - 讓我們可以使用 printf、scanf 等函式\n\n2. **int main()**\n   - 程式的進入點\n   - 每個 C 程式都必須有一個 main 函式\n   - int 表示此函式回傳整數\n\n3. **return 0**\n   - 回傳 0 給作業系統\n   - 慣例上 0 表示程式執行成功\n\n## 編譯與執行\n\n使用 GCC 編譯器：\n```bash\ngcc program.c -o program  # 編譯\n./program                  # 執行\n```\n"
+  },
+  "display": {
+    "icon": "🚀",
+    "color": "#2196F3",
+    "order": 1
+  }
+}

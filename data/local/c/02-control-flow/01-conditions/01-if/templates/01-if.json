@@ -1,0 +1,10 @@
+{
+  "type": "template",
+  "name": "01-if",
+  "title": "if 條件判斷（範本）",
+  "description": "基本 if 條件判斷",
+  "topic": "c/02-control-flow/01-conditions/01-if",
+  "language": "c",
+  "code": "if ({{條件}}) {\n    {{條件為真時執行的程式碼}}\n}",
+  "documentation": "基本 if 語句。當條件為真時，執行大括號內的程式碼。"
+}

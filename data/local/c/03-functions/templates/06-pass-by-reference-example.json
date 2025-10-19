@@ -1,0 +1,9 @@
+{
+  "type": "template",
+  "name": "06-pass-by-reference-example",
+  "title": "傳址呼叫（例子）",
+  "description": "傳址呼叫例子 - 交換兩個數",
+  "topic": "c/03-functions",
+  "language": "c",
+  "code": "void swap(int *a, int *b) {\n    int temp = *a;\n    *a = *b;\n    *b = temp;\n}\n\nint main() {\n    int x = 5, y = 10;\n    printf(\"交換前: x = %d, y = %d\\n\", x, y);\n    swap(&x, &y);\n    printf(\"交換後: x = %d, y = %d\\n\", x, y);\n    return 0;\n}"
+}

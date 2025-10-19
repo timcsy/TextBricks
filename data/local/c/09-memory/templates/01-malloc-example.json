@@ -1,0 +1,9 @@
+{
+  "type": "template",
+  "name": "01-malloc-example",
+  "title": "malloc 配置（例子）",
+  "description": "malloc 配置例子 - 動態陣列",
+  "topic": "c/09-memory",
+  "language": "c",
+  "code": "#include <stdio.h>\n#include <stdlib.h>\n\nint main() {\n    int n = 5;\n    int *arr = (int*)malloc(n * sizeof(int));\n    if (arr == NULL) {\n        printf(\"記憶體配置失敗\\n\");\n        return 1;\n    }\n    \n    for (int i = 0; i < n; i++) {\n        arr[i] = i * 10;\n        printf(\"arr[%d] = %d\\n\", i, arr[i]);\n    }\n    \n    free(arr);\n    return 0;\n}"
+}

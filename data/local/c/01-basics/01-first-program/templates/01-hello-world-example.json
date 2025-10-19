@@ -1,0 +1,10 @@
+{
+  "type": "template",
+  "name": "01-hello-world-example",
+  "title": "Hello World（例子）",
+  "description": "完整可執行的 Hello World 程式",
+  "topic": "c/01-basics/01-first-program",
+  "language": "c",
+  "code": "#include <stdio.h>\n\nint main() {\n    printf(\"Hello, World!\\n\");\n    return 0;\n}",
+  "documentation": "這是一個完整可執行的 Hello World 程式，會在螢幕上顯示 \"Hello, World!\"。"
+}

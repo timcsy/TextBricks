@@ -1,0 +1,10 @@
+{
+  "type": "template",
+  "name": "04-recursion",
+  "title": "遞迴函式（範本）",
+  "description": "函式呼叫自己",
+  "topic": "c/03-functions",
+  "language": "c",
+  "code": "{{回傳型別}} {{函式名稱}}({{參數}}) {\n    if ({{終止條件}}) {\n        return {{基本情況回傳值}};\n    }\n    return {{遞迴呼叫}};\n}",
+  "documentation": "遞迴函式會呼叫自己。必須有終止條件避免無窮遞迴。"
+}

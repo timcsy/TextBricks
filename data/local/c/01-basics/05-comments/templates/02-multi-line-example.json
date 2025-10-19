@@ -1,0 +1,10 @@
+{
+  "type": "template",
+  "name": "02-multi-line-example",
+  "title": "多行註解（例子）",
+  "description": "多行註解例子",
+  "topic": "c/01-basics/05-comments",
+  "language": "c",
+  "code": "/*\n * 學生資訊管理系統\n * 版本：1.0\n * 作者：開發團隊\n * 日期：2024-01-01\n */",
+  "documentation": "展示如何使用多行註解撰寫檔案標頭資訊。"
+}

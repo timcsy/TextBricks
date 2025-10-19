@@ -1,0 +1,9 @@
+{
+  "type": "template",
+  "name": "06-null-pointer-example",
+  "title": "空指標檢查（例子）",
+  "description": "空指標檢查例子",
+  "topic": "c/06-pointers",
+  "language": "c",
+  "code": "int *ptr = NULL;\n\nif (ptr == NULL) {\n    printf(\"指標尚未初始化\\n\");\n}\n\nint number = 42;\nptr = &number;\n\nif (ptr != NULL) {\n    printf(\"指標現在指向: %d\\n\", *ptr);\n}"
+}

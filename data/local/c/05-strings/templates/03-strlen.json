@@ -1,0 +1,9 @@
+{
+  "type": "template",
+  "name": "03-strlen",
+  "title": "字串長度（範本）",
+  "description": "使用 strlen() 計算字串長度範本",
+  "topic": "c/05-strings",
+  "language": "c",
+  "code": "#include <string.h>\n\nchar {{字串}}[] = \"{{字串內容}}\";\nsize_t {{長度}} = strlen({{字串}});\nprintf(\"字串長度: %zu\\n\", {{長度}});"
+}

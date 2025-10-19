@@ -1,0 +1,8 @@
+{
+  "type": "link",
+  "name": "14-array",
+  "title": "陣列基礎",
+  "description": "學習如何使用陣列儲存多個相同型別的資料",
+  "target": "c/04-arrays/templates/01-array-declaration-example",
+  "topic": "c/00-beginner"
+}

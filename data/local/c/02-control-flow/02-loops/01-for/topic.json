@@ -1,0 +1,14 @@
+{
+  "type": "topic",
+  "name": "01-for",
+  "title": "for 迴圈",
+  "description": "固定次數的迴圈",
+  "documentation": {
+    "content": "# for 迴圈\n\n## 語法結構\n\n```c\nfor (初始化; 條件; 更新) {\n    // 迴圈主體\n}\n```\n\n### 執行流程\n1. 執行初始化（只執行一次）\n2. 檢查條件，若為真則繼續\n3. 執行迴圈主體\n4. 執行更新\n5. 回到步驟 2\n\n## 常見用法\n\n### 從 0 到 n-1\n```c\nfor (int i = 0; i < n; i++) {\n    printf(\"%d\\n\", i);\n}\n```\n\n### 從 1 到 n\n```c\nfor (int i = 1; i <= n; i++) {\n    printf(\"%d\\n\", i);\n}\n```\n\n### 倒數\n```c\nfor (int i = n; i > 0; i--) {\n    printf(\"%d\\n\", i);\n}\n```\n\n### 步進為 2\n```c\nfor (int i = 0; i < n; i += 2) {\n    printf(\"%d\\n\", i);\n}\n```\n\n### 陣列遍歷\n```c\nfor (int i = 0; i < 陣列長度; i++) {\n    printf(\"%d\\n\", array[i]);\n}\n```\n"
+  },
+  "display": {
+    "icon": "🔢",
+    "color": "#4CAF50",
+    "order": 1
+  }
+}

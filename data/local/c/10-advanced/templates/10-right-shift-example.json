@@ -1,0 +1,9 @@
+{
+  "type": "template",
+  "name": "10-right-shift-example",
+  "title": "右移運算（例子）",
+  "description": "右移運算範例（等同於除以 2 的次方）",
+  "topic": "c/10-advanced",
+  "language": "c",
+  "code": "int a = 20;  // 10100 in binary\nint result1 = a >> 1;  // 01010 in binary = 10 (20 / 2)\nint result2 = a >> 2;  // 00101 in binary = 5 (20 / 4)\nprintf(\"%d >> 1 = %d\\n\", a, result1);\nprintf(\"%d >> 2 = %d\\n\", a, result2);"
+}

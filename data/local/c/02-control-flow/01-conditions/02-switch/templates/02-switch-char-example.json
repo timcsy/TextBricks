@@ -1,0 +1,10 @@
+{
+  "type": "template",
+  "name": "02-switch-char-example",
+  "title": "字元 switch（例子）",
+  "description": "字元 switch 例子",
+  "topic": "c/02-control-flow/01-conditions/02-switch",
+  "language": "c",
+  "code": "char grade = 'B';\nswitch (grade) {\n    case 'A':\n        printf(\"優秀\\n\");\n        break;\n    case 'B':\n        printf(\"良好\\n\");\n        break;\n    case 'C':\n        printf(\"及格\\n\");\n        break;\n    default:\n        printf(\"不及格\\n\");\n}",
+  "documentation": "根據成績等級顯示對應的評語。"
+}

@@ -1,0 +1,16 @@
+{
+  "type": "topic",
+  "name": "09-memory",
+  "title": "記憶體管理",
+  "description": "學習動態記憶體配置",
+  "documentation": {
+    "content": "# 記憶體管理\n\n## 學習內容\n\n### 動態記憶體配置\n- malloc - 配置記憶體\n- calloc - 配置並清零\n- realloc - 重新配置\n- free - 釋放記憶體\n\n### 記憶體概念\n- 堆疊 (Stack)\n- 堆積 (Heap)\n- 記憶體洩漏\n- 懸空指標\n\n### 最佳實踐\n- 檢查 NULL\n- 配對使用 malloc/free\n- 避免記憶體洩漏\n- 不要使用已釋放的記憶體\n\n## 基本用法\n\n```c\nint *arr = (int*)malloc(10 * sizeof(int));\nif (arr != NULL) {\n    // 使用陣列\n    free(arr);\n    arr = NULL;\n}\n```\n"
+  },
+  "display": {
+    "icon": "💾",
+    "color": "#9E9E9E",
+    "order": 9,
+    "collapsed": false,
+    "showInNavigation": true
+  }
+}

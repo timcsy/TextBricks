@@ -1,0 +1,9 @@
+{
+  "type": "template",
+  "name": "08-strstr",
+  "title": "尋找子字串（範本）",
+  "description": "使用 strstr() 在字串中尋找子字串範本",
+  "topic": "c/05-strings",
+  "language": "c",
+  "code": "#include <string.h>\n\nchar {{字串}}[] = \"{{字串內容}}\";\nchar {{子字串}}[] = \"{{子字串內容}}\";\nchar *{{結果}} = strstr({{字串}}, {{子字串}});\n\nif ({{結果}} != NULL) {\n    printf(\"找到子字串於位置 %ld\\n\", {{結果}} - {{字串}});\n} else {\n    printf(\"未找到子字串\\n\");\n}"
+}

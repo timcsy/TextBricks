@@ -1,0 +1,9 @@
+{
+  "type": "template",
+  "name": "06-null-pointer",
+  "title": "空指標檢查（範本）",
+  "description": "NULL 指標檢查與使用範本",
+  "topic": "c/06-pointers",
+  "language": "c",
+  "code": "{{型別}} *{{指標}} = NULL;\n\nif ({{指標}} == NULL) {\n    printf(\"指標為 NULL\\n\");\n} else {\n    printf(\"指標值: %d\\n\", *{{指標}});\n}\n\n{{指標}} = &{{變數}};\nif ({{指標}} != NULL) {\n    printf(\"現在指標指向: %d\\n\", *{{指標}});\n}"
+}

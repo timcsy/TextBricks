@@ -1,0 +1,14 @@
+{
+  "type": "topic",
+  "name": "04-input-output",
+  "title": "輸入輸出",
+  "description": "學習使用 printf 和 scanf 進行輸入輸出",
+  "documentation": {
+    "content": "# 輸入輸出\n\n## 學習目標\n\n- 使用 printf 輸出資料\n- 使用 scanf 讀取輸入\n- 理解格式化字串\n- 掌握轉義字元\n\n## printf - 格式化輸出\n\n### 基本語法\n```c\nprintf(\"格式化字串\", 參數1, 參數2, ...);\n```\n\n### 格式化標記\n- `%d` - 整數\n- `%f` - 浮點數\n- `%c` - 字元\n- `%s` - 字串\n- `%lf` - double\n- `%ld` - long\n- `%u` - unsigned int\n- `%x` - 十六進位\n- `%o` - 八進位\n\n### 格式化選項\n- `%.2f` - 顯示 2 位小數\n- `%5d` - 至少佔 5 個字元寬度\n- `%-5d` - 左對齊\n- `%05d` - 前面補 0\n\n## scanf - 格式化輸入\n\n### 基本語法\n```c\nscanf(\"格式化字串\", &變數1, &變數2, ...);\n```\n\n### 注意事項\n1. 變數前需要加 `&`（取址運算子）\n2. 字串陣列不需要 `&`\n3. 輸入前最好有提示訊息\n\n## 轉義字元\n\n- `\\n` - 換行\n- `\\t` - Tab\n- `\\\\` - 反斜線\n- `\\\"` - 雙引號\n- `\\'` - 單引號\n- `\\0` - 空字元\n\n## 例子\n\n```c\n// 輸出\nprintf(\"年齡：%d 歲\\n\", age);\nprintf(\"身高：%.1f cm\\n\", height);\n\n// 輸入\nprintf(\"請輸入年齡：\");\nscanf(\"%d\", &age);\n```\n"
+  },
+  "display": {
+    "icon": "⌨️",
+    "color": "#2196F3",
+    "order": 4
+  }
+}

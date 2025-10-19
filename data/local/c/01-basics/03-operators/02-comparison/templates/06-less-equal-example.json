@@ -1,0 +1,10 @@
+{
+  "type": "template",
+  "name": "06-less-equal-example",
+  "title": "小於等於比較（例子）",
+  "description": "小於等於比較例子",
+  "topic": "c/01-basics/03-operators/02-comparison",
+  "language": "c",
+  "code": "if (stock <= 10) {\n    printf(\"庫存不足，請補貨\\n\");\n}",
+  "documentation": "檢查 stock 是否小於或等於 10。"
+}

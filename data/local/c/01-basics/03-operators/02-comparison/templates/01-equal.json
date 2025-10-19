@@ -1,0 +1,10 @@
+{
+  "type": "template",
+  "name": "01-equal",
+  "title": "等於比較（範本）",
+  "description": "檢查兩個值是否相等",
+  "topic": "c/01-basics/03-operators/02-comparison",
+  "language": "c",
+  "code": "if ({{變數1}} == {{變數2}}) {\n    {{相等時執行的程式碼}}\n}",
+  "documentation": "檢查兩個值是否相等。注意是雙等號 ==，不是單等號 =。"
+}

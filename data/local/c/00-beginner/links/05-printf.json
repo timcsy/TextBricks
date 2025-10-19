@@ -1,0 +1,8 @@
+{
+  "type": "link",
+  "name": "05-printf",
+  "title": "輸出資料 - printf",
+  "description": "使用 printf 函式輸出資料到螢幕",
+  "target": "c/01-basics/04-input-output/templates/01-printf-example",
+  "topic": "c/00-beginner"
+}

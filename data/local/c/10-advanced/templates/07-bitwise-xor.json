@@ -1,0 +1,9 @@
+{
+  "type": "template",
+  "name": "07-bitwise-xor",
+  "title": "位元 XOR（範本）",
+  "description": "使用 ^ 進行位元 XOR 運算",
+  "topic": "c/10-advanced",
+  "language": "c",
+  "code": "{{結果}} = {{數值1}} ^ {{數值2}};"
+}

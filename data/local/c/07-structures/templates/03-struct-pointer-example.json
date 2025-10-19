@@ -1,0 +1,9 @@
+{
+  "type": "template",
+  "name": "03-struct-pointer-example",
+  "title": "結構體指標（例子）",
+  "description": "結構體指標例子",
+  "topic": "c/07-structures",
+  "language": "c",
+  "code": "typedef struct {\n    int width;\n    int height;\n} Rectangle;\n\nRectangle rect;\nRectangle *ptr = &rect;\n\nptr->width = 100;\nptr->height = 50;\n\nprintf(\"寬度: %d\\n\", ptr->width);\nprintf(\"高度: %d\\n\", (*ptr).height);\nprintf(\"面積: %d\\n\", ptr->width * ptr->height);"
+}

@@ -1,0 +1,9 @@
+{
+  "type": "template",
+  "name": "03-array-init-list",
+  "title": "陣列初始化清單（範本）",
+  "description": "使用初始化清單建立陣列範本",
+  "topic": "c/04-arrays",
+  "language": "c",
+  "code": "{{元素型別}} {{陣列名稱}}[] = {{{元素1}}, {{元素2}}, {{元素3}}};\nint {{大小}} = sizeof({{陣列名稱}}) / sizeof({{陣列名稱}}[0]);"
+}

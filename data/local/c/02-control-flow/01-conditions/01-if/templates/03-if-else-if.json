@@ -1,0 +1,10 @@
+{
+  "type": "template",
+  "name": "03-if-else-if",
+  "title": "if-else if-else（範本）",
+  "description": "多重條件判斷",
+  "topic": "c/02-control-flow/01-conditions/01-if",
+  "language": "c",
+  "code": "if ({{條件1}}) {\n    {{條件1為真時執行}}\n} else if ({{條件2}}) {\n    {{條件2為真時執行}}\n} else {\n    {{所有條件都為假時執行}}\n}",
+  "documentation": "多重條件判斷。依序檢查條件，執行第一個為真的分支。"
+}

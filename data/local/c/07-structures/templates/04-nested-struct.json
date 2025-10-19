@@ -1,0 +1,9 @@
+{
+  "type": "template",
+  "name": "04-nested-struct",
+  "title": "巢狀結構體（範本）",
+  "description": "結構體內包含其他結構體範本",
+  "topic": "c/07-structures",
+  "language": "c",
+  "code": "struct {{內層結構}} {\n    {{型別1}} {{成員1}};\n};\n\nstruct {{外層結構}} {\n    {{型別2}} {{成員2}};\n    struct {{內層結構}} {{內層成員}};\n};\n\nstruct {{外層結構}} {{變數}};\n{{變數}}.{{成員2}} = {{值1}};\n{{變數}}.{{內層成員}}.{{成員1}} = {{值2}};"
+}

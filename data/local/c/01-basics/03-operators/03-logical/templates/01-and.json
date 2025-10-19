@@ -1,0 +1,10 @@
+{
+  "type": "template",
+  "name": "01-and",
+  "title": "AND 邏輯運算（範本）",
+  "description": "兩個條件都為真時執行",
+  "topic": "c/01-basics/03-operators/03-logical",
+  "language": "c",
+  "code": "if ({{條件1}} && {{條件2}}) {\n    {{兩個條件都為真時執行}}\n}",
+  "documentation": "AND 邏輯運算。只有當兩個條件都為真時，才執行程式碼。"
+}

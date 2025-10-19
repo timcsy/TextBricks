@@ -1,0 +1,9 @@
+{
+  "type": "template",
+  "name": "02-define-macro",
+  "title": "#define 巨集函式（範本）",
+  "description": "使用 #define 定義巨集函式",
+  "topic": "c/10-advanced",
+  "language": "c",
+  "code": "#define {{巨集名稱}}({{參數}}) {{表達式}}"
+}

@@ -1,0 +1,9 @@
+{
+  "type": "template",
+  "name": "02-define-macro-example",
+  "title": "#define 巨集函式（例子）",
+  "description": "常用巨集函式範例",
+  "topic": "c/10-advanced",
+  "language": "c",
+  "code": "#define MAX(a, b) ((a) > (b) ? (a) : (b))\n#define MIN(a, b) ((a) < (b) ? (a) : (b))\n#define SQUARE(x) ((x) * (x))\n#define ABS(x) ((x) < 0 ? -(x) : (x))\n\nint main() {\n    int x = 10, y = 20;\n    printf(\"Max: %d\\n\", MAX(x, y));\n    printf(\"Min: %d\\n\", MIN(x, y));\n    printf(\"Square: %d\\n\", SQUARE(5));\n    printf(\"Abs: %d\\n\", ABS(-15));\n    return 0;\n}"
+}

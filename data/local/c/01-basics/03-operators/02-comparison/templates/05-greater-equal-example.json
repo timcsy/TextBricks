@@ -1,0 +1,10 @@
+{
+  "type": "template",
+  "name": "05-greater-equal-example",
+  "title": "大於等於比較（例子）",
+  "description": "大於等於比較例子",
+  "topic": "c/01-basics/03-operators/02-comparison",
+  "language": "c",
+  "code": "if (age >= 18) {\n    printf(\"已成年\\n\");\n}",
+  "documentation": "檢查 age 是否大於或等於 18。"
+}

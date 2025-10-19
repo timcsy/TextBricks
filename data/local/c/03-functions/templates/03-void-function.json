@@ -1,0 +1,10 @@
+{
+  "type": "template",
+  "name": "03-void-function",
+  "title": "無回傳值函式（範本）",
+  "description": "定義不回傳值的函式",
+  "topic": "c/03-functions",
+  "language": "c",
+  "code": "void {{函式名稱}}({{參數列表}}) {\n    {{函式主體}}\n}",
+  "documentation": "使用 void 表示函式不回傳任何值。"
+}

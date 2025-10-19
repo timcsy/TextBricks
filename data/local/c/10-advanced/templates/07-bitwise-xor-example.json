@@ -1,0 +1,9 @@
+{
+  "type": "template",
+  "name": "07-bitwise-xor-example",
+  "title": "位元 XOR（例子）",
+  "description": "位元 XOR 運算範例",
+  "topic": "c/10-advanced",
+  "language": "c",
+  "code": "int a = 12;  // 1100 in binary\nint b = 10;  // 1010 in binary\nint result = a ^ b;  // 0110 in binary = 6\nprintf(\"%d ^ %d = %d\\n\", a, b, result);"
+}

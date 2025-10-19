@@ -1,0 +1,8 @@
+{
+  "type": "link",
+  "name": "09-logical",
+  "title": "邏輯運算",
+  "description": "學習 AND、OR、NOT 等邏輯運算",
+  "target": "c/01-basics/03-operators/03-logical/templates/01-and-example",
+  "topic": "c/00-beginner"
+}

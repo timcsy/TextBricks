@@ -1,0 +1,9 @@
+{
+  "type": "template",
+  "name": "08-return-multiple-example",
+  "title": "回傳多個值（例子）",
+  "description": "回傳多個值例子 - 除法運算",
+  "topic": "c/03-functions",
+  "language": "c",
+  "code": "void divide(int dividend, int divisor, int *quotient, int *remainder) {\n    *quotient = dividend / divisor;\n    *remainder = dividend % divisor;\n}\n\nint main() {\n    int q, r;\n    divide(17, 5, &q, &r);\n    printf(\"17 ÷ 5 = %d 餘 %d\\n\", q, r);\n    return 0;\n}"
+}

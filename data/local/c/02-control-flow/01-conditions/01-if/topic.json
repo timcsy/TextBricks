@@ -1,0 +1,14 @@
+{
+  "type": "topic",
+  "name": "01-if",
+  "title": "if 條件判斷",
+  "description": "使用 if 語句進行條件判斷",
+  "documentation": {
+    "content": "# if 條件判斷\n\n## 語法形式\n\n### 1. 基本 if\n```c\nif (age >= 18) {\n    printf(\"成年人\\n\");\n}\n```\n\n### 2. if-else\n```c\nif (score >= 60) {\n    printf(\"及格\\n\");\n} else {\n    printf(\"不及格\\n\");\n}\n```\n\n### 3. if-else if-else\n```c\nif (score >= 90) {\n    printf(\"優秀\\n\");\n} else if (score >= 60) {\n    printf(\"及格\\n\");\n} else {\n    printf(\"不及格\\n\");\n}\n```\n\n### 4. 三元運算子\n```c\nresult = (a > b) ? a : b;  // 簡化的 if-else\n```\n\n## 常見模式\n\n### 檢查範圍\n```c\nif (temperature >= 35 && temperature <= 40) {\n    printf(\"正常體溫\\n\");\n}\n```\n\n### 多重條件\n```c\nif (age >= 18 && hasID) {\n    printf(\"可以投票\\n\");\n}\n```\n"
+  },
+  "display": {
+    "icon": "✅",
+    "color": "#4CAF50",
+    "order": 1
+  }
+}

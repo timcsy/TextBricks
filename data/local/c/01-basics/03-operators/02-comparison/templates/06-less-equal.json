@@ -1,0 +1,10 @@
+{
+  "type": "template",
+  "name": "06-less-equal",
+  "title": "小於等於比較（範本）",
+  "description": "檢查左值是否小於或等於右值",
+  "topic": "c/01-basics/03-operators/02-comparison",
+  "language": "c",
+  "code": "if ({{變數1}} <= {{變數2}}) {\n    {{小於等於時執行的程式碼}}\n}",
+  "documentation": "檢查第一個值是否小於或等於第二個值。"
+}

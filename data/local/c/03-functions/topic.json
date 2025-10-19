@@ -1,0 +1,16 @@
+{
+  "type": "topic",
+  "name": "03-functions",
+  "title": "函式",
+  "description": "學習函式的定義、呼叫和參數傳遞",
+  "documentation": {
+    "content": "# 函式\n\n## 主題簡介\n\n函式是可重複使用的程式碼區塊，幫助組織程式碼和避免重複。\n\n## 學習內容\n\n### 函式定義\n- 函式宣告\n- 函式定義\n- 回傳值\n- 參數列表\n\n### 參數傳遞\n- 傳值呼叫\n- 傳址呼叫（使用指標）\n- 陣列參數\n\n### 函式類型\n- 無參數函式\n- 有參數函式\n- 無回傳值函式（void）\n- 有回傳值函式\n\n### 進階主題\n- 遞迴函式\n- 函式指標\n- 可變參數函式\n\n## 基本語法\n\n```c\n回傳型別 函式名稱(參數列表) {\n    // 函式主體\n    return 回傳值;\n}\n```\n"
+  },
+  "display": {
+    "icon": "⚡",
+    "color": "#9C27B0",
+    "order": 3,
+    "collapsed": false,
+    "showInNavigation": true
+  }
+}

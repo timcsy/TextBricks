@@ -1,0 +1,9 @@
+{
+  "type": "template",
+  "name": "04-pointer-array",
+  "title": "指標與陣列（範本）",
+  "description": "使用指標遍歷陣列範本",
+  "topic": "c/06-pointers",
+  "language": "c",
+  "code": "{{型別}} {{陣列}}[] = {{{元素列表}}};\nint {{大小}} = sizeof({{陣列}}) / sizeof({{陣列}}[0]);\n{{型別}} *{{指標}} = {{陣列}};\n\nfor (int i = 0; i < {{大小}}; i++) {\n    printf(\"元素 %d: %d\\n\", i, *({{指標}} + i));\n}"
+}

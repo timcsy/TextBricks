@@ -1,0 +1,9 @@
+{
+  "type": "template",
+  "name": "08-strstr-example",
+  "title": "尋找子字串（例子）",
+  "description": "尋找子字串例子",
+  "topic": "c/05-strings",
+  "language": "c",
+  "code": "#include <string.h>\n\nchar text[] = \"The quick brown fox jumps over the lazy dog\";\nchar pattern[] = \"fox\";\nchar *result = strstr(text, pattern);\n\nif (result != NULL) {\n    printf(\"找到 '%s' 於位置 %ld\\n\", pattern, result - text);\n    printf(\"從該位置開始: %s\\n\", result);\n} else {\n    printf(\"未找到 '%s'\\n\", pattern);\n}"
+}

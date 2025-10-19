@@ -1,0 +1,9 @@
+{
+  "type": "template",
+  "name": "02-typedef-struct-example",
+  "title": "typedef 結構體（例子）",
+  "description": "typedef 結構體例子 - 座標點",
+  "topic": "c/07-structures",
+  "language": "c",
+  "code": "typedef struct {\n    int x;\n    int y;\n} Point;\n\nPoint p1 = {10, 20};\nPoint p2 = {30, 40};\n\nprintf(\"點1: (%d, %d)\\n\", p1.x, p1.y);\nprintf(\"點2: (%d, %d)\\n\", p2.x, p2.y);"
+}

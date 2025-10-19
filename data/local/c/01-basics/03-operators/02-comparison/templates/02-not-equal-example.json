@@ -1,0 +1,10 @@
+{
+  "type": "template",
+  "name": "02-not-equal-example",
+  "title": "不等於比較（例子）",
+  "description": "不等於比較例子",
+  "topic": "c/01-basics/03-operators/02-comparison",
+  "language": "c",
+  "code": "if (score != 100) {\n    printf(\"還有進步空間\\n\");\n}",
+  "documentation": "檢查 score 是否不等於 100。"
+}

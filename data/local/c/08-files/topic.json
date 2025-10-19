@@ -1,0 +1,16 @@
+{
+  "type": "topic",
+  "name": "08-files",
+  "title": "檔案操作",
+  "description": "學習檔案的讀寫操作",
+  "documentation": {
+    "content": "# 檔案操作\n\n## 學習內容\n\n### 檔案基礎\n- 開啟檔案 (fopen)\n- 關閉檔案 (fclose)\n- 檔案指標 FILE*\n\n### 檔案讀取\n- fgetc - 讀取字元\n- fgets - 讀取字串\n- fscanf - 格式化讀取\n- fread - 二進位讀取\n\n### 檔案寫入\n- fputc - 寫入字元\n- fputs - 寫入字串\n- fprintf - 格式化寫入\n- fwrite - 二進位寫入\n\n### 其他操作\n- fseek - 移動檔案位置\n- ftell - 取得檔案位置\n- rewind - 回到檔案開頭\n- feof - 檢查檔案結尾\n\n## 基本模式\n\n```c\nFILE *fp = fopen(\"file.txt\", \"r\");\nif (fp != NULL) {\n    // 讀寫操作\n    fclose(fp);\n}\n```\n"
+  },
+  "display": {
+    "icon": "📁",
+    "color": "#607D8B",
+    "order": 8,
+    "collapsed": false,
+    "showInNavigation": true
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "type": "template",
+  "name": "07-strchr",
+  "title": "尋找字元（範本）",
+  "description": "使用 strchr() 在字串中尋找字元範本",
+  "topic": "c/05-strings",
+  "language": "c",
+  "code": "#include <string.h>\n\nchar {{字串}}[] = \"{{字串內容}}\";\nchar {{目標字元}} = '{{字元}}';\nchar *{{結果}} = strchr({{字串}}, {{目標字元}});\n\nif ({{結果}} != NULL) {\n    printf(\"找到字元 '%c' 於位置 %ld\\n\", {{目標字元}}, {{結果}} - {{字串}});\n} else {\n    printf(\"未找到字元 '%c'\\n\", {{目標字元}});\n}"
+}

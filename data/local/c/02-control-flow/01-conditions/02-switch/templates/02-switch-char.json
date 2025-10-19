@@ -1,0 +1,10 @@
+{
+  "type": "template",
+  "name": "02-switch-char",
+  "title": "字元 switch（範本）",
+  "description": "使用字元進行判斷",
+  "topic": "c/02-control-flow/01-conditions/02-switch",
+  "language": "c",
+  "code": "switch ({{字元變數}}) {\n    case '{{字元1}}':\n        {{程式碼1}}\n        break;\n    case '{{字元2}}':\n        {{程式碼2}}\n        break;\n    default:\n        {{預設程式碼}}\n}",
+  "documentation": "使用字元作為 switch 的條件，常用於選單或等級判斷。"
+}

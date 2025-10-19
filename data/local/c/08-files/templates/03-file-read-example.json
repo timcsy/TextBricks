@@ -1,0 +1,9 @@
+{
+  "type": "template",
+  "name": "03-file-read-example",
+  "title": "讀取檔案（例子）",
+  "description": "讀取檔案例子 - 讀取整數",
+  "topic": "c/08-files",
+  "language": "c",
+  "code": "#include <stdio.h>\n\nint main() {\n    FILE *file = fopen(\"numbers.txt\", \"r\");\n    if (file == NULL) {\n        printf(\"無法開啟檔案\\n\");\n        return 1;\n    }\n    \n    int num;\n    while (fscanf(file, \"%d\", &num) != EOF) {\n        printf(\"讀取到: %d\\n\", num);\n    }\n    \n    fclose(file);\n    return 0;\n}"
+}

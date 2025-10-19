@@ -1,0 +1,9 @@
+{
+  "type": "template",
+  "name": "09-left-shift-example",
+  "title": "左移運算（例子）",
+  "description": "左移運算範例（等同於乘以 2 的次方）",
+  "topic": "c/10-advanced",
+  "language": "c",
+  "code": "int a = 5;  // 0101 in binary\nint result1 = a << 1;  // 1010 in binary = 10 (5 * 2)\nint result2 = a << 2;  // 10100 in binary = 20 (5 * 4)\nprintf(\"%d << 1 = %d\\n\", a, result1);\nprintf(\"%d << 2 = %d\\n\", a, result2);"
+}

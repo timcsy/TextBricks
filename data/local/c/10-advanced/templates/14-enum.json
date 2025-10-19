@@ -1,0 +1,9 @@
+{
+  "type": "template",
+  "name": "14-enum",
+  "title": "列舉 enum（範本）",
+  "description": "使用 enum 定義列舉型別",
+  "topic": "c/10-advanced",
+  "language": "c",
+  "code": "enum {{列舉名稱}} {\n    {{值1}},\n    {{值2}},\n    {{值3}}\n};"
+}

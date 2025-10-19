@@ -1,0 +1,8 @@
+{
+  "type": "link",
+  "name": "10-if-statement",
+  "title": "if 條件判斷",
+  "description": "學習使用 if 語句根據條件執行不同程式碼",
+  "target": "c/02-control-flow/01-conditions/01-if/templates/01-if-example",
+  "topic": "c/00-beginner"
+}

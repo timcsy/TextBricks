@@ -1,0 +1,14 @@
+{
+  "type": "topic",
+  "name": "01-arithmetic",
+  "title": "算術運算子",
+  "description": "加減乘除和取餘數運算",
+  "documentation": {
+    "content": "# 算術運算子\n\n## 基本運算\n\n### 加法 (+)\n```c\nint sum = a + b;\n```\n\n### 減法 (-)\n```c\nint diff = a - b;\n```\n\n### 乘法 (*)\n```c\nint product = a * b;\n```\n\n### 除法 (/)\n```c\nint quotient = a / b;  // 整數除法\nfloat result = (float)a / b;  // 浮點除法\n```\n\n### 取餘數 (%)\n```c\nint remainder = a % b;  // 只能用於整數\n```\n\n## 注意事項\n\n1. **整數除法**：兩個整數相除結果仍是整數（無條件捨去小數）\n2. **除以零**：除數不能為 0，會導致執行錯誤\n3. **取餘數**：只能用於整數型別\n4. **型別轉換**：混合運算時注意型別轉換\n"
+  },
+  "display": {
+    "icon": "➕",
+    "color": "#4CAF50",
+    "order": 1
+  }
+}

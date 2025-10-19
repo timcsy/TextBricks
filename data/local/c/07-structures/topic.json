@@ -1,0 +1,16 @@
+{
+  "type": "topic",
+  "name": "07-structures",
+  "title": "結構",
+  "description": "學習結構體的定義和使用",
+  "documentation": {
+    "content": "# 結構\n\n## 學習內容\n\n### 結構體基礎\n- 結構體定義\n- 結構體宣告\n- 成員存取\n- 結構體初始化\n\n### 進階應用\n- 結構體陣列\n- 巢狀結構體\n- 結構體指標\n- typedef\n\n### 其他複合型別\n- 聯合 (union)\n- 列舉 (enum)\n- 位元欄位\n\n## 基本語法\n\n```c\nstruct Student {\n    char name[50];\n    int age;\n    float gpa;\n};\n\nstruct Student s1;\ns1.age = 20;\n```\n"
+  },
+  "display": {
+    "icon": "🏗️",
+    "color": "#795548",
+    "order": 7,
+    "collapsed": false,
+    "showInNavigation": true
+  }
+}

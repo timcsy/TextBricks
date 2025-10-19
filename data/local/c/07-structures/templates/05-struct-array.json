@@ -1,0 +1,9 @@
+{
+  "type": "template",
+  "name": "05-struct-array",
+  "title": "結構體陣列（範本）",
+  "description": "建立結構體陣列範本",
+  "topic": "c/07-structures",
+  "language": "c",
+  "code": "struct {{結構體名稱}} {\n    {{型別1}} {{成員1}};\n    {{型別2}} {{成員2}};\n};\n\nstruct {{結構體名稱}} {{陣列}}[{{大小}}];\n\nfor (int i = 0; i < {{大小}}; i++) {\n    printf(\"{{成員1}}: %d\\n\", {{陣列}}[i].{{成員1}});\n}"
+}

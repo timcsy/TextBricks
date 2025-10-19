@@ -1,0 +1,9 @@
+{
+  "type": "template",
+  "name": "04-strcpy-example",
+  "title": "字串複製（例子）",
+  "description": "字串複製例子",
+  "topic": "c/05-strings",
+  "language": "c",
+  "code": "#include <string.h>\n\nchar source[] = \"Hello\";\nchar destination[50];\nstrcpy(destination, source);\nprintf(\"來源: %s\\n\", source);\nprintf(\"目標: %s\\n\", destination);"
+}

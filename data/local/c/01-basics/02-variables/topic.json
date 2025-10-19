@@ -1,0 +1,14 @@
+{
+  "type": "topic",
+  "name": "02-variables",
+  "title": "變數與資料型別",
+  "description": "學習變數宣告和基本資料型別",
+  "documentation": {
+    "content": "# 變數與資料型別\n\n## 學習目標\n\n- 理解變數的概念\n- 學會宣告和初始化變數\n- 認識基本資料型別\n- 掌握型別轉換\n- 使用常數\n\n## 基本資料型別\n\n### 整數型別\n- `int` - 整數（通常 4 bytes）\n- `short` - 短整數（通常 2 bytes）\n- `long` - 長整數（通常 4 或 8 bytes）\n- `long long` - 超長整數（通常 8 bytes）\n\n### 浮點數型別\n- `float` - 單精度浮點數（4 bytes）\n- `double` - 雙精度浮點數（8 bytes）\n- `long double` - 擴展精度浮點數\n\n### 字元型別\n- `char` - 字元（1 byte）\n\n### 型別修飾符\n- `signed` - 有符號（可表示正負數）\n- `unsigned` - 無符號（只能表示非負數）\n\n## 變數宣告\n\n```c\nint age;              // 宣告\nage = 25;             // 賦值\n\nint height = 175;     // 宣告並初始化\n\nint x = 10, y = 20;   // 一次宣告多個變數\n```\n\n## 常數\n\n```c\nconst int MAX = 100;  // const 關鍵字\n#define PI 3.14159    // 巨集定義\n```\n\n## 型別轉換\n\n```c\nint a = 10;\nfloat b = (float)a;   // 顯式轉換\n\nfloat x = 3.14;\nint y = x;            // 隱式轉換（可能遺失精度）\n```\n\n## 變數命名規則\n\n1. 只能包含字母、數字、底線\n2. 必須以字母或底線開頭\n3. 區分大小寫\n4. 不能使用保留字\n5. 建議使用有意義的名稱\n"
+  },
+  "display": {
+    "icon": "📦",
+    "color": "#2196F3",
+    "order": 2
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "type": "template",
+  "name": "05-bitwise-and",
+  "title": "位元 AND（範本）",
+  "description": "使用 & 進行位元 AND 運算",
+  "topic": "c/10-advanced",
+  "language": "c",
+  "code": "{{結果}} = {{數值1}} & {{數值2}};"
+}

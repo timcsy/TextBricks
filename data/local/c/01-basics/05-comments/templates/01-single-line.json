@@ -1,0 +1,10 @@
+{
+  "type": "template",
+  "name": "01-single-line",
+  "title": "單行註解（範本）",
+  "description": "撰寫單行註解",
+  "topic": "c/01-basics/05-comments",
+  "language": "c",
+  "code": "// {{註解內容}}",
+  "documentation": "單行註解，從 // 開始到該行結束都是註解。"
+}

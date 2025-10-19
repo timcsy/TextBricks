@@ -1,0 +1,9 @@
+{
+  "type": "template",
+  "name": "03-array-init-list-example",
+  "title": "陣列初始化清單（例子）",
+  "description": "陣列初始化清單例子",
+  "topic": "c/04-arrays",
+  "language": "c",
+  "code": "int numbers[] = {10, 20, 30, 40, 50};\nint size = sizeof(numbers) / sizeof(numbers[0]);\nprintf(\"陣列大小: %d\\n\", size);"
+}

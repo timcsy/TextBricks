@@ -1,0 +1,10 @@
+{
+  "type": "template",
+  "name": "04-division-example",
+  "title": "除法運算（例子）",
+  "description": "兩數相除例子",
+  "topic": "c/01-basics/03-operators/01-arithmetic",
+  "language": "c",
+  "code": "float quotient = (float)num1 / num2;",
+  "documentation": "將 num1 除以 num2。使用型別轉換以得到浮點數結果。"
+}

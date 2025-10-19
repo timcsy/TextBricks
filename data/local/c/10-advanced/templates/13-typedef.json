@@ -1,0 +1,9 @@
+{
+  "type": "template",
+  "name": "13-typedef",
+  "title": "typedef 型別別名（範本）",
+  "description": "使用 typedef 定義型別別名",
+  "topic": "c/10-advanced",
+  "language": "c",
+  "code": "typedef {{原始型別}} {{新型別名稱}};"
+}

@@ -1,0 +1,9 @@
+{
+  "type": "template",
+  "name": "15-command-line-args-example",
+  "title": "命令列參數（例子）",
+  "description": "解析命令列參數範例",
+  "topic": "c/10-advanced",
+  "language": "c",
+  "code": "int main(int argc, char *argv[]) {\n    printf(\"程式名稱: %s\\n\", argv[0]);\n    printf(\"參數數量: %d\\n\", argc - 1);\n    \n    for (int i = 1; i < argc; i++) {\n        printf(\"參數 %d: %s\\n\", i, argv[i]);\n    }\n    \n    // 使用方式: ./program arg1 arg2 arg3\n    return 0;\n}"
+}

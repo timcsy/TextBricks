@@ -1,0 +1,10 @@
+{
+  "type": "template",
+  "name": "02-data-types-example",
+  "title": "基本資料型別（例子）",
+  "description": "基本資料型別的實際使用例子",
+  "topic": "c/01-basics/02-variables",
+  "language": "c",
+  "code": "// 整數型別\nint age = 25;\nshort year = 2024;\nlong population = 7800000000;\n\n// 浮點數型別\nfloat temperature = 36.5;\ndouble pi = 3.14159265359;\n\n// 字元型別\nchar initial = 'A';",
+  "documentation": "展示各種基本資料型別的實際宣告和使用方式。"
+}

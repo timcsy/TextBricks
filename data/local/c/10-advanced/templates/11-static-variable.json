@@ -1,0 +1,9 @@
+{
+  "type": "template",
+  "name": "11-static-variable",
+  "title": "static 變數（範本）",
+  "description": "使用 static 關鍵字定義靜態變數",
+  "topic": "c/10-advanced",
+  "language": "c",
+  "code": "static {{型別}} {{變數名稱}} = {{初始值}};"
+}

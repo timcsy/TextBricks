@@ -1,0 +1,10 @@
+{
+  "type": "template",
+  "name": "02-function-with-params",
+  "title": "帶參數的函式（範本）",
+  "description": "定義接受參數的函式",
+  "topic": "c/03-functions",
+  "language": "c",
+  "code": "{{回傳型別}} {{函式名稱}}({{型別1}} {{參數1}}, {{型別2}} {{參數2}}) {\n    {{函式主體}}\n    return {{回傳值}};\n}",
+  "documentation": "定義接受多個參數的函式。參數在呼叫時以傳值方式傳遞。"
+}

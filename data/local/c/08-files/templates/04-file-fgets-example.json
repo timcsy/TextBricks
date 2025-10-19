@@ -1,0 +1,9 @@
+{
+  "type": "template",
+  "name": "04-file-fgets-example",
+  "title": "逐行讀取（例子）",
+  "description": "逐行讀取例子 - 顯示文字檔內容",
+  "topic": "c/08-files",
+  "language": "c",
+  "code": "#include <stdio.h>\n\nint main() {\n    FILE *file = fopen(\"text.txt\", \"r\");\n    if (file == NULL) {\n        printf(\"無法開啟檔案\\n\");\n        return 1;\n    }\n    \n    char line[256];\n    int lineNum = 1;\n    while (fgets(line, 256, file) != NULL) {\n        printf(\"%d: %s\", lineNum++, line);\n    }\n    \n    fclose(file);\n    return 0;\n}"
+}

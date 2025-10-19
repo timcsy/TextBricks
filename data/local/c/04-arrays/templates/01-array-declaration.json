@@ -1,0 +1,10 @@
+{
+  "type": "template",
+  "name": "01-array-declaration",
+  "title": "陣列宣告（範本）",
+  "description": "宣告一個陣列",
+  "topic": "c/04-arrays",
+  "language": "c",
+  "code": "{{型別}} {{陣列名稱}}[{{大小}}];",
+  "documentation": "宣告固定大小的陣列。"
+}

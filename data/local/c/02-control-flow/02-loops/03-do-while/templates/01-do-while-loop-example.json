@@ -1,0 +1,10 @@
+{
+  "type": "template",
+  "name": "01-do-while-loop-example",
+  "title": "do-while 迴圈（例子）",
+  "description": "do-while 迴圈例子",
+  "topic": "c/02-control-flow/02-loops/03-do-while",
+  "language": "c",
+  "code": "int num;\ndo {\n    printf(\"請輸入正整數（0 結束）：\");\n    scanf(\"%d\", &num);\n    if (num > 0) {\n        printf(\"你輸入了：%d\\n\", num);\n    }\n} while (num != 0);",
+  "documentation": "讀取使用者輸入直到輸入 0。至少會詢問一次。"
+}

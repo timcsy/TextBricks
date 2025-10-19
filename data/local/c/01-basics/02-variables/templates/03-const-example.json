@@ -1,0 +1,10 @@
+{
+  "type": "template",
+  "name": "03-const-example",
+  "title": "常數宣告（例子）",
+  "description": "常數宣告例子",
+  "topic": "c/01-basics/02-variables",
+  "language": "c",
+  "code": "const double PI = 3.14159;\nconst int MAX_SIZE = 100;",
+  "documentation": "宣告常數 PI 和 MAX_SIZE。這些值在程式執行中不會改變。"
+}

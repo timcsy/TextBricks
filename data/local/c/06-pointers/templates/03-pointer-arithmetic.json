@@ -1,0 +1,9 @@
+{
+  "type": "template",
+  "name": "03-pointer-arithmetic",
+  "title": "指標運算（範本）",
+  "description": "指標加減運算範本",
+  "topic": "c/06-pointers",
+  "language": "c",
+  "code": "{{型別}} {{陣列}}[] = {{{元素列表}}};\n{{型別}} *{{指標}} = {{陣列}};\n\nprintf(\"第一個元素: %d\\n\", *{{指標}});\n{{指標}}++;\nprintf(\"第二個元素: %d\\n\", *{{指標}});\n{{指標}} += {{偏移量}};\nprintf(\"後續元素: %d\\n\", *{{指標}});"
+}

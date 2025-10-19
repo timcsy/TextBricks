@@ -1,0 +1,9 @@
+{
+  "type": "template",
+  "name": "04-memory-leak-example",
+  "title": "避免記憶體洩漏（例子）",
+  "description": "避免記憶體洩漏例子 - 正確的記憶體管理",
+  "topic": "c/09-memory",
+  "language": "c",
+  "code": "#include <stdio.h>\n#include <stdlib.h>\n\nvoid processData() {\n    int *data = (int*)malloc(100 * sizeof(int));\n    if (data == NULL) {\n        printf(\"配置失敗\\n\");\n        return;\n    }\n    \n    // 使用資料\n    for (int i = 0; i < 100; i++) {\n        data[i] = i;\n    }\n    \n    // 重要：離開前釋放記憶體\n    free(data);\n    data = NULL;\n    printf(\"記憶體已正確釋放\\n\");\n}\n\nint main() {\n    processData();\n    return 0;\n}"
+}

@@ -1,0 +1,10 @@
+{
+  "type": "template",
+  "name": "01-single-line-example",
+  "title": "單行註解（例子）",
+  "description": "單行註解例子",
+  "topic": "c/01-basics/05-comments",
+  "language": "c",
+  "code": "// 宣告年齡變數\nint age = 25;  // 預設值為 25 歲",
+  "documentation": "展示兩種單行註解的位置：獨立一行和程式碼後面。"
+}

@@ -2,13 +2,22 @@
   "type": "topic",
   "name": "c",
   "title": "C 語言",
-  "description": "C 語言的基本語法和概念",
-  "documentation": "# c\n\n## 主題簡介\nC 語言的基本語法和概念\n\n## 內容概覽\n這個主題包含了以下內容：\n\n- **核心概念**：基本原理和重要概念\n- **實用範例**：實際應用和程式範例\n- **進階技巧**：高級用法和最佳實踐\n\n## 相關技術\n- 相關技術1\n- 相關技術2\n\n## 使用指南\n1. **基礎瞭解**：掌握基本概念和語法\n2. **實際操作**：參考範例程式進行實作\n3. **深入探索**：嘗試不同的應用場景\n4. **最佳實踐**：遵循業界標準和建議\n\n## 相關主題\n- 相關主題1\n- 相關主題2\n\n## 參考資料\n- 官方文檔\n- 推薦教程\n- 實用工具",
-  "templates": "templates",
-  "links": "links",
+  "description": "C 語言完整學習路徑 - 從基礎到進階",
+  "documentation": {
+    "content": "# C 語言學習指南\n\n## 學習路徑\n\nC 語言是一門強大的系統程式設計語言，本指南提供從基礎到進階的完整學習路徑。\n\n### 🎯 學習建議\n\n1. **初學者** - 從「初學者專區」開始，掌握基本概念\n2. **基礎學習** - 依序學習編號主題（01-05）\n3. **進階應用** - 學習指標、結構、檔案操作（06-08）\n4. **深入探索** - 記憶體管理和進階主題（09-10）\n\n### 📚 主題概覽\n\n- **00-beginner** - 初學者專區：精選必學內容\n- **01-basics** - 基礎：變數、運算子、輸入輸出\n- **02-control-flow** - 控制流程：條件判斷、迴圈\n- **03-functions** - 函式：函式定義、參數傳遞、遞迴\n- **04-arrays** - 陣列：一維、多維陣列操作\n- **05-strings** - 字串：字串處理和函式庫\n- **06-pointers** - 指標：指標基礎和應用\n- **07-structures** - 結構：結構體和聯合\n- **08-files** - 檔案操作：檔案讀寫\n- **09-memory** - 記憶體管理：動態記憶體配置\n- **10-advanced** - 進階主題：預處理器、位元運算等\n\n### 💡 使用說明\n\n每個模板提供兩個版本：\n- **範本版本**：使用 `{{佔位符}}` 格式，適合理解概念\n- **例子版本**：完整可執行例子，名稱帶 `-example` 後綴\n\n### 🔗 相關資源\n\n- [C 語言官方標準](https://www.iso.org/standard/74528.html)\n- [GCC 編譯器文檔](https://gcc.gnu.org/onlinedocs/)\n- [C 語言參考手冊](https://en.cppreference.com/w/c)\n"
+  },
   "subtopics": [
-    "basic",
-    "advanced"
+    "00-beginner",
+    "01-basics",
+    "02-control-flow",
+    "03-functions",
+    "04-arrays",
+    "05-strings",
+    "06-pointers",
+    "07-structures",
+    "08-files",
+    "09-memory",
+    "10-advanced"
   ],
   "display": {
     "icon": "⚙️",

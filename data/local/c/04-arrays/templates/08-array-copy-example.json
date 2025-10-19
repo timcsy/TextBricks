@@ -1,0 +1,9 @@
+{
+  "type": "template",
+  "name": "08-array-copy-example",
+  "title": "陣列複製（例子）",
+  "description": "陣列複製例子",
+  "topic": "c/04-arrays",
+  "language": "c",
+  "code": "int source[] = {1, 2, 3, 4, 5};\nint size = sizeof(source) / sizeof(source[0]);\nint destination[size];\n\nfor (int i = 0; i < size; i++) {\n    destination[i] = source[i];\n}\n\nprintf(\"複製後的陣列: \");\nfor (int i = 0; i < size; i++) {\n    printf(\"%d \", destination[i]);\n}\nprintf(\"\\n\");"
+}

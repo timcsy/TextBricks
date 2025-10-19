@@ -1,0 +1,10 @@
+{
+  "type": "template",
+  "name": "01-and-example",
+  "title": "AND 邏輯運算（例子）",
+  "description": "AND 運算例子",
+  "topic": "c/01-basics/03-operators/03-logical",
+  "language": "c",
+  "code": "if (age >= 18 && hasLicense) {\n    printf(\"可以開車\\n\");\n}",
+  "documentation": "只有當年齡大於等於18且有駕照時，才能開車。"
+}

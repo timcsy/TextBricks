@@ -1,0 +1,18 @@
+{
+  "type": "topic",
+  "name": "01-conditions",
+  "title": "條件判斷",
+  "description": "根據條件執行不同的程式碼",
+  "documentation": {
+    "content": "# 條件判斷\n\n## if 語句\n\n### 基本 if\n```c\nif (條件) {\n    // 條件為真時執行\n}\n```\n\n### if-else\n```c\nif (條件) {\n    // 條件為真時執行\n} else {\n    // 條件為假時執行\n}\n```\n\n### if-else if-else\n```c\nif (條件1) {\n    // 條件1為真\n} else if (條件2) {\n    // 條件2為真\n} else {\n    // 所有條件都為假\n}\n```\n\n### 巢狀 if\n```c\nif (外層條件) {\n    if (內層條件) {\n        // 兩個條件都為真\n    }\n}\n```\n\n## switch 語句\n\n```c\nswitch (表達式) {\n    case 值1:\n        // 程式碼\n        break;\n    case 值2:\n        // 程式碼\n        break;\n    default:\n        // 預設程式碼\n}\n```\n\n### switch 注意事項\n\n1. **break 的重要性**\n   - 沒有 break 會繼續執行下一個 case\n   - 稱為「fall-through」\n\n2. **適用情況**\n   - 表達式必須是整數或字元\n   - case 值必須是常數\n\n3. **default**\n   - 可選的預設分支\n   - 建議總是加上 default\n\n## if vs switch\n\n### 使用 if 當：\n- 條件是範圍判斷（> < >= <=）\n- 條件較複雜\n- 條件是浮點數或字串\n\n### 使用 switch 當：\n- 單一變數的多重相等比較\n- case 很多的情況\n- 需要 fall-through 特性\n"
+  },
+  "subtopics": [
+    "01-if",
+    "02-switch"
+  ],
+  "display": {
+    "icon": "❓",
+    "color": "#FF5722",
+    "order": 1
+  }
+}

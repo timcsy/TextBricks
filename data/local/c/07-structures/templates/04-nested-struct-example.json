@@ -1,0 +1,9 @@
+{
+  "type": "template",
+  "name": "04-nested-struct-example",
+  "title": "巢狀結構體（例子）",
+  "description": "巢狀結構體例子 - 員工與日期",
+  "topic": "c/07-structures",
+  "language": "c",
+  "code": "typedef struct {\n    int year;\n    int month;\n    int day;\n} Date;\n\ntypedef struct {\n    char name[50];\n    Date birthdate;\n} Employee;\n\nEmployee emp = {\"John\", {1990, 5, 15}};\nprintf(\"姓名: %s\\n\", emp.name);\nprintf(\"生日: %d/%d/%d\\n\", emp.birthdate.year, emp.birthdate.month, emp.birthdate.day);"
+}

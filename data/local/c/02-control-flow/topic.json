@@ -1,0 +1,20 @@
+{
+  "type": "topic",
+  "name": "02-control-flow",
+  "title": "控制流程",
+  "description": "學習條件判斷和迴圈控制",
+  "documentation": {
+    "content": "# 控制流程\n\n## 主題簡介\n\n控制流程是程式設計的核心，讓程式能夠根據條件執行不同的程式碼，或重複執行特定的動作。\n\n### 📚 內容概覽\n\n#### 01. 條件判斷 (Conditions)\n根據條件決定執行哪段程式碼\n\n**if 語句**\n- 單一條件判斷\n- if-else 二選一\n- if-else if-else 多重條件\n- 巢狀 if\n\n**switch 語句**\n- 多重選擇結構\n- case 分支\n- default 預設情況\n- break 的使用\n\n#### 02. 迴圈 (Loops)\n重複執行程式碼\n\n**for 迴圈**\n- 固定次數迴圈\n- 計數器控制\n- 巢狀 for 迴圈\n\n**while 迴圈**\n- 條件式迴圈\n- 前測試迴圈\n\n**do-while 迴圈**\n- 至少執行一次\n- 後測試迴圈\n\n**迴圈控制**\n- break - 跳出迴圈\n- continue - 跳過當次迭代\n\n### 🎯 學習目標\n\n完成本主題後，你將能夠：\n1. 使用 if 和 switch 進行條件判斷\n2. 運用不同類型的迴圈\n3. 選擇適合的控制結構\n4. 使用 break 和 continue 控制迴圈\n5. 處理巢狀結構\n\n### 💡 學習建議\n\n1. **先學條件判斷**：從簡單的 if 開始\n2. **再學迴圈**：理解 for、while 的差異\n3. **多練習**：控制流程需要大量練習才能熟練\n4. **注意縮排**：良好的縮排讓程式碼更易讀\n\n### 🔗 相關主題\n\n學習完控制流程後，建議繼續學習：\n- **03-functions** - 函式（組織和重用程式碼）\n- **04-arrays** - 陣列（搭配迴圈處理大量資料）\n"
+  },
+  "subtopics": [
+    "01-conditions",
+    "02-loops"
+  ],
+  "display": {
+    "icon": "🔀",
+    "color": "#FF5722",
+    "order": 2,
+    "collapsed": false,
+    "showInNavigation": true
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "type": "template",
+  "name": "04-array-traverse-example",
+  "title": "陣列遍歷（例子）",
+  "description": "陣列遍歷例子 - 顯示分數",
+  "topic": "c/04-arrays",
+  "language": "c",
+  "code": "int scores[] = {85, 92, 78, 95, 88};\nint size = sizeof(scores) / sizeof(scores[0]);\nfor (int i = 0; i < size; i++) {\n    printf(\"分數 %d: %d\\n\", i + 1, scores[i]);\n}"
+}

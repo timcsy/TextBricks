@@ -1,0 +1,10 @@
+{
+  "type": "template",
+  "name": "01-string-declaration",
+  "title": "字串宣告（範本）",
+  "description": "宣告一個字串",
+  "topic": "c/05-strings",
+  "language": "c",
+  "code": "char {{字串名稱}}[{{大小}}] = \"{{初始值}}\";",
+  "documentation": "宣告並初始化字串。記得預留空間給結尾的 \\0。"
+}

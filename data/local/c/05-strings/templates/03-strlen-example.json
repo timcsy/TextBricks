@@ -1,0 +1,9 @@
+{
+  "type": "template",
+  "name": "03-strlen-example",
+  "title": "字串長度（例子）",
+  "description": "字串長度例子",
+  "topic": "c/05-strings",
+  "language": "c",
+  "code": "#include <string.h>\n\nchar message[] = \"Hello, World!\";\nsize_t length = strlen(message);\nprintf(\"'%s' 的長度: %zu\\n\", message, length);"
+}

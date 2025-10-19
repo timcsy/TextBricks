@@ -1,0 +1,10 @@
+{
+  "type": "template",
+  "name": "02-if-else-example",
+  "title": "if-else 條件判斷（例子）",
+  "description": "if-else 例子",
+  "topic": "c/02-control-flow/01-conditions/01-if",
+  "language": "c",
+  "code": "if (score >= 60) {\n    printf(\"及格\\n\");\n} else {\n    printf(\"不及格\\n\");\n}",
+  "documentation": "分數大於等於60顯示「及格」，否則顯示「不及格」。"
+}

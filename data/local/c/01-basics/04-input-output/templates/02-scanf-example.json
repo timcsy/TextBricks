@@ -1,0 +1,10 @@
+{
+  "type": "template",
+  "name": "02-scanf-example",
+  "title": "scanf 輸入（例子）",
+  "description": "scanf 輸入例子",
+  "topic": "c/01-basics/04-input-output",
+  "language": "c",
+  "code": "int age;\nprintf(\"請輸入年齡：\");\nscanf(\"%d\", &age);",
+  "documentation": "讀取使用者輸入的整數。&age 取得變數的記憶體位址。"
+}

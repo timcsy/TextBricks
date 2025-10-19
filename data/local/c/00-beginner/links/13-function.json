@@ -1,0 +1,8 @@
+{
+  "type": "link",
+  "name": "13-function",
+  "title": "函式定義",
+  "description": "學習如何定義和使用函式來組織程式碼",
+  "target": "c/03-functions/templates/01-function-definition-example",
+  "topic": "c/00-beginner"
+}

@@ -1,0 +1,9 @@
+{
+  "type": "template",
+  "name": "02-typedef-struct",
+  "title": "typedef 結構體（範本）",
+  "description": "使用 typedef 簡化結構體宣告範本",
+  "topic": "c/07-structures",
+  "language": "c",
+  "code": "typedef struct {\n    {{型別1}} {{成員1}};\n    {{型別2}} {{成員2}};\n} {{結構體名稱}};\n\n{{結構體名稱}} {{變數}} = {{{值1}}, {{值2}}};\nprintf(\"{{成員1}}: %d\\n\", {{變數}}.{{成員1}});"
+}

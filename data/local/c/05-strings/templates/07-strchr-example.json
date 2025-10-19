@@ -1,0 +1,9 @@
+{
+  "type": "template",
+  "name": "07-strchr-example",
+  "title": "尋找字元（例子）",
+  "description": "尋找字元例子",
+  "topic": "c/05-strings",
+  "language": "c",
+  "code": "#include <string.h>\n\nchar email[] = \"user@example.com\";\nchar target = '@';\nchar *result = strchr(email, target);\n\nif (result != NULL) {\n    printf(\"找到 '@' 於位置 %ld\\n\", result - email);\n    printf(\"網域名稱: %s\\n\", result + 1);\n} else {\n    printf(\"無效的電子郵件\\n\");\n}"
+}

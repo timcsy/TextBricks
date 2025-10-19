@@ -1,0 +1,9 @@
+{
+  "type": "template",
+  "name": "06-array-search",
+  "title": "陣列搜尋（範本）",
+  "description": "在陣列中搜尋元素範本",
+  "topic": "c/04-arrays",
+  "language": "c",
+  "code": "{{元素型別}} {{陣列名稱}}[{{大小}}];\n{{元素型別}} {{目標值}};\nint {{索引}} = -1;\n\nfor (int i = 0; i < {{大小}}; i++) {\n    if ({{陣列名稱}}[i] == {{目標值}}) {\n        {{索引}} = i;\n        break;\n    }\n}\n\nif ({{索引}} != -1) {\n    printf(\"找到於索引 %d\\n\", {{索引}});\n} else {\n    printf(\"未找到\\n\");\n}"
+}

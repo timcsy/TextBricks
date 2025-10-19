@@ -1,0 +1,9 @@
+{
+  "type": "template",
+  "name": "02-calloc",
+  "title": "calloc 配置（範本）",
+  "description": "使用 calloc() 配置並初始化記憶體範本",
+  "topic": "c/09-memory",
+  "language": "c",
+  "code": "#include <stdlib.h>\n\n{{型別}} *{{指標}} = ({{型別}}*)calloc({{數量}}, sizeof({{型別}}));\nif ({{指標}} == NULL) {\n    printf(\"記憶體配置失敗\\n\");\n    return 1;\n}\n\n// 使用記憶體（已初始化為 0）\n\nfree({{指標}});"
+}

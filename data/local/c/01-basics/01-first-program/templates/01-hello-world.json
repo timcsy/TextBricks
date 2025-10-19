@@ -1,0 +1,10 @@
+{
+  "type": "template",
+  "name": "01-hello-world",
+  "title": "Hello World（範本）",
+  "description": "最基本的 C 程式結構範本",
+  "topic": "c/01-basics/01-first-program",
+  "language": "c",
+  "code": "#include <stdio.h>\n\nint main() {\n    printf(\"{{輸出訊息}}\\n\");\n    return 0;\n}",
+  "documentation": "基本的 Hello World 程式範本。將 {{輸出訊息}} 替換為你想要顯示的文字。"
+}

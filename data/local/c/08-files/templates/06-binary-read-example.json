@@ -1,0 +1,9 @@
+{
+  "type": "template",
+  "name": "06-binary-read-example",
+  "title": "二進位讀取（例子）",
+  "description": "二進位讀取例子 - 讀取結構體",
+  "topic": "c/08-files",
+  "language": "c",
+  "code": "#include <stdio.h>\n\ntypedef struct {\n    int id;\n    char name[50];\n    double salary;\n} Employee;\n\nint main() {\n    FILE *file = fopen(\"employees.dat\", \"rb\");\n    if (file == NULL) {\n        printf(\"無法開啟檔案\\n\");\n        return 1;\n    }\n    \n    Employee emp;\n    while (fread(&emp, sizeof(Employee), 1, file) == 1) {\n        printf(\"ID: %d, 姓名: %s, 薪資: %.2f\\n\", \n               emp.id, emp.name, emp.salary);\n    }\n    \n    fclose(file);\n    return 0;\n}"
+}

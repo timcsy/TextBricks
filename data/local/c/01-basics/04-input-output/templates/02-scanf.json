@@ -1,0 +1,10 @@
+{
+  "type": "template",
+  "name": "02-scanf",
+  "title": "scanf 輸入（範本）",
+  "description": "讀取使用者輸入",
+  "topic": "c/01-basics/04-input-output",
+  "language": "c",
+  "code": "{{型別}} {{變數名稱}};\nprintf(\"{{提示訊息}}\");\nscanf(\"{{格式化標記}}\", &{{變數名稱}});",
+  "documentation": "使用 scanf 讀取輸入。注意：變數前要加 &（取址運算子）。"
+}

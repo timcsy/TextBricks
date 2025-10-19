@@ -1,0 +1,9 @@
+{
+  "type": "template",
+  "name": "04-pointer-array-example",
+  "title": "指標與陣列（例子）",
+  "description": "指標與陣列例子",
+  "topic": "c/06-pointers",
+  "language": "c",
+  "code": "int values[] = {5, 10, 15, 20, 25};\nint size = sizeof(values) / sizeof(values[0]);\nint *ptr = values;\n\nprintf(\"使用指標遍歷陣列:\\n\");\nfor (int i = 0; i < size; i++) {\n    printf(\"values[%d] = %d\\n\", i, *(ptr + i));\n}"
+}

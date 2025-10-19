@@ -1,0 +1,9 @@
+{
+  "type": "template",
+  "name": "01-file-open",
+  "title": "開啟檔案（範本）",
+  "description": "使用 fopen() 開啟檔案範本",
+  "topic": "c/08-files",
+  "language": "c",
+  "code": "#include <stdio.h>\n\nFILE *{{檔案指標}} = fopen(\"{{檔案路徑}}\", \"{{模式}}\");\nif ({{檔案指標}} == NULL) {\n    printf(\"無法開啟檔案\\n\");\n    return 1;\n}\n\n// 檔案操作\n\nfclose({{檔案指標}});"
+}

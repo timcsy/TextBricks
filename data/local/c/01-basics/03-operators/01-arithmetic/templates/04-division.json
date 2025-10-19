@@ -1,0 +1,10 @@
+{
+  "type": "template",
+  "name": "04-division",
+  "title": "除法運算（範本）",
+  "description": "兩數相除",
+  "topic": "c/01-basics/03-operators/01-arithmetic",
+  "language": "c",
+  "code": "{{型別}} {{結果變數}} = {{被除數}} / {{除數}};",
+  "documentation": "基本除法運算。注意：整數除法會捨去小數部分。"
+}

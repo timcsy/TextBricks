@@ -1,0 +1,10 @@
+{
+  "type": "template",
+  "name": "03-const",
+  "title": "常數宣告（範本）",
+  "description": "宣告不可改變的常數",
+  "topic": "c/01-basics/02-variables",
+  "language": "c",
+  "code": "const {{型別}} {{常數名稱}} = {{值}};",
+  "documentation": "使用 const 關鍵字宣告常數。常數一旦賦值後不可修改。"
+}

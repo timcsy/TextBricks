@@ -1,0 +1,9 @@
+{
+  "type": "template",
+  "name": "02-pointer-modify",
+  "title": "透過指標修改值（範本）",
+  "description": "使用指標修改變數值範本",
+  "topic": "c/06-pointers",
+  "language": "c",
+  "code": "{{型別}} {{變數}} = {{原始值}};\n{{型別}} *{{指標}} = &{{變數}};\n\nprintf(\"修改前: %d\\n\", {{變數}});\n*{{指標}} = {{新值}};\nprintf(\"修改後: %d\\n\", {{變數}});"
+}

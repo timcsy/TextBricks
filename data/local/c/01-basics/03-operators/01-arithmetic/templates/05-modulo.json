@@ -1,0 +1,10 @@
+{
+  "type": "template",
+  "name": "05-modulo",
+  "title": "取餘數運算（範本）",
+  "description": "取兩數相除的餘數",
+  "topic": "c/01-basics/03-operators/01-arithmetic",
+  "language": "c",
+  "code": "int {{結果變數}} = {{被除數}} % {{除數}};",
+  "documentation": "取餘數運算（模運算）。只能用於整數型別。"
+}

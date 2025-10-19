@@ -1,0 +1,9 @@
+{
+  "type": "template",
+  "name": "06-struct-function-example",
+  "title": "結構體與函式（例子）",
+  "description": "結構體與函式例子 - 計算圓面積",
+  "topic": "c/07-structures",
+  "language": "c",
+  "code": "typedef struct {\n    double radius;\n} Circle;\n\ndouble calculateArea(Circle c) {\n    return 3.14159 * c.radius * c.radius;\n}\n\nCircle myCircle = {5.0};\ndouble area = calculateArea(myCircle);\nprintf(\"半徑 %.2f 的圓面積: %.2f\\n\", myCircle.radius, area);"
+}

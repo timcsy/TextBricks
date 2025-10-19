@@ -1,0 +1,9 @@
+{
+  "type": "template",
+  "name": "02-file-write",
+  "title": "寫入檔案（範本）",
+  "description": "使用 fprintf() 寫入檔案範本",
+  "topic": "c/08-files",
+  "language": "c",
+  "code": "#include <stdio.h>\n\nFILE *{{檔案指標}} = fopen(\"{{檔案路徑}}\", \"w\");\nif ({{檔案指標}} == NULL) {\n    printf(\"無法開啟檔案\\n\");\n    return 1;\n}\n\nfprintf({{檔案指標}}, \"{{內容格式}}\", {{變數}});\nfclose({{檔案指標}});"
+}

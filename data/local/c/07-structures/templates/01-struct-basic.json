@@ -1,0 +1,9 @@
+{
+  "type": "template",
+  "name": "01-struct-basic",
+  "title": "基本結構體（範本）",
+  "description": "定義與使用結構體範本",
+  "topic": "c/07-structures",
+  "language": "c",
+  "code": "struct {{結構體名稱}} {\n    {{型別1}} {{成員1}};\n    {{型別2}} {{成員2}};\n};\n\nstruct {{結構體名稱}} {{變數}} = {{{值1}}, {{值2}}};\nprintf(\"{{成員1}}: %d\\n\", {{變數}}.{{成員1}});\nprintf(\"{{成員2}}: %s\\n\", {{變數}}.{{成員2}});"
+}

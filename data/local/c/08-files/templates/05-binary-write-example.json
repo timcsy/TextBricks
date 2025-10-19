@@ -1,0 +1,9 @@
+{
+  "type": "template",
+  "name": "05-binary-write-example",
+  "title": "二進位寫入（例子）",
+  "description": "二進位寫入例子 - 寫入結構體",
+  "topic": "c/08-files",
+  "language": "c",
+  "code": "#include <stdio.h>\n\ntypedef struct {\n    int id;\n    char name[50];\n    double salary;\n} Employee;\n\nint main() {\n    FILE *file = fopen(\"employees.dat\", \"wb\");\n    if (file == NULL) {\n        printf(\"無法建立檔案\\n\");\n        return 1;\n    }\n    \n    Employee emp = {1001, \"John Doe\", 50000.0};\n    fwrite(&emp, sizeof(Employee), 1, file);\n    \n    fclose(file);\n    printf(\"已寫入二進位資料\\n\");\n    return 0;\n}"
+}

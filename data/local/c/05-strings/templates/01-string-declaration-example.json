@@ -1,0 +1,10 @@
+{
+  "type": "template",
+  "name": "01-string-declaration-example",
+  "title": "字串宣告（例子）",
+  "description": "字串宣告例子",
+  "topic": "c/05-strings",
+  "language": "c",
+  "code": "char name[50] = \"張三\";\nchar message[] = \"Hello, World!\";",
+  "documentation": "宣告兩個字串變數。第一個指定大小，第二個由編譯器自動計算。"
+}

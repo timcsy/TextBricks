@@ -1,0 +1,10 @@
+{
+  "type": "template",
+  "name": "01-for-loop",
+  "title": "for 迴圈（範本）",
+  "description": "基本 for 迴圈結構",
+  "topic": "c/02-control-flow/02-loops/01-for",
+  "language": "c",
+  "code": "for (int {{計數器}} = {{起始值}}; {{計數器}} < {{結束值}}; {{計數器}}++) {\n    {{迴圈主體}}\n}",
+  "documentation": "基本 for 迴圈。從起始值開始，每次增加1，直到結束值。"
+}

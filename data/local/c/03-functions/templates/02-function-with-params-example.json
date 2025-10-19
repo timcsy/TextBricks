@@ -1,0 +1,10 @@
+{
+  "type": "template",
+  "name": "02-function-with-params-example",
+  "title": "帶參數的函式（例子）",
+  "description": "帶參數的函式例子",
+  "topic": "c/03-functions",
+  "language": "c",
+  "code": "int multiply(int a, int b) {\n    return a * b;\n}\n\nint main() {\n    int result = multiply(5, 3);\n    printf(\"結果：%d\\n\", result);\n    return 0;\n}",
+  "documentation": "定義 multiply 函式計算兩數相乘，並在 main 中呼叫。"
+}

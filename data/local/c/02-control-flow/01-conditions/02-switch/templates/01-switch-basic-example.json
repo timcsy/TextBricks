@@ -1,0 +1,10 @@
+{
+  "type": "template",
+  "name": "01-switch-basic-example",
+  "title": "基本 switch（例子）",
+  "description": "基本 switch 例子",
+  "topic": "c/02-control-flow/01-conditions/02-switch",
+  "language": "c",
+  "code": "int day = 3;\nswitch (day) {\n    case 1:\n        printf(\"星期一\\n\");\n        break;\n    case 2:\n        printf(\"星期二\\n\");\n        break;\n    case 3:\n        printf(\"星期三\\n\");\n        break;\n    default:\n        printf(\"其他日子\\n\");\n}",
+  "documentation": "根據 day 的值顯示對應的星期。"
+}

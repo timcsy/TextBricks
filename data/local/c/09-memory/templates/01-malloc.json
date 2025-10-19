@@ -1,0 +1,9 @@
+{
+  "type": "template",
+  "name": "01-malloc",
+  "title": "malloc 配置（範本）",
+  "description": "使用 malloc() 配置記憶體範本",
+  "topic": "c/09-memory",
+  "language": "c",
+  "code": "#include <stdlib.h>\n\n{{型別}} *{{指標}} = ({{型別}}*)malloc({{數量}} * sizeof({{型別}}));\nif ({{指標}} == NULL) {\n    printf(\"記憶體配置失敗\\n\");\n    return 1;\n}\n\n// 使用記憶體\n\nfree({{指標}});"
+}

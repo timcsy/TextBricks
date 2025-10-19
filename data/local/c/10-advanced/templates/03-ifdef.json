@@ -1,0 +1,9 @@
+{
+  "type": "template",
+  "name": "03-ifdef",
+  "title": "#ifdef 條件編譯（範本）",
+  "description": "使用 #ifdef 進行條件編譯",
+  "topic": "c/10-advanced",
+  "language": "c",
+  "code": "#ifdef {{巨集名稱}}\n    {{程式碼1}}\n#else\n    {{程式碼2}}\n#endif"
+}

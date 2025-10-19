@@ -1,0 +1,9 @@
+{
+  "type": "template",
+  "name": "03-pointer-arithmetic-example",
+  "title": "指標運算（例子）",
+  "description": "指標運算例子",
+  "topic": "c/06-pointers",
+  "language": "c",
+  "code": "int numbers[] = {10, 20, 30, 40, 50};\nint *ptr = numbers;\n\nprintf(\"第一個元素: %d\\n\", *ptr);\nptr++;\nprintf(\"第二個元素: %d\\n\", *ptr);\nptr += 2;\nprintf(\"第四個元素: %d\\n\", *ptr);"
+}

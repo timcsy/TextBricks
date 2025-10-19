@@ -1,0 +1,9 @@
+{
+  "type": "template",
+  "name": "03-ifdef-example",
+  "title": "#ifdef 條件編譯（例子）",
+  "description": "根據除錯模式輸出不同訊息",
+  "topic": "c/10-advanced",
+  "language": "c",
+  "code": "#define DEBUG\n\nint main() {\n#ifdef DEBUG\n    printf(\"除錯模式: 程式開始\\n\");\n#endif\n\n    int x = 10;\n    int y = 20;\n    int sum = x + y;\n\n#ifdef DEBUG\n    printf(\"除錯模式: x=%d, y=%d, sum=%d\\n\", x, y, sum);\n#endif\n\n    printf(\"結果: %d\\n\", sum);\n    return 0;\n}"
+}

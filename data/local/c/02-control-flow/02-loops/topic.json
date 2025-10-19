@@ -1,0 +1,19 @@
+{
+  "type": "topic",
+  "name": "02-loops",
+  "title": "迴圈",
+  "description": "重複執行程式碼",
+  "documentation": {
+    "content": "# 迴圈\n\n## 迴圈類型\n\n### 1. for 迴圈\n固定次數的迴圈，適合知道執行次數時使用\n```c\nfor (初始化; 條件; 更新) {\n    // 迴圈主體\n}\n```\n\n### 2. while 迴圈\n條件式迴圈，在條件為真時持續執行\n```c\nwhile (條件) {\n    // 迴圈主體\n}\n```\n\n### 3. do-while 迴圈\n至少執行一次的迴圈\n```c\ndo {\n    // 迴圈主體\n} while (條件);\n```\n\n## 迴圈控制\n\n### break\n立即跳出迴圈\n```c\nfor (int i = 0; i < 10; i++) {\n    if (i == 5) break;  // i 為 5 時跳出\n}\n```\n\n### continue\n跳過本次迭代，繼續下一次\n```c\nfor (int i = 0; i < 10; i++) {\n    if (i % 2 == 0) continue;  // 跳過偶數\n    printf(\"%d\\n\", i);\n}\n```\n\n## 選擇適合的迴圈\n\n### 使用 for 當：\n- 知道執行次數\n- 需要計數器\n- 陣列遍歷\n\n### 使用 while 當：\n- 不知道執行次數\n- 條件式終止\n- 讀取輸入直到特定值\n\n### 使用 do-while 當：\n- 至少需要執行一次\n- 選單系統\n- 輸入驗證\n\n## 無窮迴圈\n\n```c\n// for 無窮迴圈\nfor (;;) {\n    // 需要 break 才能跳出\n}\n\n// while 無窮迴圈\nwhile (1) {\n    // 需要 break 才能跳出\n}\n```\n\n## 巢狀迴圈\n\n```c\nfor (int i = 0; i < 3; i++) {\n    for (int j = 0; j < 3; j++) {\n        printf(\"(%d,%d) \", i, j);\n    }\n    printf(\"\\n\");\n}\n```\n"
+  },
+  "subtopics": [
+    "01-for",
+    "02-while",
+    "03-do-while"
+  ],
+  "display": {
+    "icon": "🔄",
+    "color": "#FF9800",
+    "order": 2
+  }
+}

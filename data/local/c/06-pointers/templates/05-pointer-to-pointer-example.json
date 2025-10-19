@@ -1,0 +1,9 @@
+{
+  "type": "template",
+  "name": "05-pointer-to-pointer-example",
+  "title": "指標的指標（例子）",
+  "description": "指標的指標例子",
+  "topic": "c/06-pointers",
+  "language": "c",
+  "code": "int value = 100;\nint *ptr = &value;\nint **pptr = &ptr;\n\nprintf(\"值: %d\\n\", value);\nprintf(\"透過 ptr: %d\\n\", *ptr);\nprintf(\"透過 pptr: %d\\n\", **pptr);\n\n**pptr = 200;\nprintf(\"修改後的值: %d\\n\", value);"
+}

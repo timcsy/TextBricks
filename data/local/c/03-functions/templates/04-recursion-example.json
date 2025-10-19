@@ -1,0 +1,10 @@
+{
+  "type": "template",
+  "name": "04-recursion-example",
+  "title": "遞迴函式（例子）",
+  "description": "遞迴函式例子 - 階乘",
+  "topic": "c/03-functions",
+  "language": "c",
+  "code": "int factorial(int n) {\n    if (n <= 1) {\n        return 1;\n    }\n    return n * factorial(n - 1);\n}\n\nint main() {\n    int result = factorial(5);\n    printf(\"5! = %d\\n\", result);\n    return 0;\n}",
+  "documentation": "計算階乘的遞迴函式。5! = 5 × 4 × 3 × 2 × 1 = 120。"
+}

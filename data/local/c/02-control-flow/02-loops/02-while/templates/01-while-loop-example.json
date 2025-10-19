@@ -1,0 +1,10 @@
+{
+  "type": "template",
+  "name": "01-while-loop-example",
+  "title": "while 迴圈（例子）",
+  "description": "while 迴圈例子",
+  "topic": "c/02-control-flow/02-loops/02-while",
+  "language": "c",
+  "code": "int count = 0;\nwhile (count < 5) {\n    printf(\"計數：%d\\n\", count);\n    count++;\n}",
+  "documentation": "當 count 小於 5 時持續執行，輸出 0 到 4。"
+}

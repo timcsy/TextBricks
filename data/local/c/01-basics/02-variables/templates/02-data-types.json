@@ -1,0 +1,10 @@
+{
+  "type": "template",
+  "name": "02-data-types",
+  "title": "基本資料型別（範本）",
+  "description": "展示各種基本資料型別的宣告",
+  "topic": "c/01-basics/02-variables",
+  "language": "c",
+  "code": "// 整數型別\nint {{整數變數}} = {{整數值}};\nshort {{短整數變數}} = {{短整數值}};\nlong {{長整數變數}} = {{長整數值}};\n\n// 浮點數型別\nfloat {{單精度變數}} = {{單精度值}};\ndouble {{雙精度變數}} = {{雙精度值}};\n\n// 字元型別\nchar {{字元變數}} = '{{字元值}}';",
+  "documentation": "展示 C 語言的基本資料型別。選擇適合你需求的型別。"
+}

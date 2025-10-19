@@ -1,0 +1,9 @@
+{
+  "type": "template",
+  "name": "09-left-shift",
+  "title": "左移運算（範本）",
+  "description": "使用 << 進行位元左移運算",
+  "topic": "c/10-advanced",
+  "language": "c",
+  "code": "{{結果}} = {{數值}} << {{位數}};"
+}

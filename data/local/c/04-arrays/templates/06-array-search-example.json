@@ -1,0 +1,9 @@
+{
+  "type": "template",
+  "name": "06-array-search-example",
+  "title": "陣列搜尋（例子）",
+  "description": "陣列搜尋例子 - 線性搜尋",
+  "topic": "c/04-arrays",
+  "language": "c",
+  "code": "int numbers[] = {23, 45, 12, 67, 34};\nint size = sizeof(numbers) / sizeof(numbers[0]);\nint target = 67;\nint index = -1;\n\nfor (int i = 0; i < size; i++) {\n    if (numbers[i] == target) {\n        index = i;\n        break;\n    }\n}\n\nif (index != -1) {\n    printf(\"找到 %d 於索引 %d\\n\", target, index);\n} else {\n    printf(\"未找到 %d\\n\", target);\n}"
+}

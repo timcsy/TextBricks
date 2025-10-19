@@ -1,0 +1,9 @@
+{
+  "type": "template",
+  "name": "02-pointer-modify-example",
+  "title": "透過指標修改值（例子）",
+  "description": "透過指標修改值例子",
+  "topic": "c/06-pointers",
+  "language": "c",
+  "code": "int score = 75;\nint *ptr = &score;\n\nprintf(\"原始分數: %d\\n\", score);\n*ptr = 95;\nprintf(\"修改後分數: %d\\n\", score);\nprintf(\"透過指標讀取: %d\\n\", *ptr);"
+}

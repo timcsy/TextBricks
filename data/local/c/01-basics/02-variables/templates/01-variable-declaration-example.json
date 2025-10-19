@@ -1,0 +1,10 @@
+{
+  "type": "template",
+  "name": "01-variable-declaration-example",
+  "title": "變數宣告（例子）",
+  "description": "變數宣告例子",
+  "topic": "c/01-basics/02-variables",
+  "language": "c",
+  "code": "int age = 25;\nfloat height = 175.5;\nchar grade = 'A';",
+  "documentation": "展示如何宣告不同型別的變數並賦予初始值。"
+}

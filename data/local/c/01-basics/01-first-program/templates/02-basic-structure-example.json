@@ -1,0 +1,10 @@
+{
+  "type": "template",
+  "name": "02-basic-structure-example",
+  "title": "基本程式結構（例子）",
+  "description": "完整的基本程式結構例子",
+  "topic": "c/01-basics/01-first-program",
+  "language": "c",
+  "code": "#include <stdio.h>\n\nint main() {\n    // 在這裡撰寫你的程式碼\n    printf(\"程式開始執行\\n\");\n    return 0;\n}",
+  "documentation": "展示完整的 C 程式基本結構，包含標頭檔引入、main 函式和 return 語句。"
+}

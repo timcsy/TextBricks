@@ -1,0 +1,10 @@
+{
+  "type": "template",
+  "name": "01-addition",
+  "title": "加法運算（範本）",
+  "description": "兩數相加",
+  "topic": "c/01-basics/03-operators/01-arithmetic",
+  "language": "c",
+  "code": "{{型別}} {{結果變數}} = {{變數1}} + {{變數2}};",
+  "documentation": "基本加法運算。將兩個數值相加並儲存結果。"
+}

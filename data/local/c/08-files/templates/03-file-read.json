@@ -1,0 +1,9 @@
+{
+  "type": "template",
+  "name": "03-file-read",
+  "title": "讀取檔案（範本）",
+  "description": "使用 fscanf() 讀取檔案範本",
+  "topic": "c/08-files",
+  "language": "c",
+  "code": "#include <stdio.h>\n\nFILE *{{檔案指標}} = fopen(\"{{檔案路徑}}\", \"r\");\nif ({{檔案指標}} == NULL) {\n    printf(\"無法開啟檔案\\n\");\n    return 1;\n}\n\n{{型別}} {{變數}};\nwhile (fscanf({{檔案指標}}, \"{{格式}}\", &{{變數}}) != EOF) {\n    printf(\"讀取: %d\\n\", {{變數}});\n}\n\nfclose({{檔案指標}});"
+}

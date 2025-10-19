@@ -1,0 +1,10 @@
+{
+  "type": "template",
+  "name": "01-if-example",
+  "title": "if 條件判斷（例子）",
+  "description": "if 條件判斷例子",
+  "topic": "c/02-control-flow/01-conditions/01-if",
+  "language": "c",
+  "code": "if (age >= 18) {\n    printf(\"你已成年\\n\");\n}",
+  "documentation": "當 age 大於等於 18 時，顯示「你已成年」。"
+}

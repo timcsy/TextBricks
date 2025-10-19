@@ -1,0 +1,9 @@
+{
+  "type": "template",
+  "name": "05-multi-dimensional-example",
+  "title": "多維陣列（例子）",
+  "description": "多維陣列例子 - 3x3 矩陣",
+  "topic": "c/04-arrays",
+  "language": "c",
+  "code": "int matrix[3][3] = {\n    {1, 2, 3},\n    {4, 5, 6},\n    {7, 8, 9}\n};\n\nprintf(\"矩陣:\\n\");\nfor (int i = 0; i < 3; i++) {\n    for (int j = 0; j < 3; j++) {\n        printf(\"%d \", matrix[i][j]);\n    }\n    printf(\"\\n\");\n}"
+}

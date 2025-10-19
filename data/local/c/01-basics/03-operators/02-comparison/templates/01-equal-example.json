@@ -1,0 +1,10 @@
+{
+  "type": "template",
+  "name": "01-equal-example",
+  "title": "等於比較（例子）",
+  "description": "等於比較例子",
+  "topic": "c/01-basics/03-operators/02-comparison",
+  "language": "c",
+  "code": "if (age == 18) {\n    printf(\"你剛好18歲\\n\");\n}",
+  "documentation": "檢查 age 是否等於 18。"
+}

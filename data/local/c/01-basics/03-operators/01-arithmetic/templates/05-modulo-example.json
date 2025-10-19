@@ -1,0 +1,10 @@
+{
+  "type": "template",
+  "name": "05-modulo-example",
+  "title": "取餘數運算（例子）",
+  "description": "取餘數例子",
+  "topic": "c/01-basics/03-operators/01-arithmetic",
+  "language": "c",
+  "code": "int remainder = num1 % num2;",
+  "documentation": "計算 num1 除以 num2 的餘數。例如 10 % 3 = 1。"
+}

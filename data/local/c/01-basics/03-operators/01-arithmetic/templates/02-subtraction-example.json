@@ -1,0 +1,10 @@
+{
+  "type": "template",
+  "name": "02-subtraction-example",
+  "title": "減法運算（例子）",
+  "description": "兩數相減例子",
+  "topic": "c/01-basics/03-operators/01-arithmetic",
+  "language": "c",
+  "code": "int difference = num1 - num2;",
+  "documentation": "從 num1 減去 num2，結果儲存在 difference 變數中。"
+}

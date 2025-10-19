@@ -1,0 +1,9 @@
+{
+  "type": "template",
+  "name": "01-define-constant-example",
+  "title": "#define 常數（例子）",
+  "description": "定義 PI 常數範例",
+  "topic": "c/10-advanced",
+  "language": "c",
+  "code": "#define PI 3.14159\n#define MAX_SIZE 100\n#define TRUE 1\n#define FALSE 0\n\nint main() {\n    double radius = 5.0;\n    double area = PI * radius * radius;\n    printf(\"圓面積: %.2f\\n\", area);\n    return 0;\n}"
+}

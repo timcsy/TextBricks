@@ -1,0 +1,10 @@
+{
+  "type": "template",
+  "name": "01-addition-example",
+  "title": "加法運算（例子）",
+  "description": "兩數相加例子",
+  "topic": "c/01-basics/03-operators/01-arithmetic",
+  "language": "c",
+  "code": "int sum = num1 + num2;",
+  "documentation": "將 num1 和 num2 相加，結果儲存在 sum 變數中。"
+}

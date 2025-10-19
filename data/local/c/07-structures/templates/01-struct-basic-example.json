@@ -1,0 +1,9 @@
+{
+  "type": "template",
+  "name": "01-struct-basic-example",
+  "title": "基本結構體（例子）",
+  "description": "基本結構體例子 - 學生資料",
+  "topic": "c/07-structures",
+  "language": "c",
+  "code": "struct Student {\n    int id;\n    char name[50];\n    int age;\n};\n\nstruct Student s1 = {1001, \"Alice\", 20};\nprintf(\"學號: %d\\n\", s1.id);\nprintf(\"姓名: %s\\n\", s1.name);\nprintf(\"年齡: %d\\n\", s1.age);"
+}

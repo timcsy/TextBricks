@@ -1,0 +1,9 @@
+{
+  "type": "template",
+  "name": "01-pointer-basics-example",
+  "title": "指標基礎（例子）",
+  "description": "指標基礎例子",
+  "topic": "c/06-pointers",
+  "language": "c",
+  "code": "int number = 42;\nint *ptr = &number;\n\nprintf(\"number 的值: %d\\n\", number);\nprintf(\"number 的位址: %p\\n\", (void*)&number);\nprintf(\"ptr 指向的值: %d\\n\", *ptr);\nprintf(\"ptr 本身的值（位址）: %p\\n\", (void*)ptr);"
+}

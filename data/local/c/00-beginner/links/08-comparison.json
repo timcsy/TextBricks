@@ -1,0 +1,8 @@
+{
+  "type": "link",
+  "name": "08-comparison",
+  "title": "比較運算",
+  "description": "學習如何比較兩個數值（大於、小於、等於）",
+  "target": "c/01-basics/03-operators/02-comparison/templates/01-equal-example",
+  "topic": "c/00-beginner"
+}

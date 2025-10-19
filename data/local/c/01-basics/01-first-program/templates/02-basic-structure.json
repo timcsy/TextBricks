@@ -1,0 +1,10 @@
+{
+  "type": "template",
+  "name": "02-basic-structure",
+  "title": "基本程式結構（範本）",
+  "description": "C 程式的基本骨架",
+  "topic": "c/01-basics/01-first-program",
+  "language": "c",
+  "code": "#include <{{標頭檔}}>\n\nint main() {\n    {{程式碼}}\n    return 0;\n}",
+  "documentation": "C 程式的基本結構範本。{{標頭檔}} 通常是 stdio.h，{{程式碼}} 是你的主要程式碼。"
+}

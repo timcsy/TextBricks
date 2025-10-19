@@ -1,0 +1,8 @@
+{
+  "type": "link",
+  "name": "01-hello-world",
+  "title": "第一個 C 程式 - Hello World",
+  "description": "學習 C 程式的基本結構，輸出第一個訊息",
+  "target": "c/01-basics/01-first-program/templates/01-hello-world-example",
+  "topic": "c/00-beginner"
+}

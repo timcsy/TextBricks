@@ -1,0 +1,9 @@
+{
+  "type": "template",
+  "name": "05-strcat-example",
+  "title": "字串串接（例子）",
+  "description": "字串串接例子",
+  "topic": "c/05-strings",
+  "language": "c",
+  "code": "#include <string.h>\n\nchar greeting[50] = \"Hello, \";\nchar name[] = \"World\";\nstrcat(greeting, name);\nstrcat(greeting, \"!\");\nprintf(\"%s\\n\", greeting);"
+}

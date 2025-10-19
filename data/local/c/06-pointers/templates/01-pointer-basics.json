@@ -1,0 +1,9 @@
+{
+  "type": "template",
+  "name": "01-pointer-basics",
+  "title": "指標基礎（範本）",
+  "description": "指標宣告與基本使用範本",
+  "topic": "c/06-pointers",
+  "language": "c",
+  "code": "{{型別}} {{變數}} = {{值}};\n{{型別}} *{{指標}} = &{{變數}};\n\nprintf(\"{{變數}}的值: %d\\n\", {{變數}});\nprintf(\"{{變數}}的位址: %p\\n\", (void*)&{{變數}});\nprintf(\"{{指標}}指向的值: %d\\n\", *{{指標}});"
+}

@@ -1,0 +1,10 @@
+{
+  "type": "template",
+  "name": "04-less-example",
+  "title": "小於比較（例子）",
+  "description": "小於比較例子",
+  "topic": "c/01-basics/03-operators/02-comparison",
+  "language": "c",
+  "code": "if (score < 60) {\n    printf(\"需要加油\\n\");\n}",
+  "documentation": "檢查 score 是否小於 60。"
+}

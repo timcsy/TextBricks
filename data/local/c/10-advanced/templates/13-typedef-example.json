@@ -1,0 +1,9 @@
+{
+  "type": "template",
+  "name": "13-typedef-example",
+  "title": "typedef 型別別名（例子）",
+  "description": "typedef 常用範例",
+  "topic": "c/10-advanced",
+  "language": "c",
+  "code": "// 基本型別別名\ntypedef unsigned long ulong;\ntypedef unsigned char byte;\n\n// 指標別名\ntypedef int* int_ptr;\n\n// 結構別名\ntypedef struct {\n    int x;\n    int y;\n} Point;\n\nint main() {\n    ulong big_number = 1000000;\n    byte small_num = 255;\n    Point p = {10, 20};\n    printf(\"Point: (%d, %d)\\n\", p.x, p.y);\n    return 0;\n}"
+}

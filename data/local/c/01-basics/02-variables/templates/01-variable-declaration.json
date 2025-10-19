@@ -1,0 +1,10 @@
+{
+  "type": "template",
+  "name": "01-variable-declaration",
+  "title": "變數宣告（範本）",
+  "description": "基本變數宣告範本",
+  "topic": "c/01-basics/02-variables",
+  "language": "c",
+  "code": "{{型別}} {{變數名稱}} = {{初始值}};",
+  "documentation": "基本變數宣告語法。{{型別}} 可以是 int、float、char 等，{{變數名稱}} 是你的變數名稱，{{初始值}} 是初始值。"
+}

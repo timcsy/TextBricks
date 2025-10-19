@@ -1,0 +1,9 @@
+{
+  "type": "template",
+  "name": "01-define-constant",
+  "title": "#define 常數（範本）",
+  "description": "使用 #define 定義常數",
+  "topic": "c/10-advanced",
+  "language": "c",
+  "code": "#define {{常數名稱}} {{值}}"
+}

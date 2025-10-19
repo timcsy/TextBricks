@@ -1,0 +1,9 @@
+{
+  "type": "template",
+  "name": "06-struct-function",
+  "title": "結構體與函式（範本）",
+  "description": "將結構體作為函式參數範本",
+  "topic": "c/07-structures",
+  "language": "c",
+  "code": "struct {{結構體名稱}} {\n    {{型別1}} {{成員1}};\n    {{型別2}} {{成員2}};\n};\n\nvoid {{函式名稱}}(struct {{結構體名稱}} {{參數}}) {\n    printf(\"{{成員1}}: %d\\n\", {{參數}}.{{成員1}});\n}\n\nstruct {{結構體名稱}} {{變數}} = {{{值1}}, {{值2}}};\n{{函式名稱}}({{變數}});"
+}

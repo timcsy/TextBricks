@@ -1,0 +1,9 @@
+{
+  "type": "template",
+  "name": "07-array-sort-example",
+  "title": "陣列排序（例子）",
+  "description": "陣列排序例子 - 氣泡排序",
+  "topic": "c/04-arrays",
+  "language": "c",
+  "code": "int numbers[] = {64, 34, 25, 12, 22, 11, 90};\nint size = sizeof(numbers) / sizeof(numbers[0]);\n\nprintf(\"排序前: \");\nfor (int i = 0; i < size; i++) printf(\"%d \", numbers[i]);\nprintf(\"\\n\");\n\n// 氣泡排序\nfor (int i = 0; i < size - 1; i++) {\n    for (int j = 0; j < size - i - 1; j++) {\n        if (numbers[j] > numbers[j + 1]) {\n            int temp = numbers[j];\n            numbers[j] = numbers[j + 1];\n            numbers[j + 1] = temp;\n        }\n    }\n}\n\nprintf(\"排序後: \");\nfor (int i = 0; i < size; i++) printf(\"%d \", numbers[i]);\nprintf(\"\\n\");"
+}

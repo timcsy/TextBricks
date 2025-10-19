@@ -1,0 +1,9 @@
+{
+  "type": "template",
+  "name": "04-include-guard",
+  "title": "標頭檔保護（範本）",
+  "description": "使用 #ifndef 防止重複包含標頭檔",
+  "topic": "c/10-advanced",
+  "language": "c",
+  "code": "#ifndef {{標頭檔名稱}}_H\n#define {{標頭檔名稱}}_H\n\n{{標頭檔內容}}\n\n#endif // {{標頭檔名稱}}_H"
+}

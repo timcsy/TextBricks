@@ -1,0 +1,10 @@
+{
+  "type": "template",
+  "name": "01-do-while-loop",
+  "title": "do-while 迴圈（範本）",
+  "description": "至少執行一次的迴圈",
+  "topic": "c/02-control-flow/02-loops/03-do-while",
+  "language": "c",
+  "code": "do {\n    {{迴圈主體}}\n} while ({{條件}});",
+  "documentation": "do-while 迴圈。先執行迴圈主體，再檢查條件。至少會執行一次。"
+}

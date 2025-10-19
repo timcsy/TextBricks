@@ -1,0 +1,8 @@
+{
+  "type": "link",
+  "name": "07-addition",
+  "title": "加法運算",
+  "description": "學習基本的數值加法運算",
+  "target": "c/01-basics/03-operators/01-arithmetic/templates/01-addition-example",
+  "topic": "c/00-beginner"
+}

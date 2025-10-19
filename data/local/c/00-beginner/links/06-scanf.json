@@ -1,0 +1,8 @@
+{
+  "type": "link",
+  "name": "06-scanf",
+  "title": "讀取輸入 - scanf",
+  "description": "使用 scanf 函式讀取使用者輸入",
+  "target": "c/01-basics/04-input-output/templates/02-scanf-example",
+  "topic": "c/00-beginner"
+}

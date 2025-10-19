@@ -1,0 +1,9 @@
+{
+  "type": "template",
+  "name": "04-include-guard-example",
+  "title": "標頭檔保護（例子）",
+  "description": "完整的標頭檔範例",
+  "topic": "c/10-advanced",
+  "language": "c",
+  "code": "// mymath.h\n#ifndef MYMATH_H\n#define MYMATH_H\n\n#define PI 3.14159\n\nint add(int a, int b);\nint subtract(int a, int b);\ndouble circle_area(double radius);\n\n#endif // MYMATH_H"
+}

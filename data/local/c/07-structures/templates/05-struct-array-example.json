@@ -1,0 +1,9 @@
+{
+  "type": "template",
+  "name": "05-struct-array-example",
+  "title": "結構體陣列（例子）",
+  "description": "結構體陣列例子 - 多位學生",
+  "topic": "c/07-structures",
+  "language": "c",
+  "code": "typedef struct {\n    int id;\n    char name[30];\n    int score;\n} Student;\n\nStudent students[3] = {\n    {101, \"Alice\", 85},\n    {102, \"Bob\", 92},\n    {103, \"Carol\", 78}\n};\n\nfor (int i = 0; i < 3; i++) {\n    printf(\"學號: %d, 姓名: %s, 分數: %d\\n\", \n           students[i].id, students[i].name, students[i].score);\n}"
+}

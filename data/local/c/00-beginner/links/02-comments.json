@@ -1,0 +1,8 @@
+{
+  "type": "link",
+  "name": "02-comments",
+  "title": "程式碼註解",
+  "description": "學習如何為程式碼添加說明和註解",
+  "target": "c/01-basics/05-comments/templates/01-single-line-example",
+  "topic": "c/00-beginner"
+}

@@ -1,0 +1,10 @@
+{
+  "type": "template",
+  "name": "02-subtraction",
+  "title": "減法運算（範本）",
+  "description": "兩數相減",
+  "topic": "c/01-basics/03-operators/01-arithmetic",
+  "language": "c",
+  "code": "{{型別}} {{結果變數}} = {{被減數}} - {{減數}};",
+  "documentation": "基本減法運算。從第一個數減去第二個數。"
+}

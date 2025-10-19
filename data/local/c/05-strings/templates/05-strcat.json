@@ -1,0 +1,9 @@
+{
+  "type": "template",
+  "name": "05-strcat",
+  "title": "字串串接（範本）",
+  "description": "使用 strcat() 串接字串範本",
+  "topic": "c/05-strings",
+  "language": "c",
+  "code": "#include <string.h>\n\nchar {{目標}}[{{緩衝區大小}}] = \"{{目標初始內容}}\";\nchar {{來源}}[] = \"{{來源內容}}\";\nstrcat({{目標}}, {{來源}});\nprintf(\"串接結果: %s\\n\", {{目標}});"
+}

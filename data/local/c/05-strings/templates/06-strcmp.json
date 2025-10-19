@@ -1,0 +1,9 @@
+{
+  "type": "template",
+  "name": "06-strcmp",
+  "title": "字串比較（範本）",
+  "description": "使用 strcmp() 比較字串範本",
+  "topic": "c/05-strings",
+  "language": "c",
+  "code": "#include <string.h>\n\nchar {{字串1}}[] = \"{{內容1}}\";\nchar {{字串2}}[] = \"{{內容2}}\";\nint {{結果}} = strcmp({{字串1}}, {{字串2}});\n\nif ({{結果}} == 0) {\n    printf(\"字串相同\\n\");\n} else if ({{結果}} < 0) {\n    printf(\"字串1 < 字串2\\n\");\n} else {\n    printf(\"字串1 > 字串2\\n\");\n}"
+}

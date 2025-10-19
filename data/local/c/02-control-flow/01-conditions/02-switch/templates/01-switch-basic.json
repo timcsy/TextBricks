@@ -1,0 +1,10 @@
+{
+  "type": "template",
+  "name": "01-switch-basic",
+  "title": "基本 switch（範本）",
+  "description": "基本的 switch 語句結構",
+  "topic": "c/02-control-flow/01-conditions/02-switch",
+  "language": "c",
+  "code": "switch ({{表達式}}) {\n    case {{值1}}:\n        {{程式碼1}}\n        break;\n    case {{值2}}:\n        {{程式碼2}}\n        break;\n    default:\n        {{預設程式碼}}\n}",
+  "documentation": "基本的 switch 語句。根據表達式的值執行對應的 case 分支。"
+}

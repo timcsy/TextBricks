@@ -1,0 +1,10 @@
+{
+  "type": "template",
+  "name": "02-or-example",
+  "title": "OR 邏輯運算（例子）",
+  "description": "OR 運算例子",
+  "topic": "c/01-basics/03-operators/03-logical",
+  "language": "c",
+  "code": "if (isWeekend || isHoliday) {\n    printf(\"今天可以休息\\n\");\n}",
+  "documentation": "如果是週末或是假日，就可以休息。"
+}

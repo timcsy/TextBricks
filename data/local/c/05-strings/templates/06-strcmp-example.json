@@ -1,0 +1,9 @@
+{
+  "type": "template",
+  "name": "06-strcmp-example",
+  "title": "字串比較（例子）",
+  "description": "字串比較例子",
+  "topic": "c/05-strings",
+  "language": "c",
+  "code": "#include <string.h>\n\nchar password[] = \"secret123\";\nchar input[] = \"secret123\";\nint result = strcmp(password, input);\n\nif (result == 0) {\n    printf(\"密碼正確！\\n\");\n} else {\n    printf(\"密碼錯誤！\\n\");\n}"
+}

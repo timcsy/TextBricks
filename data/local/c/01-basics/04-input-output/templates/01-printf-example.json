@@ -1,0 +1,10 @@
+{
+  "type": "template",
+  "name": "01-printf-example",
+  "title": "printf 輸出（例子）",
+  "description": "printf 輸出例子",
+  "topic": "c/01-basics/04-input-output",
+  "language": "c",
+  "code": "int age = 25;\nprintf(\"年齡：%d 歲\\n\", age);",
+  "documentation": "使用 printf 輸出整數變數。\\n 表示換行。"
+}

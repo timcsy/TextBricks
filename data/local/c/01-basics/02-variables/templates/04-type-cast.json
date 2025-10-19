@@ -1,0 +1,10 @@
+{
+  "type": "template",
+  "name": "04-type-cast",
+  "title": "型別轉換（範本）",
+  "description": "將一個型別轉換為另一個型別",
+  "topic": "c/01-basics/02-variables",
+  "language": "c",
+  "code": "{{目標型別}} {{變數名稱}} = ({{目標型別}}){{來源變數}};",
+  "documentation": "顯式型別轉換（強制轉型）。將變數從一個型別轉換為另一個型別。"
+}

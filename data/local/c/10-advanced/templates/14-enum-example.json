@@ -1,0 +1,9 @@
+{
+  "type": "template",
+  "name": "14-enum-example",
+  "title": "列舉 enum（例子）",
+  "description": "使用 enum 定義星期和顏色",
+  "topic": "c/10-advanced",
+  "language": "c",
+  "code": "enum Weekday {\n    MONDAY,      // 0\n    TUESDAY,     // 1\n    WEDNESDAY,   // 2\n    THURSDAY,    // 3\n    FRIDAY,      // 4\n    SATURDAY,    // 5\n    SUNDAY       // 6\n};\n\nenum Color {\n    RED = 1,\n    GREEN = 2,\n    BLUE = 4\n};\n\nint main() {\n    enum Weekday today = FRIDAY;\n    enum Color favorite = BLUE;\n    \n    if (today == FRIDAY) {\n        printf(\"快到週末了！\\n\");\n    }\n    \n    printf(\"顏色代碼: %d\\n\", favorite);\n    return 0;\n}"
+}

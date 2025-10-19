@@ -1,0 +1,8 @@
+{
+  "type": "link",
+  "name": "04-data-types",
+  "title": "基本資料型別",
+  "description": "認識 int、float、char 等基本資料型別",
+  "target": "c/01-basics/02-variables/templates/02-data-types-example",
+  "topic": "c/00-beginner"
+}

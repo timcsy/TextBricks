@@ -1,0 +1,10 @@
+{
+  "type": "template",
+  "name": "03-not-example",
+  "title": "NOT 邏輯運算（例子）",
+  "description": "NOT 運算例子",
+  "topic": "c/01-basics/03-operators/03-logical",
+  "language": "c",
+  "code": "if (!found) {\n    printf(\"找不到資料\\n\");\n}",
+  "documentation": "如果 found 為假（0），則顯示找不到資料。"
+}

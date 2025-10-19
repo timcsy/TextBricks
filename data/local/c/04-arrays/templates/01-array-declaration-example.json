@@ -1,0 +1,10 @@
+{
+  "type": "template",
+  "name": "01-array-declaration-example",
+  "title": "陣列宣告（例子）",
+  "description": "陣列宣告例子",
+  "topic": "c/04-arrays",
+  "language": "c",
+  "code": "int numbers[10];\nfloat scores[5] = {85.5, 90.0, 78.5, 92.0, 88.5};",
+  "documentation": "宣告整數陣列和浮點數陣列。"
+}

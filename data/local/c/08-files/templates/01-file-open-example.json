@@ -1,0 +1,9 @@
+{
+  "type": "template",
+  "name": "01-file-open-example",
+  "title": "開啟檔案（例子）",
+  "description": "開啟檔案例子 - 讀取模式",
+  "topic": "c/08-files",
+  "language": "c",
+  "code": "#include <stdio.h>\n\nint main() {\n    FILE *file = fopen(\"data.txt\", \"r\");\n    if (file == NULL) {\n        printf(\"無法開啟檔案 data.txt\\n\");\n        return 1;\n    }\n    \n    printf(\"檔案成功開啟\\n\");\n    fclose(file);\n    return 0;\n}"
+}

@@ -1,0 +1,10 @@
+{
+  "type": "template",
+  "name": "02-if-else",
+  "title": "if-else 條件判斷（範本）",
+  "description": "二選一的條件判斷",
+  "topic": "c/02-control-flow/01-conditions/01-if",
+  "language": "c",
+  "code": "if ({{條件}}) {\n    {{條件為真時執行}}\n} else {\n    {{條件為假時執行}}\n}",
+  "documentation": "if-else 語句。條件為真執行第一段，為假執行第二段。"
+}

@@ -1,0 +1,10 @@
+{
+  "type": "template",
+  "name": "01-for-loop-example",
+  "title": "for 迴圈（例子）",
+  "description": "for 迴圈例子",
+  "topic": "c/02-control-flow/02-loops/01-for",
+  "language": "c",
+  "code": "for (int i = 0; i < 10; i++) {\n    printf(\"%d\\n\", i);\n}",
+  "documentation": "輸出 0 到 9 的數字。"
+}

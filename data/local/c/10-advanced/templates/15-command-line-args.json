@@ -1,0 +1,9 @@
+{
+  "type": "template",
+  "name": "15-command-line-args",
+  "title": "命令列參數（範本）",
+  "description": "main 函式接收命令列參數",
+  "topic": "c/10-advanced",
+  "language": "c",
+  "code": "int main(int argc, char *argv[]) {\n    // argc: 參數數量\n    // argv: 參數陣列\n    {{程式碼}}\n    return 0;\n}"
+}

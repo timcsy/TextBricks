@@ -1,0 +1,10 @@
+{
+  "type": "template",
+  "name": "01-function-definition-example",
+  "title": "函式定義（例子）",
+  "description": "函式定義例子",
+  "topic": "c/03-functions",
+  "language": "c",
+  "code": "int add(int a, int b) {\n    int sum = a + b;\n    return sum;\n}",
+  "documentation": "定義一個計算兩數之和的函式。"
+}

@@ -1,0 +1,8 @@
+{
+  "type": "link",
+  "name": "15-string",
+  "title": "字串基礎",
+  "description": "學習如何宣告和使用字串來處理文字資料",
+  "target": "c/05-strings/templates/01-string-declaration-example",
+  "topic": "c/00-beginner"
+}

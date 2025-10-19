@@ -1,0 +1,9 @@
+{
+  "type": "template",
+  "name": "05-function-prototype-example",
+  "title": "函式原型宣告（例子）",
+  "description": "函式原型宣告例子 - 計算最大值",
+  "topic": "c/03-functions",
+  "language": "c",
+  "code": "int findMax(int a, int b);\n\nint main() {\n    int result = findMax(10, 20);\n    printf(\"Max: %d\\n\", result);\n    return 0;\n}\n\nint findMax(int a, int b) {\n    return (a > b) ? a : b;\n}"
+}

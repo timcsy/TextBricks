@@ -1,0 +1,9 @@
+{
+  "type": "template",
+  "name": "04-memory-leak",
+  "title": "避免記憶體洩漏（範本）",
+  "description": "正確釋放記憶體避免洩漏範本",
+  "topic": "c/09-memory",
+  "language": "c",
+  "code": "#include <stdlib.h>\n\n{{型別}} *{{指標}} = ({{型別}}*)malloc({{大小}} * sizeof({{型別}}));\nif ({{指標}} == NULL) {\n    return 1;\n}\n\n// 使用記憶體\n\n// 重要：使用完畢後必須釋放\nfree({{指標}});\n{{指標}} = NULL;  // 避免 dangling pointer"
+}

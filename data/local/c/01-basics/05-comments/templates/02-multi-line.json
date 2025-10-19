@@ -1,0 +1,10 @@
+{
+  "type": "template",
+  "name": "02-multi-line",
+  "title": "多行註解（範本）",
+  "description": "撰寫多行註解",
+  "topic": "c/01-basics/05-comments",
+  "language": "c",
+  "code": "/*\n * {{註解內容行1}}\n * {{註解內容行2}}\n * {{註解內容行3}}\n */",
+  "documentation": "多行註解，使用 /* */ 包圍，可以跨多行。"
+}

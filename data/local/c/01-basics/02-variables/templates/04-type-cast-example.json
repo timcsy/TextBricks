@@ -1,0 +1,10 @@
+{
+  "type": "template",
+  "name": "04-type-cast-example",
+  "title": "型別轉換（例子）",
+  "description": "型別轉換例子",
+  "topic": "c/01-basics/02-variables",
+  "language": "c",
+  "code": "int a = 10;\nint b = 3;\nfloat result = (float)a / b;  // 結果為 3.333...\nprintf(\"結果：%.2f\\n\", result);",
+  "documentation": "將整數 a 轉換為 float 後再除法，避免整數除法丟失小數部分。"
+}

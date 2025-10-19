@@ -1,0 +1,10 @@
+{
+  "type": "template",
+  "name": "03-multiplication-example",
+  "title": "乘法運算（例子）",
+  "description": "兩數相乘例子",
+  "topic": "c/01-basics/03-operators/01-arithmetic",
+  "language": "c",
+  "code": "int product = num1 * num2;",
+  "documentation": "將 num1 和 num2 相乘，結果儲存在 product 變數中。"
+}

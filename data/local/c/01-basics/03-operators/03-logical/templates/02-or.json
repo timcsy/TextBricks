@@ -1,0 +1,10 @@
+{
+  "type": "template",
+  "name": "02-or",
+  "title": "OR 邏輯運算（範本）",
+  "description": "任一條件為真時執行",
+  "topic": "c/01-basics/03-operators/03-logical",
+  "language": "c",
+  "code": "if ({{條件1}} || {{條件2}}) {\n    {{任一條件為真時執行}}\n}",
+  "documentation": "OR 邏輯運算。只要任一條件為真，就執行程式碼。"
+}

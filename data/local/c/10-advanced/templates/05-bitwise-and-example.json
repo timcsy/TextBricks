@@ -1,0 +1,9 @@
+{
+  "type": "template",
+  "name": "05-bitwise-and-example",
+  "title": "位元 AND（例子）",
+  "description": "位元 AND 運算範例",
+  "topic": "c/10-advanced",
+  "language": "c",
+  "code": "int a = 12;  // 1100 in binary\nint b = 10;  // 1010 in binary\nint result = a & b;  // 1000 in binary = 8\nprintf(\"%d & %d = %d\\n\", a, b, result);"
+}

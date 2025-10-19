@@ -1,0 +1,9 @@
+{
+  "type": "template",
+  "name": "12-extern-variable-example",
+  "title": "extern 變數（例子）",
+  "description": "跨檔案存取全域變數範例",
+  "topic": "c/10-advanced",
+  "language": "c",
+  "code": "// file1.c\nint global_count = 0;  // 定義全域變數\n\n// file2.c\nextern int global_count;  // 宣告外部變數\n\nvoid increment() {\n    global_count++;  // 存取 file1.c 中的變數\n    printf(\"Count: %d\\n\", global_count);\n}"
+}

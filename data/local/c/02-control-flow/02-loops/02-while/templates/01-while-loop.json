@@ -1,0 +1,10 @@
+{
+  "type": "template",
+  "name": "01-while-loop",
+  "title": "while 迴圈（範本）",
+  "description": "條件式迴圈",
+  "topic": "c/02-control-flow/02-loops/02-while",
+  "language": "c",
+  "code": "while ({{條件}}) {\n    {{迴圈主體}}\n}",
+  "documentation": "while 迴圈。當條件為真時持續執行。注意：確保條件最終會變成假，避免無窮迴圈。"
+}
