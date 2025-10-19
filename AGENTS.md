@@ -152,9 +152,9 @@ TextBricks/
 │       ├── common/         # utils.js, card-templates.js, event-delegator.js
 │       ├── templates-panel/  # 12 個模組
 │       └── manager-panel/    # 21 個模組
-├── data/local/             # 開發用本地資料（不進 git）
-│   ├── scope.json          # Scope 配置
-│   └── {language}/         # 語言模板
+├── data/local/             # 開發模板數據（納入 git）
+│   ├── scope.json          # Scope 配置範例
+│   └── {language}/         # 各語言模板（如 c/, python/, javascript/）
 └── specs/                  # 規格文檔
     ├── PRD.md             # 產品需求
     ├── VERSION_HISTORY.md # 版本歷史
