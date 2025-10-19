@@ -16,6 +16,9 @@ packages/*/src/**/*.d.ts
 # Backup directories
 src_backup_*
 
+# Development data sync backup
+/data/local.backup/
+
 # If you want to track final releases, uncomment these lines:
 # !dist/plugins/*/current/*.vsix
 # !dist/plugins/.gitkeep

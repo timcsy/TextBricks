@@ -3,7 +3,8 @@
   "name": "hello-world",
   "title": "Hello World",
   "description": "基本的 Hello World 程式",
+  "topic": "c/basic",
   "language": "c",
   "code": "#include <stdio.h>\n\nint main() {\n    printf(\"Hello, World!\\n\");\n    return 0;\n}",
-  "documentation": "這是最基本的 C 程式，用來輸出 \"Hello, World!\" 訊息。"
+  "documentation": "# Hello World\n\n## 功能簡介\n基本的 Hello World 程式\n\n## 模板內容\n```c\n#include <stdio.h>\n\nint main() {\n    printf(\"Hello, World!\\n\");\n    return 0;\n}\n```\n\n## 範例輸入\n```\n無輸入\n```\n\n## 範例輸出\n```\nHello, World!\n```\n\n## 重點說明\n- 第一個程式\n\n## 相關模板\n- 無模板"
 }

@@ -4,6 +4,8 @@
   "title": "JavaScript",
   "description": "JavaScript 的基本語法和概念",
   "documentation": "這裡包含了 JavaScript 的基本語法，包括變數宣告、條件判斷、迴圈等基礎概念。",
+  "templates": "templates",
+  "links": "links",
   "display": {
     "icon": "⚡",
     "color": "#F7DF1E",

@@ -4,6 +4,8 @@
   "title": "Python",
   "description": "Python 的基本語法和概念",
   "documentation": "這裡包含了 Python 的基本語法，包括變數宣告、條件判斷、迴圈等基礎概念。",
+  "templates": "templates",
+  "links": "links",
   "display": {
     "icon": "🐍",
     "color": "#3776AB",

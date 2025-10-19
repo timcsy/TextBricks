@@ -1,62 +1,49 @@
 {
-  "id": "local",
-  "name": "本機範圍",
+  "name": "local",
+  "title": "本機範圍",
   "description": "本機開發環境的程式語言模板和主題",
   "languages": [
     {
       "name": "c",
       "title": "C 語言",
       "tagName": "C",
-      "description": "C programming language",
+      "description": "系統程式設計語言",
       "fileExtensions": [
-        ".c"
+        ".c",
+        ".h"
       ],
-      "icon": "file-text"
-    },
-    {
-      "name": "javascript",
-      "title": "JavaScript",
-      "tagName": "JAVASCRIPT",
-      "description": "JavaScript programming language",
-      "fileExtensions": [
-        ".js"
-      ],
-      "icon": "file-text"
+      "icon": "⚙️",
+      "color": "#A8B9CC"
     },
     {
       "name": "python",
       "title": "Python",
-      "tagName": "PYTHON",
-      "description": "Python programming language",
+      "tagName": "PY",
+      "description": "高階程式設計語言",
       "fileExtensions": [
-        ".py"
+        ".py",
+        ".pyw"
       ],
-      "icon": "file-text"
+      "icon": "🐍",
+      "color": "#3776AB"
+    },
+    {
+      "name": "javascript",
+      "title": "JavaScript",
+      "tagName": "JS",
+      "description": "網頁前端程式設計語言",
+      "fileExtensions": [
+        ".js",
+        ".mjs",
+        ".jsx"
+      ],
+      "icon": "📜",
+      "color": "#F7DF1E"
     }
   ],
-  "favorites": [
-    "c/basic/templates/hello-world",
-    "c/advanced",
-    "c/basic"
-  ],
-  "usage": {
-    "c/basic/templates/hello-world": 17,
-    "python/templates/hello-world": 12,
-    "javascript/templates/hello-world": 8,
-    "c/basic/templates/variables": 11,
-    "python/templates/variables": 7,
-    "c/advanced/templates/pointers": 5
-  },
-  "settings": {
-    "autoSync": false,
-    "readOnly": false,
-    "shareMode": "private",
-    "autoBackup": true
-  },
-  "metadata": {
-    "version": "1.0.0",
-    "created": "2024-09-26",
-    "lastUpdated": "2025-10-02T15:25:36.722Z",
-    "author": "TextBricks"
-  }
+  "topics": [
+    "c",
+    "python",
+    "javascript"
+  ]
 }

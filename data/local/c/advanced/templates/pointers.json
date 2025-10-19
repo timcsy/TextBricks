@@ -3,6 +3,7 @@
   "name": "pointers",
   "title": "指標基礎",
   "description": "C 語言指標的基本使用",
+  "topic": "c/advanced",
   "language": "c",
   "code": "#include <stdio.h>\n\nint main() {\n    int num = 42;\n    int *ptr = &num;  // 指標指向 num 的地址\n    \n    printf(\"變數值: %d\\n\", num);\n    printf(\"變數地址: %p\\n\", (void*)&num);\n    printf(\"指標值 (地址): %p\\n\", (void*)ptr);\n    printf(\"指標指向的值: %d\\n\", *ptr);\n    \n    // 透過指標修改值\n    *ptr = 100;\n    printf(\"修改後的變數值: %d\\n\", num);\n    \n    return 0;\n}",
   "documentation": "展示 C 語言指標的基本概念，包括地址操作符 (&) 和解參考操作符 (*)。"

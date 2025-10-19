@@ -3,6 +3,7 @@
   "name": "variables",
   "title": "變數宣告",
   "description": "Python 基本變數宣告範例",
+  "topic": "python",
   "language": "python",
   "code": "# Python 變數宣告範例\n\n# 整數變數\nage = 25\n\n# 浮點數變數\nheight = 175.5\n\n# 字串變數\nname = \"張三\"\n\n# 布林變數\nis_student = True\n\n# 輸出變數值\nprint(f\"姓名: {name}\")\nprint(f\"年齡: {age}\")\nprint(f\"身高: {height} cm\")\nprint(f\"是否為學生: {is_student}\")",
   "documentation": "展示如何在 Python 中宣告和使用不同類型的變數。"
