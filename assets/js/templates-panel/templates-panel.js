@@ -211,8 +211,29 @@
             case 'updateFavoritesContent':
                 panelEventHandlers.updateFavoritesTabContent(message.content);
                 break;
+            case 'usageUpdated':
+                // 動態更新使用次數
+                updateUsageCount(message.itemPath, message.newCount);
+                break;
         }
     });
+
+    /**
+     * 動態更新模板卡片的使用次數
+     */
+    function updateUsageCount(itemPath, newCount) {
+        // 找到對應的模板卡片
+        const cards = document.querySelectorAll('.template-card[data-template-path]');
+        cards.forEach(card => {
+            if (card.dataset.templatePath === itemPath) {
+                // 找到使用次數元素
+                const usageElement = card.querySelector('.usage-count');
+                if (usageElement) {
+                    usageElement.textContent = `已使用 ${newCount} 次`;
+                }
+            }
+        });
+    }
 
     // Initialize when DOM is ready
     if (document.readyState === 'loading') {

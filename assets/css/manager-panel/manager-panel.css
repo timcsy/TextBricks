@@ -2715,6 +2715,100 @@ textarea {
     font-style: italic;
 }
 
+/* 開發工具區塊 */
+.dev-sync-section {
+    background: linear-gradient(135deg, rgba(0, 122, 204, 0.05) 0%, rgba(0, 122, 204, 0.02) 100%);
+    border: 1px solid rgba(0, 122, 204, 0.2);
+    border-radius: 8px;
+    padding: 20px;
+    margin-top: 24px;
+}
+
+.dev-sync-section h3 {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 16px;
+    color: var(--primary-color);
+}
+
+.dev-sync-content {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.sync-options {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 16px;
+    background-color: rgba(0, 0, 0, 0.2);
+    border-radius: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.checkbox-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    padding: 8px 12px;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+}
+
+.checkbox-wrapper:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+.checkbox-wrapper input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+}
+
+.sync-description {
+    font-size: 13px;
+    color: var(--muted-text);
+    line-height: 1.6;
+    padding: 12px 16px;
+    background-color: rgba(0, 0, 0, 0.15);
+    border-radius: 6px;
+    border-left: 3px solid var(--primary-color);
+}
+
+#sync-to-dev-data-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 24px;
+    font-size: 14px;
+    font-weight: 600;
+    background: linear-gradient(135deg, var(--primary-color) 0%, #005a9e 100%);
+    border: none;
+    border-radius: 6px;
+    color: white;
+    cursor: pointer;
+    transition: all 0.3s;
+    box-shadow: 0 2px 8px rgba(0, 122, 204, 0.3);
+}
+
+#sync-to-dev-data-btn:hover {
+    background: linear-gradient(135deg, #0091ea 0%, var(--primary-color) 100%);
+    box-shadow: 0 4px 12px rgba(0, 122, 204, 0.4);
+    transform: translateY(-1px);
+}
+
+#sync-to-dev-data-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 6px rgba(0, 122, 204, 0.3);
+}
+
+#sync-to-dev-data-btn .icon {
+    font-size: 16px;
+}
+
 /* 響應式設計 */
 @media (max-width: 600px) {
     .location-stats {
@@ -2736,5 +2830,18 @@ textarea {
         align-items: flex-start;
         flex-direction: row;
         flex-wrap: wrap;
+    }
+
+    .dev-sync-section {
+        padding: 16px;
+    }
+
+    .sync-options {
+        padding: 12px;
+    }
+
+    #sync-to-dev-data-btn {
+        padding: 10px 20px;
+        font-size: 13px;
     }
 }

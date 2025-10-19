@@ -54,6 +54,11 @@
                     this._handleDataLocationReset(message);
                     break;
 
+                // 清空詳情面板
+                case 'clearDetailsPanel':
+                    this._handleClearDetailsPanel(message);
+                    break;
+
                 // 文檔渲染
                 case 'documentationRendered':
                     this._handleDocumentationRendered(message);
@@ -81,6 +86,11 @@
             // 更新數據
             console.log('[MessageHandler] Updating data...');
             stateManager.updateData(message.data);
+
+            // 調試：檢查更新後的數據
+            const currentData = stateManager.getCurrentData();
+            console.log('[MessageHandler] Updated data - templates count:', currentData.templates?.length);
+            console.log('[MessageHandler] Updated data - topics hierarchy:', currentData.topics?.hierarchy);
 
             // 隱藏加載狀態
             console.log('[MessageHandler] Hiding loading indicator...');
@@ -152,6 +162,17 @@
 
             const stateManager = this.context.getStateManager();
             stateManager.showMessage('已重設為系統預設位置');
+        }
+
+        /**
+         * 處理清空詳情面板消息（私有方法）
+         */
+        _handleClearDetailsPanel(message) {
+            console.log('[MessageHandler] Clearing details panel');
+            const contentRenderer = this.context.getContentRenderer();
+            if (contentRenderer) {
+                contentRenderer.clearContentDetails();
+            }
         }
 
         /**

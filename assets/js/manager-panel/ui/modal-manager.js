@@ -21,6 +21,7 @@
          * @param {Object} prefillData - 預填資料（可選）
          */
         openModal(type, item = null, prefillData = null) {
+            console.log('[ModalManager] openModal called with type:', type, 'item:', item, 'prefillData:', prefillData);
             this.editingItem = item;
 
             const modal = document.getElementById('modal');
@@ -38,19 +39,22 @@
             switch (type) {
                 case 'template':
                     titleText = item ? '編輯模板' : '創建新模板';
-                    bodyHTML = this.context.getFormGenerator().getTemplateForm(item);
+                    console.log('[ModalManager] Calling getTemplateForm with item:', item, 'prefillData:', prefillData);
+                    bodyHTML = this.context.getFormGenerator().getTemplateForm(item, prefillData);
                     break;
                 case 'topic':
                     titleText = item ? '編輯主題' : '創建新主題';
-                    bodyHTML = this.context.getFormGenerator().getTopicForm(item);
+                    console.log('[ModalManager] Calling getTopicForm with item:', item, 'prefillData:', prefillData);
+                    bodyHTML = this.context.getFormGenerator().getTopicForm(item, prefillData);
                     break;
                 case 'link':
                     titleText = item ? '編輯連結' : '創建新連結';
-                    bodyHTML = this.context.getFormGenerator().getLinkForm(item);
+                    console.log('[ModalManager] Calling getLinkForm with item:', item, 'prefillData:', prefillData);
+                    bodyHTML = this.context.getFormGenerator().getLinkForm(item, prefillData);
                     break;
                 case 'language':
                     titleText = item ? '編輯語言' : '創建新語言';
-                    bodyHTML = this.context.getFormGenerator().getLanguageForm(item);
+                    bodyHTML = this.context.getFormGenerator().getLanguageForm(item, prefillData);
                     break;
                 default:
                     console.error('Unknown modal type:', type);
@@ -864,12 +868,12 @@
                 <div class="documentation-modal-backdrop"></div>
                 <div class="documentation-modal-content">
                     <div class="documentation-modal-header">
-                        <h3>${utils.escapeHtml(title)}</h3>
+                        <h3>${utils.escapeHtml(String(title || ''))}</h3>
                         <button class="documentation-close-btn" title="關閉 (ESC)">✕</button>
                     </div>
                     <div class="documentation-modal-body">
                         <div class="documentation-content">
-                            ${html}
+                            ${html || ''}
                         </div>
                     </div>
                 </div>

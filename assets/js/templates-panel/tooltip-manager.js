@@ -343,6 +343,8 @@
                     console.log('[DEBUG] Inserting entire template:', templatePath);
                 }
 
+                // 使用次數已由後端 insertTemplate/insertCodeSnippet 自動記錄
+
                 // Clear stored selection
                 storedSelection = null;
 
@@ -469,6 +471,15 @@
                     dragHandle.addEventListener('dragend', (e) => {
                         // Reset visual feedback
                         dragHandle.style.opacity = '';
+
+                        // 如果拖曳成功完成（dropEffect 不是 'none'），則更新使用次數
+                        if (e.dataTransfer && e.dataTransfer.dropEffect !== 'none') {
+                            console.log('Tooltip drag successful, incrementing usage for:', templatePath);
+                            vscode.postMessage({
+                                type: 'incrementUsage',
+                                templatePath: templatePath
+                            });
+                        }
 
                         // Reset drag drop handler state
                         dragDropHandler.isDragging = false;

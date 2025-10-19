@@ -638,6 +638,9 @@
             const container = document.getElementById('content-details');
             if (!container) return;
 
+            // 儲存當前顯示的項目資訊，用於後續檢查
+            this.currentDetailItem = { path: itemPath, type: itemType };
+
             if (itemType === 'topic') {
                 this._showTopicDetails(itemPath, container);
             } else if (itemType === 'template') {
@@ -645,6 +648,34 @@
             } else if (itemType === 'link') {
                 this._showLinkDetails(itemPath, container);
             }
+        }
+
+        /**
+         * 清空詳情面板（顯示歡迎畫面）
+         */
+        clearContentDetails() {
+            const container = document.getElementById('content-details');
+            if (!container) return;
+
+            this.currentDetailItem = null;
+            container.innerHTML = `
+                <div class="welcome-message">
+                    <div class="welcome-icon">🗂️</div>
+                    <h3>歡迎使用內容管理</h3>
+                    <p>請從左側選擇一個主題或模板來查看詳細資訊</p>
+                    <div class="welcome-actions">
+                        <button class="btn btn-primary" data-action="open-modal" data-modal-type="topic">
+                            <span class="icon">🏷️</span> 建立新主題
+                        </button>
+                        <button class="btn btn-success" data-action="open-modal" data-modal-type="template">
+                            <span class="icon">📄</span> 建立新模板
+                        </button>
+                        <button class="btn btn-info" data-action="open-modal" data-modal-type="link">
+                            <span class="icon">🔗</span> 建立新連結
+                        </button>
+                    </div>
+                </div>
+            `;
         }
 
         /**
@@ -830,10 +861,10 @@
                         <button class="btn btn-primary btn-small" data-action="follow-link" data-link-path="${linkPath}">
                             <span class="icon">➡️</span> 前往目標
                         </button>
-                        <button class="btn btn-secondary btn-small" data-action="edit-link" data-link-name="${linkPath}">
+                        <button class="btn btn-secondary btn-small" data-action="edit-link" data-link-name="${linkName}">
                             <span class="icon">✏️</span> 編輯
                         </button>
-                        <button class="btn btn-danger btn-small" data-action="delete-link" data-link-name="${linkPath}">
+                        <button class="btn btn-danger btn-small" data-action="delete-link" data-link-name="${linkName}">
                             <span class="icon">🗑️</span> 刪除
                         </button>
                     </div>

@@ -190,6 +190,27 @@
         }
 
         /**
+         * 同步到開發數據
+         */
+        syncToDevData() {
+            const vscode = this.context.getVSCode();
+
+            // 獲取選項
+            const includeUsage = document.getElementById('include-usage-checkbox')?.checked || false;
+            const includeFavorites = document.getElementById('include-favorites-checkbox')?.checked || false;
+            const includeMetadata = document.getElementById('include-metadata-checkbox')?.checked || false;
+
+            vscode.postMessage({
+                type: 'syncToDevData',
+                options: {
+                    includeUsage,
+                    includeFavorites,
+                    includeMetadata
+                }
+            });
+        }
+
+        /**
          * 格式化位元組大小（私有方法）
          */
         _formatBytes(bytes) {

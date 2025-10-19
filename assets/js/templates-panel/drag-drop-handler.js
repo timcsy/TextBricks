@@ -94,6 +94,17 @@
                 templateCard.classList.remove('dragging');
             }
 
+            // 如果拖曳成功完成（dropEffect 不是 'none'），則更新使用次數
+            const draggedPath = this.draggedTemplateId;
+            if (draggedPath && event.dataTransfer && event.dataTransfer.dropEffect !== 'none') {
+                console.log('Drag successful, incrementing usage for:', draggedPath);
+                const vscode = this.context.getVSCode();
+                vscode.postMessage({
+                    type: 'incrementUsage',
+                    templatePath: draggedPath
+                });
+            }
+
             this.isDragging = false;
             this.draggedTemplateId = null;
 

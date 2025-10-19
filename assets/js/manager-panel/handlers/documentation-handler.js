@@ -19,6 +19,16 @@
         getDocumentationType(documentation) {
             if (!documentation) return '';
 
+            // If documentation is already an object with type property, return it
+            if (typeof documentation === 'object' && documentation.type) {
+                return documentation.type;
+            }
+
+            // If documentation is not a string, return empty
+            if (typeof documentation !== 'string') {
+                return '';
+            }
+
             // Check for URL
             if (documentation.startsWith('http://') || documentation.startsWith('https://')) {
                 return 'url';
@@ -67,7 +77,23 @@
                 if (currentType === type) {
                     const input = document.getElementById('template-documentation');
                     if (input) {
-                        input.value = editingItem.documentation;
+                        // Extract content based on documentation format
+                        let content = '';
+                        const doc = editingItem.documentation;
+
+                        if (typeof doc === 'string') {
+                            content = doc;
+                        } else if (typeof doc === 'object') {
+                            if (doc.type === 'markdown' && doc.content) {
+                                content = doc.content;
+                            } else if (doc.type === 'file' && doc.path) {
+                                content = doc.path;
+                            } else if (doc.type === 'url' && doc.url) {
+                                content = doc.url;
+                            }
+                        }
+
+                        input.value = content;
                     }
                 }
             }
@@ -101,7 +127,23 @@
                 if (currentType === type) {
                     const input = document.getElementById('topic-documentation');
                     if (input) {
-                        input.value = editingItem.documentation;
+                        // Extract content based on documentation format
+                        let content = '';
+                        const doc = editingItem.documentation;
+
+                        if (typeof doc === 'string') {
+                            content = doc;
+                        } else if (typeof doc === 'object') {
+                            if (doc.type === 'markdown' && doc.content) {
+                                content = doc.content;
+                            } else if (doc.type === 'file' && doc.path) {
+                                content = doc.path;
+                            } else if (doc.type === 'url' && doc.url) {
+                                content = doc.url;
+                            }
+                        }
+
+                        input.value = content;
                     }
                 }
             }
