@@ -68,19 +68,14 @@
                 );
             }) || [];
 
-            let confirmMessage = `確定要刪除主題「${topic.name}」嗎？`;
-
-            if (templates.length > 0) {
-                confirmMessage += `\n此主題包含 ${templates.length} 個模板，刪除後這些模板將移到「未分類」主題。`;
-            }
-
-            if (confirm(confirmMessage)) {
-                const vscode = this.context.getVSCode();
-                vscode.postMessage({
-                    type: 'deleteTopic',
-                    topicPath: topicPath
-                });
-            }
+            // 直接發送刪除請求，讓後端處理確認
+            const vscode = this.context.getVSCode();
+            vscode.postMessage({
+                type: 'deleteTopic',
+                topicPath: topicPath,
+                topicTitle: topic.title || topic.name,
+                templateCount: templates.length
+            });
         }
 
         /**

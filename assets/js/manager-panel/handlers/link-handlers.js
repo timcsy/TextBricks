@@ -17,11 +17,19 @@
          * 編輯連結
          */
         editLink(linkName) {
+            console.log('[LinkHandlers] editLink called with linkName:', linkName);
             const link = this.context.findLinkByName(linkName);
+            console.log('[LinkHandlers] Found link for editing:', link);
+
             if (link) {
                 this.context.openModal('link', link);
             } else {
-                console.error('Link not found:', linkName);
+                console.error('[LinkHandlers] Link not found:', linkName);
+                const vscode = this.context.getVSCode();
+                vscode.postMessage({
+                    type: 'showError',
+                    message: `找不到連結: ${linkName}`
+                });
             }
         }
 
@@ -29,19 +37,29 @@
          * 刪除連結
          */
         deleteLink(linkName) {
+            console.log('[LinkHandlers] deleteLink called with linkName:', linkName);
+
             const link = this.context.findLinkByName(linkName);
+            console.log('[LinkHandlers] Found link:', link);
+
             if (!link) {
-                console.error('Link not found for name:', linkName);
+                console.error('[LinkHandlers] Link not found for name:', linkName);
+                const vscode = this.context.getVSCode();
+                vscode.postMessage({
+                    type: 'showError',
+                    message: `找不到連結: ${linkName}`
+                });
                 return;
             }
 
-            if (confirm(`確定要刪除連結 "${link.title}" 嗎？此操作無法恢復。`)) {
-                const vscode = this.context.getVSCode();
-                vscode.postMessage({
-                    type: 'deleteLink',
-                    linkName: linkName
-                });
-            }
+            // 直接發送刪除請求，讓後端處理確認
+            const vscode = this.context.getVSCode();
+            console.log('[LinkHandlers] Sending deleteLink message to VS Code');
+            vscode.postMessage({
+                type: 'deleteLink',
+                linkName: linkName,
+                linkTitle: link.title || link.name
+            });
         }
 
         /**

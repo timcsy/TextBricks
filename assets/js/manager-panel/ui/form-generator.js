@@ -16,11 +16,21 @@
         /**
          * 獲取模板表單
          */
-        getTemplateForm(template) {
+        getTemplateForm(template, prefillData = null) {
             const currentData = this.context.getCurrentData();
             const utils = this.context.getUtils();
 
+            // 使用 prefillData 或 template 的值，prefillData 優先
+            const defaultTopic = prefillData?.topicPath || template?.topic || template?.topicPath || '';
+            const defaultTopicDisplay = defaultTopic ? this.context.getDisplayPath(defaultTopic) : '';
+
             return `
+                <div class="form-group">
+                    <label for="template-name">模板名稱 *</label>
+                    <input type="text" id="template-name" value="${template && template.name ? utils.escapeHtml(template.name) : ''}" ${template && template.name ? 'readonly' : ''} required>
+                    <div class="form-help">模板的內部名稱，如：hello-world、for-loop、class-template${template && template.name ? '（編輯時不可修改）' : ''}</div>
+                </div>
+
                 <div class="form-group">
                     <label for="template-title">標題 *</label>
                     <input type="text" id="template-title" value="${template ? utils.escapeHtml(template.title) : ''}" required>
@@ -47,8 +57,8 @@
                     <div class="form-group">
                         <label for="template-topic">主題 *</label>
                         <div style="display: flex; gap: 8px; align-items: center;">
-                            <input type="text" id="template-topic-display" style="flex: 1;" value="${template ? utils.escapeHtml(this.context.getDisplayPath(template.topic)) : ''}" readonly required placeholder="點擊瀏覽選擇主題...">
-                            <input type="hidden" id="template-topic" value="${template ? utils.escapeHtml(template.topic) : ''}">
+                            <input type="text" id="template-topic-display" style="flex: 1;" value="${utils.escapeHtml(defaultTopicDisplay)}" readonly required placeholder="點擊瀏覽選擇主題...">
+                            <input type="hidden" id="template-topic" value="${utils.escapeHtml(defaultTopic)}">
                             <button type="button" id="browse-topic-btn" class="btn btn-secondary btn-small">
                                 <span class="icon">🗂️</span> 瀏覽
                             </button>
@@ -112,21 +122,22 @@
         /**
          * 獲取主題表單
          */
-        getTopicForm(topic) {
+        getTopicForm(topic, prefillData = null) {
             const utils = this.context.getUtils();
 
             // 計算當前主題的完整路徑
             const currentTopicPath = topic ? (Array.isArray(topic.path) ? topic.path.join('/') : topic.path) : '';
             const currentTopicDisplayPath = currentTopicPath ? this.context.getDisplayPath(currentTopicPath) : '';
 
-            // 計算所屬主題的顯示路徑
-            const parentDisplayPath = topic?.parent ? this.context.getDisplayPath(topic.parent) : '';
+            // 使用 prefillData 或 topic 的 parent 值，prefillData 優先
+            const defaultParent = prefillData?.parentPath || topic?.parent || '';
+            const parentDisplayPath = defaultParent ? this.context.getDisplayPath(defaultParent) : '';
 
             return `
                 <div class="form-group">
                     <label for="topic-name">主題名稱 *</label>
-                    <input type="text" id="topic-name" value="${topic ? utils.escapeHtml(topic.name) : ''}" ${topic ? 'readonly' : ''} required>
-                    <div class="form-help">主題的內部名稱，如：basic、advanced、algorithm</div>
+                    <input type="text" id="topic-name" value="${topic && topic.name ? utils.escapeHtml(topic.name) : ''}" ${topic && topic.name ? 'readonly' : ''} required>
+                    <div class="form-help">主題的內部名稱，如：basic、advanced、algorithm${topic && topic.name ? '（編輯時不可修改）' : ''}</div>
                 </div>
 
                 <div class="form-group">
@@ -139,7 +150,7 @@
                     <label for="topic-parent">所屬主題</label>
                     <div style="display: flex; gap: 8px; align-items: center;">
                         <input type="text" id="topic-parent-display" style="flex: 1;" value="${utils.escapeHtml(parentDisplayPath)}" readonly placeholder="無（頂層主題）">
-                        <input type="hidden" id="topic-parent" value="${topic?.parent || ''}">
+                        <input type="hidden" id="topic-parent" value="${utils.escapeHtml(defaultParent)}">
                         <button type="button" id="browse-parent-topic-btn" class="btn btn-secondary btn-small">
                             <span class="icon">🗂️</span> 瀏覽
                         </button>
@@ -195,11 +206,12 @@
         /**
          * 獲取連結表單
          */
-        getLinkForm(link) {
+        getLinkForm(link, prefillData = null) {
             const utils = this.context.getUtils();
 
-            // 計算目標路徑的顯示路徑
-            const targetDisplayPath = link?.target ? this.context.getDisplayPath(link.target) : '';
+            // 使用 prefillData 或 link 的值，prefillData 優先
+            const defaultTarget = prefillData?.targetPath || link?.target || '';
+            const targetDisplayPath = defaultTarget ? this.context.getDisplayPath(defaultTarget) : '';
 
             // 計算保存到主題的顯示路徑
             const saveToTopicPath = link?.topic || '';
@@ -222,7 +234,7 @@
                     <label for="link-target">目標路徑 *</label>
                     <div style="display: flex; gap: 8px; align-items: center;">
                         <input type="text" id="link-target-display" style="flex: 1;" value="${utils.escapeHtml(targetDisplayPath)}" readonly placeholder="選擇目標主題" required>
-                        <input type="hidden" id="link-target" value="${link?.target || ''}">
+                        <input type="hidden" id="link-target" value="${utils.escapeHtml(defaultTarget)}">
                         <button type="button" id="browse-target-btn" class="btn btn-secondary btn-small">
                             <span class="icon">🗂️</span> 瀏覽
                         </button>
@@ -240,7 +252,7 @@
                     <label for="link-save-to-topic">保存到主題 *</label>
                     <div style="display: flex; gap: 8px; align-items: center;">
                         <input type="text" id="link-save-to-topic-display" style="flex: 1;" value="${utils.escapeHtml(saveToDisplayPath)}" readonly placeholder="選擇主題" required>
-                        <input type="hidden" id="link-save-to-topic" value="${saveToTopicPath}">
+                        <input type="hidden" id="link-save-to-topic" value="${utils.escapeHtml(saveToTopicPath)}">
                         <button type="button" id="browse-save-to-topic-btn" class="btn btn-secondary btn-small">
                             <span class="icon">🗂️</span> 瀏覽
                         </button>
@@ -253,7 +265,7 @@
         /**
          * 獲取語言表單
          */
-        getLanguageForm(language) {
+        getLanguageForm(language, prefillData = null) {
             const utils = this.context.getUtils();
 
             return `
@@ -292,6 +304,7 @@
          * 從表單獲取模板數據
          */
         getTemplateData() {
+            const name = document.getElementById('template-name')?.value.trim();
             const title = document.getElementById('template-title')?.value.trim();
             const description = document.getElementById('template-description')?.value.trim();
             const language = document.getElementById('template-language')?.value;
@@ -302,7 +315,7 @@
             const tagsInput = document.getElementById('template-tags')?.value.trim();
 
             // 驗證必填字段
-            if (!title || !description || !language || !topic || !code) {
+            if (!name || !title || !description || !language || !topic || !code) {
                 throw new Error('請填寫所有必填字段');
             }
 
@@ -333,6 +346,7 @@
             }
 
             return {
+                name,
                 title,
                 description,
                 language,

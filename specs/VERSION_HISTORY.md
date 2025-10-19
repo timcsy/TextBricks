@@ -7,6 +7,43 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - 0.3.0 Development
 
+### 🐛 Manager Panel Bug Fixes (2025-10-19)
+
+**修復內容**: 修復 Manager Panel 中複製、創建、刪除功能的多個關鍵問題
+
+- **複製功能修復**
+  - 修正複製模板/主題後保存時「找不到指定的模板」錯誤
+  - 問題：`event-coordinator.js` 和 `manager.js` 使用 `if (editingItem)` 判斷模式
+  - 解決：改為 `if (editingItem && editingItem.name)` 正確區分編輯/創建模式
+  - 影響檔案：
+    - `assets/js/manager-panel/core/event-coordinator.js`
+    - `assets/js/manager-panel/manager.js`
+
+- **表單欄位編輯修復**
+  - 修正複製項目時名稱欄位仍為唯讀的問題
+  - 修正複製模板時主題路徑未預填的問題
+  - 解決：表單生成器檢查 `name` 屬性存在性，同時支援 `topicPath` 和 `topic` 屬性
+  - 影響檔案：`assets/js/manager-panel/ui/form-generator.js`
+
+- **主題創建數據轉換**
+  - 修正創建主題時「Cannot read properties of undefined (reading 'icon')」錯誤
+  - 問題：前端傳送扁平結構（`color`, `icon`），後端期望巢狀 `display` 物件
+  - 解決：在 `TopicActions.createTopic()` 中轉換數據格式
+  - 影響檔案：`packages/vscode/src/providers/manager-panel/actions/TopicActions.ts`
+
+- **文檔類型處理**
+  - 修正「documentation.trim is not a function」錯誤
+  - 問題：程式假設 `documentation` 是字串，但可能是物件
+  - 解決：新增 `hasDocumentation()` 輔助方法處理字串和物件兩種格式
+  - 影響檔案：
+    - `packages/vscode/src/providers/templates-panel/renderers/CardRenderer.ts`
+    - `packages/vscode/src/providers/templates-panel/renderers/TopicRenderer.ts`
+
+- **刪除確認統一**
+  - 統一主題、模板、連結的右鍵刪除行為
+  - 所有刪除操作使用一致的 modal 確認對話框
+  - 刪除後自動清空詳情面板並刷新顯示
+
 ### 🏗️ Core Architecture Overhaul (2025-09-30)
 
 **完成階段**: Phase 1-6 全部完成

@@ -127,7 +127,7 @@
                 getTopicPath: (topic) => this.pathHelpers.getTopicPath(topic),
 
                 // Modal shortcuts
-                openModal: (type, item) => this.modalManager.openModal(type, item),
+                openModal: (type, item, prefillData) => this.modalManager.openModal(type, item, prefillData),
                 closeModal: () => this.modalManager.closeModal(),
                 showDocumentationModal: (item, itemType) => this.modalManager.showDocumentationModal(item, itemType),
 
@@ -372,17 +372,23 @@
                 switch (type) {
                     case 'template':
                         data = this.formGenerator.getTemplateData();
-                        if (editingItem) {
+                        console.log('[Manager] saveItem - editingItem:', editingItem);
+                        console.log('[Manager] saveItem - editingItem.name:', editingItem?.name);
+                        // 只有當 editingItem 有 name 屬性時才視為編輯模式（複製時沒有 name）
+                        if (editingItem && editingItem.name) {
+                            console.log('[Manager] saveItem - Using updateTemplate mode');
                             messageType = 'updateTemplate';
                             identifier = this.pathHelpers.buildTemplatePath(editingItem);
                         } else {
+                            console.log('[Manager] saveItem - Using createTemplate mode');
                             messageType = 'createTemplate';
                         }
                         break;
 
                     case 'topic':
                         data = this.formGenerator.getTopicData();
-                        if (editingItem) {
+                        // 只有當 editingItem 有 name 屬性時才視為編輯模式（複製時沒有 name）
+                        if (editingItem && editingItem.name) {
                             messageType = 'updateTopic';
                             identifier = Array.isArray(editingItem.path)
                                 ? editingItem.path.join('/')

@@ -164,7 +164,8 @@
                 'open-location-btn': () => settingsRenderer.openDataLocation(),
                 'validate-custom-path-btn': () => settingsRenderer.validateCustomPath(),
                 'apply-custom-location-btn': () => settingsRenderer.applyCustomLocation(),
-                'reset-to-system-default-btn': () => settingsRenderer.resetToSystemDefault()
+                'reset-to-system-default-btn': () => settingsRenderer.resetToSystemDefault(),
+                'sync-to-dev-data-btn': () => settingsRenderer.syncToDevData()
             };
 
             Object.entries(locationHandlers).forEach(([id, handler]) => {
@@ -284,7 +285,8 @@
                 switch (type) {
                     case 'template':
                         data = formGenerator.getTemplateData();
-                        if (editingItem) {
+                        // 只有當 editingItem 有 name 屬性時才視為編輯模式（複製時沒有 name）
+                        if (editingItem && editingItem.name) {
                             messageType = 'updateTemplate';
                             identifier = pathHelpers.buildTemplatePath(editingItem);
                         } else {
@@ -294,7 +296,8 @@
 
                     case 'topic':
                         data = formGenerator.getTopicData();
-                        if (editingItem) {
+                        // 只有當 editingItem 有 name 屬性時才視為編輯模式（複製時沒有 name）
+                        if (editingItem && editingItem.name) {
                             messageType = 'updateTopic';
                             identifier = Array.isArray(editingItem.path)
                                 ? editingItem.path.join('/')

@@ -43,13 +43,13 @@
             );
 
             if (template) {
-                if (confirm(`確定要刪除模板「${template.title}」嗎？`)) {
-                    const vscode = this.context.getVSCode();
-                    vscode.postMessage({
-                        type: 'deleteTemplate',
-                        templatePath: templatePath
-                    });
-                }
+                // 直接發送刪除請求，讓後端處理確認
+                const vscode = this.context.getVSCode();
+                vscode.postMessage({
+                    type: 'deleteTemplate',
+                    templatePath: templatePath,
+                    templateTitle: template.title
+                });
             }
         }
 
