@@ -5,7 +5,11 @@ All notable changes to the TextBricks extension will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased] - 0.3.0 Development
+## [0.3.0] - 2025-10-19
+
+**重大版本發布**: 完整的 C 語言模板系統、Usage 統計重構、Provider 模組化拆分、UI 增強
+
+> 🎉 這是 TextBricks 的一個里程碑版本，包含完整的架構重構和 C 語言模板系統
 
 ### 📚 C 語言完整模板系統 (2025-10-19)
 
@@ -347,7 +351,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [Previous Releases] - 2025-09-26
+## [0.2.5] - 2025-09-26
 
 ### ✨ New Features
 - **Browsing History Navigation**: Added browser-like back/forward navigation based on actual browsing history
