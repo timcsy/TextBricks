@@ -164,14 +164,14 @@ scopes/
 
 **位置**：`scopes/{scope-id}/scope.json`
 
-**用途**：定義 Scope 的基本資訊、語言支援、收藏列表和使用統計。
+**用途**：定義 Scope 的基本資訊、語言支援和頂層主題列表。
 
 #### 完整範例
 
 ```json
 {
-  "id": "local",
-  "name": "本機範圍",
+  "name": "local",
+  "title": "本機範圍",
   "description": "本機開發環境的程式語言模板和主題",
 
   "languages": [
@@ -179,33 +179,41 @@ scopes/
       "name": "c",
       "title": "C 語言",
       "tagName": "C",
-      "description": "C programming language",
+      "description": "系統程式設計語言",
       "fileExtensions": [".c", ".h"],
-      "icon": "file-code"
+      "icon": "⚙️",
+      "color": "#A8B9CC"
     },
     {
       "name": "python",
       "title": "Python",
-      "tagName": "PYTHON",
-      "description": "Python programming language",
-      "fileExtensions": [".py"],
-      "icon": "file-code"
+      "tagName": "PY",
+      "description": "高階程式設計語言",
+      "fileExtensions": [".py", ".pyw"],
+      "icon": "🐍",
+      "color": "#3776AB"
     },
     {
       "name": "javascript",
       "title": "JavaScript",
       "tagName": "JS",
-      "description": "JavaScript programming language",
-      "fileExtensions": [".js", ".mjs"],
-      "icon": "file-code"
+      "description": "網頁前端程式設計語言",
+      "fileExtensions": [".js", ".mjs", ".jsx"],
+      "icon": "📜",
+      "color": "#F7DF1E"
     }
+  ],
+
+  "topics": [
+    "c",
+    "python",
+    "javascript"
   ],
 
   "favorites": [
     "c/basic/templates/hello-world",
-    "python/templates/hello-world",
-    "c/advanced",
-    "c/basic"
+    "python/templates/variables",
+    "c/advanced"
   ],
 
   "usage": {
@@ -213,20 +221,6 @@ scopes/
     "python/templates/hello-world": 12,
     "javascript/templates/hello-world": 8,
     "c/basic/templates/variables": 11
-  },
-
-  "settings": {
-    "autoSync": false,
-    "readOnly": false,
-    "shareMode": "private",
-    "autoBackup": true
-  },
-
-  "metadata": {
-    "version": "1.0.0",
-    "created": "2024-09-26",
-    "lastUpdated": "2025-10-02T15:25:36.722Z",
-    "author": "TextBricks"
   }
 }
 ```
@@ -235,14 +229,13 @@ scopes/
 
 | 欄位 | 類型 | 必需 | 說明 |
 |------|------|------|------|
-| **id** | string | ✅ | Scope 唯一識別符（與資料夾名稱相同） |
-| **name** | string | ✅ | Scope 顯示名稱 |
+| **name** | string | ✅ | Scope 唯一識別符（與資料夾名稱相同） |
+| **title** | string | ✅ | Scope 顯示標題 |
 | **description** | string | ✅ | Scope 說明 |
 | **languages** | array | ✅ | 支援的程式語言列表 |
-| **favorites** | array | ❌ | 收藏的路徑列表（自動管理） |
-| **usage** | object | ❌ | 使用次數統計（自動管理） |
-| **settings** | object | ❌ | Scope 設定 |
-| **metadata** | object | ❌ | 元資料（版本、作者等） |
+| **topics** | array | ✅ | 頂層主題列表（對應直接子資料夾） |
+| **favorites** | array | ❌ | 收藏的項目路徑列表（系統自動管理） |
+| **usage** | object | ❌ | 使用次數統計（系統自動管理） |
 
 #### languages 陣列
 
@@ -253,15 +246,38 @@ scopes/
   "name": "c",                    // 語言 ID（小寫，用於路徑）
   "title": "C 語言",              // 顯示名稱
   "tagName": "C",                 // 標籤名稱（UI 顯示）
-  "description": "C programming language",
+  "description": "系統程式設計語言",
   "fileExtensions": [".c", ".h"], // 檔案副檔名列表
-  "icon": "file-code"             // 圖示名稱（可選）
+  "icon": "⚙️",                   // 圖示（emoji 或圖示名稱）
+  "color": "#A8B9CC"              // 主題顏色（CSS 色碼）
 }
 ```
 
+**新欄位說明**（v0.3.0+）：
+- **icon**：現在支援 emoji（如 `"⚙️"`, `"🐍"`, `"📜"`）或圖示名稱
+- **color**：語言的代表色，用於 UI 標籤顯示
+
+#### topics 陣列
+
+**格式**：頂層主題名稱的字串陣列
+
+```json
+"topics": [
+  "c",           // 對應 c/ 資料夾
+  "python",      // 對應 python/ 資料夾
+  "javascript"   // 對應 javascript/ 資料夾
+]
+```
+
+**注意**：
+- 只包含直接子主題的名稱
+- 順序決定 UI 中的顯示順序
+- 主題必須存在對應的資料夾和 topic.json
+- 通常與 languages 對應，但也可以包含語言無關的主題（如 `algorithms`）
+
 #### favorites 陣列
 
-**格式**：路徑字串陣列
+**格式**：收藏項目的路徑字串陣列
 
 ```json
 "favorites": [
@@ -272,10 +288,15 @@ scopes/
 ]
 ```
 
-**注意**：
-- 路徑不包含 scope ID 前綴
-- 路徑格式：`topic/subtopic.../templates/template-name` 或 `topic/subtopic...`
-- 由系統自動管理，手動修改會被覆蓋
+**說明**：
+- **路徑格式**：不包含 scope ID 前綴
+  - 模板：`topic/subtopic.../templates/template-name`
+  - 主題：`topic/subtopic...`
+- **自動管理**：由系統自動維護，當使用者在 UI 中點擊收藏/取消收藏時更新
+- **用途**：
+  - 在 Templates Panel 顯示「我的最愛」區域
+  - 快速存取常用模板和主題
+- **手動編輯**：可以手動編輯來預設收藏項目，但使用者操作會覆蓋
 
 #### usage 物件
 
@@ -289,7 +310,36 @@ scopes/
 }
 ```
 
-**注意**：由系統自動管理，建議不要手動修改
+**說明**：
+- **記錄內容**：追蹤每個模板的使用次數
+- **自動更新**：每次插入模板時自動增加計數
+- **用途**：
+  - 生成「推薦模板」列表
+  - 排序搜尋結果（按使用頻率）
+  - 提供使用統計資訊
+- **重置統計**：可以透過 TextBricks Manager 清空使用記錄
+- **不建議手動編輯**：系統會覆蓋手動修改
+
+**使用統計的應用**：
+
+1. **推薦演算法**：結合使用次數和最近使用時間，計算推薦分數
+2. **搜尋排序**：可以按 `usage` 排序搜尋結果
+3. **數據分析**：透過 `ScopeManager.getUsageStats()` 獲取統計資訊
+
+```typescript
+// 取得使用統計
+const stats = scopeManager.getUsageStats();
+// 輸出:
+// {
+//   totalUsage: 48,
+//   topUsed: [
+//     { path: "c/basic/templates/hello-world", usage: 17 },
+//     { path: "python/templates/hello-world", usage: 12 },
+//     ...
+//   ],
+//   favoritesCount: 4
+// }
+```
 
 ---
 
@@ -309,6 +359,9 @@ scopes/
   "description": "C 語言的基本語法和概念",
 
   "documentation": "# C 語言\n\n## 主題簡介\nC 語言是一種通用的程式語言...\n\n## 內容概覽\n- 基礎語法\n- 控制結構\n- 函數與指標",
+
+  "templates": "templates",
+  "links": "links",
 
   "subtopics": [
     "basic",
@@ -333,9 +386,52 @@ scopes/
 | **name** | string | ✅ | 主題名稱（與資料夾名稱相同） |
 | **title** | string | ✅ | 主題顯示標題 |
 | **description** | string | ✅ | 主題簡短描述 |
-| **documentation** | string | ❌ | Markdown 格式的完整文檔 |
+| **documentation** | string/object | ❌ | Markdown 文檔（字串或物件格式） |
+| **templates** | string | ❌ | 模板目錄名稱（通常為 `"templates"`） |
+| **links** | string | ❌ | 連結目錄名稱（通常為 `"links"`） |
 | **subtopics** | array | ❌ | 子主題名稱列表 |
 | **display** | object | ❌ | 顯示設定 |
+
+#### documentation 欄位
+
+**支援兩種格式**（v0.3.0+）：
+
+**格式 1：字串（簡單格式）**
+```json
+{
+  "documentation": "# 標題\n\n內容..."
+}
+```
+
+**格式 2：物件（進階格式）**
+```json
+{
+  "documentation": {
+    "type": "markdown",
+    "content": "# 標題\n\n內容..."
+  }
+}
+```
+
+或引用外部檔案：
+```json
+{
+  "documentation": {
+    "type": "file",
+    "path": "README.md"
+  }
+}
+```
+
+或連結到 URL：
+```json
+{
+  "documentation": {
+    "type": "url",
+    "url": "https://example.com/docs"
+  }
+}
+```
 
 #### subtopics 陣列
 
@@ -741,7 +837,75 @@ TextBricks 使用**路徑基礎識別**，每個項目都有唯一的路徑。
 
 ## 最佳實踐
 
-### 1. 目錄組織
+### 1. 開發時同步資料夾
+
+在開發 TextBricks 時，系統資料夾與專案資料夾之間需要同步，以便測試和版本控制。
+
+#### 使用 TextBricks Manager 同步（推薦）
+
+**同步方向**：系統資料夾 → 專案資料夾
+
+TextBricks Manager 提供內建的同步功能：
+
+1. 開啟 **TextBricks Manager**
+2. 進入「**設定**」→「**資料位置設定**」
+3. 點擊「**🔄 同步到開發數據 (data/local)**」按鈕
+
+**功能說明**：
+- 將系統資料夾的 `local` scope 同步到專案的 `data/local/` 目錄
+- 同步前會自動備份到 `data/local.backup/`
+- 可選擇包含：
+  - ✅ **包含使用統計 (usage)**：同步使用次數記錄
+  - ✅ **包含收藏列表 (favorites)**：同步收藏項目
+  - ✅ **包含元數據 (metadata)**：同步其他元資料
+
+**系統資料夾位置**：
+- **macOS**: `~/Library/Application Support/TextBricks/scopes/local`
+- **Windows**: `%APPDATA%\TextBricks\scopes\local`
+- **Linux**: `~/.config/TextBricks/scopes/local`
+
+**專案資料夾位置**：
+- `{project-root}/data/local/`
+
+**使用時機**：
+- ✅ 在 UI 中修改了 scope 內容後，想提交到 Git
+- ✅ 測試新功能後，想保存測試資料
+- ✅ 開發完成後，更新專案的預設資料
+
+#### 推薦的開發流程
+
+1. **開發過程**：
+   - 使用 TextBricks Manager 的 UI 新增/編輯模板和主題
+   - 或直接在系統資料夾中修改檔案進行測試
+
+2. **同步到專案**：
+   - 開啟 TextBricks Manager
+   - 進入「設定」→「資料位置設定」
+   - 點擊「🔄 同步到開發數據 (data/local)」
+   - 選擇要包含的選項：
+     - 如果需要保留測試統計，勾選「包含使用統計」
+     - 如果需要預設收藏項目，勾選「包含收藏列表」
+     - 通常不需要勾選「包含元數據」
+
+3. **版本控制**：
+   - 檢查 Git 變更是否符合預期
+   - 提交有意義的變更到 Git
+   - 如果不需要同步 usage/favorites，可以還原這些變更
+
+**注意事項**：
+- ⚠️ 同步前會自動備份現有的 `data/local/` 到 `data/local.backup/`
+- ⚠️ 同步會**覆蓋**專案中的 `data/local/` 內容
+- ⚠️ 記得定期同步，避免遺失在系統資料夾中的修改
+- ✅ 建議在完成一個功能或修改後立即同步並提交
+
+**開發技巧**：
+
+- **快速測試**：直接在系統資料夾中修改，即時看到效果
+- **批次修改**：直接編輯專案中的 `data/local/` JSON 檔案
+- **UI 操作**：使用 Manager Panel 視覺化新增/編輯內容
+- **定期同步**：養成習慣在每次開發會議結束時同步一次
+
+### 2. 目錄組織
 
 ✅ **推薦做法**：
 
@@ -1253,7 +1417,22 @@ scopes/
 ---
 
 **製作團隊**：TextBricks 開發組
-**最後更新**：2025-10-18
-**版本**：v2.0
+**最後更新**：2025-10-19
+**版本**：v2.1
+
+## 更新記錄
+
+### v2.1 (2025-10-19)
+- ✨ 更新 scope.json 格式說明（移除已廢棄欄位 `id`, `settings`, `metadata`）
+- ✨ 新增 `favorites` 和 `usage` 的詳細說明
+- ✨ 新增 `topics` 陣列說明
+- ✨ 更新 languages 格式（新增 `icon` 和 `color` 欄位）
+- ✨ 新增 topic.json 的 `templates` 和 `links` 欄位說明
+- ✨ 新增 documentation 物件格式支援（v0.3.0+）
+- ✨ 新增「開發時同步資料夾」完整指南（4 種方法）
+- 📝 更新所有範例以反映實際實作
+
+### v2.0 (2025-10-18)
+- 初始完整版本
 
 > **提示**：建議先從小型 Scope 開始，熟悉結構後再逐步擴展。善用 TextBricks Manager 的匯入匯出功能來管理和分享您的模板集。
