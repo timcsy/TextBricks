@@ -9,17 +9,10 @@
 
 ### 高優先級 (v0.3.0)
 
-- [ ] **文檔完善**
+- [ ] **測試與驗證**
   - [ ] 在 TextBricks Manager 中測試所有 C 語言模板載入
   - [ ] 驗證所有模板的 JSON 格式正確性
   - [ ] 測試模板在編輯器中的插入功能
-  - [ ] 完善 TEMPLATE_GUIDE.md 的範例
-
-- ✅ **Provider 模組化拆分**（全部完成）
-  - ✅ Step 1: Manager.js 模組化拆分 (5,753 行 → 21 個模組)
-  - ✅ Step 2: Templates Panel 模組化拆分 (12 個功能模組)
-  - ✅ Step 3: ManagerPanelProvider 拆分 (2,088 行 → 1,226 行 + 8 個 action 模組)
-  - ✅ Step 4: TemplatesPanelProvider 拆分 (1,410 行 → 434 行 + 4 個 action + 4 個 renderer 模組)
 
 ### 中優先級
 
@@ -45,9 +38,7 @@
 
 ## 📚 C 語言模板系統擴充（可選）
 
-> ✅ **已完成**: 223 個檔案，192 個模板，11 個主題層級
-> ✅ **達成率**: 103.7% (原目標 215-415 個項目)
-> ✅ **已納入版本控制**: data/local/c/ 現已加入 git
+> **基礎系統已完成**: 223 個檔案，192 個模板，11 個主題層級（達成率 103.7%）
 >
 > 以下為可選的進一步擴充方向
 
@@ -162,14 +153,11 @@
 ## 🛠️ 技術債務
 
 ### 程式碼品質
-- ✅ ESLint 警告修正和 Jest 配置清理
 - [ ] 完整的 TypeScript 嚴格模式檢查
 - [ ] 移除所有 console.log（改用 platform logging）
 - [ ] 統一錯誤處理模式
 
 ### 架構改進
-- ✅ CSS 模組化重組 (採用 `-panel` 命名慣例)
-- ✅ assets/js 目錄結構重組
 - [ ] HTML 模板完全分離（TemplateLoader 完成度）
 - [ ] 前端狀態管理統一
 
@@ -206,27 +194,12 @@
 
 ## 🎨 UI/UX 改進
 
-### Templates Panel（大部分已完成）
-- ✅ 模板預覽浮動視窗（hover 顯示完整內容）
-  - tooltip-manager.js 完整實現 (642 行)
-  - 支援 hover 延遲、智能定位、互動按鈕
-  - 支援選取文字後複製/插入（智能縮排）
-- ✅ 拖曳功能（拖曳模板到編輯器）
-  - drag-drop-handler.js 實現 (175 行)
-  - 自訂拖曳圖像、視覺反饋、使用追蹤
-  - 註：不是面板內重新排序，而是拖曳插入編輯器
-- ✅ 基礎鍵盤快捷鍵（ESC、Ctrl+C）
-  - ESC 關閉 tooltip 和取消拖曳
-  - Ctrl/Cmd+C 複製聚焦的卡片
-- ✅ 麵包屑導航與文檔按鈕（NavigationRenderer.ts）
-- ✅ 展開/收合控制（全部展開/全部收合按鈕）
-- ✅ 智能預設收合邏輯（當前主題展開，其他收合）
+### Templates Panel
 - [ ] 進階鍵盤快捷鍵（Ctrl+K 快速搜尋等）
 - [ ] 面板內拖曳排序（自訂模板順序）
 
 ### Manager Panel
 - [ ] 批次操作（多選刪除、移動）
-- ✅ 語法高亮（Documentation Panel 中使用 highlight.js）
 - [ ] 模板編輯器中的語法高亮
 - [ ] 即時預覽（編輯時即時看到效果）
 
@@ -273,29 +246,10 @@
 ## 📝 文檔完善
 
 ### 用戶文檔
-- ✅ 快速入門指南
-  - README.md (386 行) - 功能概覽和基本使用
-  - TEMPLATE_GUIDE.md (1,459 行) - 完整的 Scope 設定指南
-- ✅ 進階使用技巧
-  - TEMPLATE_GUIDE.md 包含進階主題組織策略
-  - 跨主題連結模式、自訂主題結構
-- ✅ 常見問題 FAQ（基礎版本）
-  - TEMPLATE_GUIDE.md 包含基本常見問題
-  - 註：尚需擴充更多實際使用問題
 - [ ] 影片教學
 - [ ] 擴充完整的 FAQ（更多實際使用問題）
 
 ### 開發者文檔
-- ✅ 架構深入解析
-  - AGENTS.md (454 行) - 完整架構概覽
-  - PRD.md (682 行) - 產品需求和架構決策
-  - VERSION_HISTORY.md - 架構演進歷史
-- ✅ API 參考文檔
-  - AGENTS.md 包含核心服務 API
-  - TypeScript 接口提供完整類型文檔
-- ✅ 插件開發指南（基礎版本）
-  - AGENTS.md 包含 monorepo 工作流程
-  - 註：尚需更詳細的擴展指南
 - [ ] 貢獻指南 (CONTRIBUTING.md)
 - [ ] 完整的插件/擴展開發教程
 
