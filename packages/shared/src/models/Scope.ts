@@ -6,10 +6,10 @@
 import { Language } from './Template';
 
 export interface ScopeConfig {
-    /** Scope 唯一標識 */
-    id: string;
-    /** 顯示名稱 */
+    /** Scope 唯一標識（同時作為目錄名稱） */
     name: string;
+    /** 顯示標題 */
+    title?: string;
     /** 描述 */
     description: string;
     /** 支援的程式語言 */

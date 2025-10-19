@@ -61,7 +61,7 @@ export class TextBricksEngine {
         // 使用注入的服務或獲取單例
         this.dataPathService = dataPathService || DataPathService.getInstance(platform);
         this.topicManager = topicManager || new TopicManager(platform, this.dataPathService);
-        this.scopeManager = scopeManager || new ScopeManager(platform);
+        this.scopeManager = scopeManager || new ScopeManager(platform, this.dataPathService);
         this.templateRepository = templateRepository || new TemplateRepository(platform, this.dataPathService, this.topicManager);
         this.recommendationService = recommendationService || new RecommendationService(platform);
     }
@@ -567,7 +567,7 @@ export class TextBricksEngine {
         if (!currentScope) {
             throw new Error('No current scope available');
         }
-        await this.scopeManager.updateScope(currentScope.id, {
+        await this.scopeManager.updateScope(currentScope.name, {
             languages: this.languages
         });
         return language;
@@ -586,7 +586,7 @@ export class TextBricksEngine {
         if (!currentScope) {
             throw new Error('No current scope available');
         }
-        await this.scopeManager.updateScope(currentScope.id, {
+        await this.scopeManager.updateScope(currentScope.name, {
             languages: this.languages
         });
 
@@ -772,6 +772,10 @@ export class TextBricksEngine {
 
     getPlatform(): IPlatform {
         return this.platform;
+    }
+
+    getScopeManager(): ScopeManager {
+        return this.scopeManager;
     }
 
     // === 私有輔助方法 ===

@@ -44,11 +44,11 @@ export class CodeOperationService {
             const formattedCode = this.engine.formatTemplate(template, targetIndentation);
 
             await this._executeClipboardOperation(formattedCode, options);
-            await this._recordUsage(templatePath);
-            
+            // 複製操作不計入使用次數
+
             this._showFeedback(
-                options?.successMessage || `模板 '${template.title}' 已複製`, 
-                'info', 
+                options?.successMessage || `模板 '${template.title}' 已複製`,
+                'info',
                 options
             );
         } catch (error) {
@@ -106,8 +106,8 @@ export class CodeOperationService {
             const formattedCode = await this._formatCodeSnippet(code, templatePath);
 
             await this._executeClipboardOperation(formattedCode, options);
-            await this._recordUsage(templatePath);
-            
+            // 複製操作不計入使用次數
+
             const lines = code.split('\n').length;
             const defaultMessage = lines > 1 ? `${lines} 行程式碼已複製` : '程式碼片段已複製';
             this._showFeedback(options?.successMessage || defaultMessage, 'info', options);

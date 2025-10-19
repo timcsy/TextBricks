@@ -159,9 +159,17 @@ export class DataPathService {
      */
     async getDataPath(): Promise<string> {
         if (!this.currentDataPath) {
+            this.platform.logWarning?.('currentDataPath is undefined, initializing...', 'DataPathService');
             await this.initialize();
         }
-        return this.currentDataPath!;
+
+        // 雙重檢查：如果 initialize() 後仍然沒有設置，使用系統預設
+        if (!this.currentDataPath) {
+            this.platform.logError?.(new Error('Failed to initialize dataPath, falling back to system default'), 'DataPathService');
+            this.currentDataPath = this.getSystemDefaultPath();
+        }
+
+        return this.currentDataPath;
     }
 
     /**
@@ -820,5 +828,361 @@ export class DataPathService {
         } catch (error) {
             this.platform.logError?.(error as Error, 'DataPathService.notifyPathChanged');
         }
+    }
+
+    // ==================== 開發同步功能 ====================
+
+    /**
+     * 檢測是否為開發環境
+     */
+    isDevEnvironment(): boolean {
+        try {
+            // 獲取擴展路徑
+            const extensionPath = typeof (this.platform as any).getExtensionPath === 'function'
+                ? (this.platform as any).getExtensionPath()
+                : (this.platform as any).getExtensionContext?.()?.extensionPath;
+
+            if (!extensionPath) {
+                this.platform.logInfo?.('isDevEnvironment: No extension path found', 'DataPathService');
+                return false;
+            }
+
+            // 檢查是否存在 packages/vscode 目錄結構（開發模式特徵）
+            // 在開發模式下，extensionPath 可能是項目根目錄或 packages/vscode 目錄
+            const { existsSync } = require('fs');
+            const packagesVscodePath = path.join(extensionPath, 'packages', 'vscode');
+            const isDev = extensionPath.includes('packages/vscode') || existsSync(packagesVscodePath);
+
+            this.platform.logInfo?.(`isDevEnvironment: ${isDev}, extensionPath: ${extensionPath}`, 'DataPathService');
+            return isDev;
+        } catch (error) {
+            this.platform.logError?.(error as Error, 'DataPathService.isDevEnvironment');
+            return false;
+        }
+    }
+
+    /**
+     * 獲取開發數據路徑（項目的 data/local）
+     */
+    getDevDataPath(): string | null {
+        try {
+            const extensionPath = typeof (this.platform as any).getExtensionPath === 'function'
+                ? (this.platform as any).getExtensionPath()
+                : (this.platform as any).getExtensionContext?.()?.extensionPath;
+
+            if (!extensionPath) {
+                return null;
+            }
+
+            let projectRoot: string;
+
+            // 檢查 extensionPath 是否已經是項目根目錄（包含 packages/vscode）
+            const { existsSync } = require('fs');
+            const packagesVscodePath = path.join(extensionPath, 'packages', 'vscode');
+
+            if (existsSync(packagesVscodePath)) {
+                // extensionPath 就是項目根目錄
+                projectRoot = extensionPath;
+            } else if (extensionPath.includes('packages/vscode')) {
+                // extensionPath 是 packages/vscode 或其子目錄，需要向上找
+                projectRoot = path.join(extensionPath, '..', '..');
+            } else {
+                // 無法確定項目根目錄
+                return null;
+            }
+
+            // 構建 data/local 路徑
+            const devDataPath = path.resolve(projectRoot, 'data', 'local');
+
+            return devDataPath;
+        } catch {
+            return null;
+        }
+    }
+
+    /**
+     * 同步運行時數據到開發數據
+     */
+    async syncToDevData(options?: {
+        includeUsage?: boolean;
+        includeFavorites?: boolean;
+        includeMetadata?: boolean;
+    }): Promise<{
+        success: boolean;
+        message: string;
+        templatesCount?: number;
+        topicsCount?: number;
+        docsCount?: number;
+    }> {
+        const opts = {
+            includeUsage: options?.includeUsage ?? false,
+            includeFavorites: options?.includeFavorites ?? false,
+            includeMetadata: options?.includeMetadata ?? false
+        };
+
+        try {
+            // 1. 驗證開發環境
+            if (!this.isDevEnvironment()) {
+                return {
+                    success: false,
+                    message: '不是開發環境，無法同步'
+                };
+            }
+
+            // 2. 獲取路徑
+            const devDataPath = this.getDevDataPath();
+            if (!devDataPath) {
+                return {
+                    success: false,
+                    message: '無法獲取開發數據路徑'
+                };
+            }
+
+            const runtimeDataPath = await this.getScopePath('local');
+
+            // 3. 備份舊數據
+            await this.backupDevData(devDataPath);
+
+            // 4. 複製運行時數據
+            const { promises: fs } = await import('fs');
+
+            // 刪除舊的 devDataPath（如果存在）
+            try {
+                await fs.rm(devDataPath, { recursive: true });
+            } catch {
+                // 不存在也沒關係
+            }
+
+            // 複製整個目錄
+            await this.copyDirectory(runtimeDataPath, devDataPath, {
+                success: false,
+                sourceLocation: runtimeDataPath,
+                targetLocation: devDataPath,
+                migratedFiles: 0,
+                totalFiles: 0,
+                duration: 0,
+                errors: [],
+                warnings: []
+            });
+
+            // 5. 處理 documentation 文件並獲取統計
+            const docsCount = await this.processDocumentationFiles(runtimeDataPath, devDataPath);
+
+            // 6. 清理數據
+            const counts = await this.cleanDataByOptions(devDataPath, opts);
+
+            this.platform.logInfo?.(`Synced to dev data: ${devDataPath}`);
+
+            return {
+                success: true,
+                message: '同步完成',
+                templatesCount: counts.templatesCount,
+                topicsCount: counts.topicsCount,
+                docsCount
+            };
+        } catch (error) {
+            this.platform.logError?.(error as Error, 'DataPathService.syncToDevData');
+            return {
+                success: false,
+                message: `同步失敗: ${error instanceof Error ? error.message : String(error)}`
+            };
+        }
+    }
+
+    /**
+     * 備份開發數據
+     */
+    private async backupDevData(devDataPath: string): Promise<void> {
+        const { promises: fs } = await import('fs');
+        const backupPath = devDataPath + '.backup';
+
+        try {
+            // 如果備份已存在，先刪除
+            try {
+                await fs.rm(backupPath, { recursive: true });
+            } catch {
+                // 不存在也沒關係
+            }
+
+            // 如果 devDataPath 存在，重命名為備份
+            try {
+                await fs.rename(devDataPath, backupPath);
+                this.platform.logInfo?.(`Backed up: ${backupPath}`);
+            } catch {
+                // 不存在也沒關係
+            }
+        } catch (error) {
+            this.platform.logWarning?.(`Failed to backup: ${error}`, 'DataPathService');
+        }
+    }
+
+    /**
+     * 處理 documentation 文件路徑
+     */
+    private async processDocumentationFiles(runtimeDataPath: string, devDataPath: string): Promise<number> {
+        const { promises: fs } = await import('fs');
+        let processedCount = 0;
+
+        try {
+            // 遞迴查找所有模板檔案
+            const templateFiles = await this.findTemplateFiles(devDataPath);
+
+            for (const templateFile of templateFiles) {
+                try {
+                    const content = await fs.readFile(templateFile, 'utf8');
+                    const template = JSON.parse(content);
+
+                    if (template.documentation && typeof template.documentation === 'string') {
+                        const docPath = template.documentation;
+
+                        // 如果是絕對路徑且在運行時位置
+                        if (path.isAbsolute(docPath) && docPath.includes('scopes/local')) {
+                            // 計算相對於 scopes/local 的路徑
+                            const relativePath = path.relative(runtimeDataPath, docPath);
+
+                            // 目標文檔路徑
+                            const targetDocPath = path.join(devDataPath, relativePath);
+
+                            // 檢查文檔文件是否已經被複製（應該已在 copyDirectory 中複製）
+                            // 如果沒有，手動複製
+                            try {
+                                await fs.access(targetDocPath);
+                            } catch {
+                                // 文件不存在，手動複製
+                                await fs.mkdir(path.dirname(targetDocPath), { recursive: true });
+                                await fs.copyFile(docPath, targetDocPath);
+                            }
+
+                            // 調整模板中的路徑為相對路徑
+                            const templateDir = path.dirname(templateFile);
+                            const relativeDocPath = path.relative(templateDir, targetDocPath);
+                            template.documentation = relativeDocPath;
+
+                            // 寫回模板文件
+                            await fs.writeFile(templateFile, JSON.stringify(template, null, 2));
+
+                            processedCount++;
+                        }
+                    }
+                } catch (error) {
+                    this.platform.logWarning?.(`Failed to process template: ${templateFile}`, 'DataPathService');
+                }
+            }
+        } catch (error) {
+            this.platform.logError?.(error as Error, 'DataPathService.processDocumentationFiles');
+        }
+
+        return processedCount;
+    }
+
+    /**
+     * 查找所有模板檔案
+     */
+    private async findTemplateFiles(dirPath: string): Promise<string[]> {
+        const { promises: fs } = await import('fs');
+        const templateFiles: string[] = [];
+
+        try {
+            const entries = await fs.readdir(dirPath, { withFileTypes: true });
+
+            for (const entry of entries) {
+                const fullPath = path.join(dirPath, entry.name);
+
+                if (entry.isDirectory()) {
+                    // 遞迴查找子目錄
+                    const subFiles = await this.findTemplateFiles(fullPath);
+                    templateFiles.push(...subFiles);
+                } else if (entry.name.endsWith('.json') && !entry.name.includes('scope.json') && !entry.name.includes('topic.json')) {
+                    // 模板檔案
+                    templateFiles.push(fullPath);
+                }
+            }
+        } catch (error) {
+            this.platform.logError?.(error as Error, 'DataPathService.findTemplateFiles');
+        }
+
+        return templateFiles;
+    }
+
+    /**
+     * 根據選項清理數據
+     */
+    private async cleanDataByOptions(devDataPath: string, options: {
+        includeUsage: boolean;
+        includeFavorites: boolean;
+        includeMetadata: boolean;
+    }): Promise<{
+        templatesCount: number;
+        topicsCount: number;
+    }> {
+        const { promises: fs } = await import('fs');
+        let templatesCount = 0;
+        let topicsCount = 0;
+
+        try {
+            // 清理 scope.json
+            const scopePath = path.join(devDataPath, 'scope.json');
+            try {
+                const scopeContent = await fs.readFile(scopePath, 'utf8');
+                const scope = JSON.parse(scopeContent);
+
+                const cleanedScope: any = {
+                    name: scope.name,
+                    title: scope.title,
+                    description: scope.description,
+                    languages: scope.languages,  // 保留所有欄位，包括 icon, color
+                    topics: scope.topics
+                };
+
+                // 根據選項決定是否保留
+                if (options.includeUsage && scope.usage) {
+                    cleanedScope.usage = scope.usage;
+                }
+                if (options.includeFavorites && scope.favorites) {
+                    cleanedScope.favorites = scope.favorites;
+                }
+                if (options.includeMetadata && scope.metadata) {
+                    cleanedScope.metadata = scope.metadata;
+                } else if (scope.settings) {
+                    // 保留 settings（非個人化設定）
+                    cleanedScope.settings = scope.settings;
+                }
+
+                await fs.writeFile(scopePath, JSON.stringify(cleanedScope, null, 2));
+            } catch (error) {
+                this.platform.logWarning?.(`Failed to clean scope.json: ${error}`, 'DataPathService');
+            }
+
+            // 清理所有模板檔案
+            const templateFiles = await this.findTemplateFiles(devDataPath);
+            for (const templateFile of templateFiles) {
+                try {
+                    const content = await fs.readFile(templateFile, 'utf8');
+                    const template = JSON.parse(content);
+
+                    // 移除運行時欄位
+                    delete template.topicPath;
+
+                    // 根據選項決定是否移除 metadata
+                    if (!options.includeMetadata) {
+                        delete template.metadata;
+                    }
+
+                    await fs.writeFile(templateFile, JSON.stringify(template, null, 2));
+                    templatesCount++;
+                } catch (error) {
+                    this.platform.logWarning?.(`Failed to clean template: ${templateFile}`, 'DataPathService');
+                }
+            }
+
+            // 統計主題數量
+            const entries = await fs.readdir(devDataPath, { withFileTypes: true });
+            topicsCount = entries.filter(e => e.isDirectory() && !e.name.startsWith('.')).length;
+
+        } catch (error) {
+            this.platform.logError?.(error as Error, 'DataPathService.cleanDataByOptions');
+        }
+
+        return { templatesCount, topicsCount };
     }
 }

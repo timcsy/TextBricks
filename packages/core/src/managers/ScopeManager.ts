@@ -11,15 +11,18 @@ import {
     ScopeExportData,
     ScopeEvent
 } from '@textbricks/shared';
+import { DataPathService } from '../services/DataPathService';
 
 export class ScopeManager {
     private platform: IPlatform;
+    private dataPathService: DataPathService;
     private currentScope: ScopeConfig | null = null;
     private availableScopes: Map<string, ScopeConfig> = new Map();
     private eventListeners: Array<(event: ScopeEvent) => void> = [];
 
-    constructor(platform: IPlatform) {
+    constructor(platform: IPlatform, dataPathService: DataPathService) {
         this.platform = platform;
+        this.dataPathService = dataPathService;
     }
 
     // ==================== 初始化和載入 ====================
@@ -34,20 +37,35 @@ export class ScopeManager {
         }
     }
 
+    /**
+     * 獲取資料根目錄路徑（scopes 目錄）
+     */
+    private async getDataRootPath(): Promise<string> {
+        if (!this.dataPathService) {
+            throw new Error('DataPathService is required but not provided');
+        }
+        const dataPath = await this.dataPathService.getDataPath();
+
+        if (!dataPath) {
+            this.platform.logError(new Error('DataPathService.getDataPath() returned undefined'), 'ScopeManager.getDataRootPath');
+            throw new Error('DataPathService.getDataPath() returned undefined. DataPathService may not be initialized.');
+        }
+
+        const { join } = await import('path');
+        const scopesPath = join(dataPath, 'scopes');
+
+        this.platform.logInfo(`Data root path: ${dataPath}, scopes path: ${scopesPath}`, 'ScopeManager');
+
+        return scopesPath;
+    }
+
     private async loadAvailableScopes(): Promise<void> {
         try {
             // 從文件系統載入所有可用的 scope
             const { join } = await import('path');
             const { readdir, readFile, stat } = await import('fs/promises');
 
-            const extensionPath = (this.platform as any).getExtensionPath?.() ||
-                                (this.platform as any).getExtensionContext?.()?.extensionPath;
-
-            if (!extensionPath) {
-                throw new Error('Extension path not found');
-            }
-
-            const dataPath = join(extensionPath, 'data');
+            const dataPath = await this.getDataRootPath();
 
             try {
                 const entries = await readdir(dataPath, { withFileTypes: true });
@@ -60,7 +78,10 @@ export class ScopeManager {
                         try {
                             const scopeData = await readFile(scopeConfigPath, 'utf-8');
                             const scopeConfig: ScopeConfig = JSON.parse(scopeData);
-                            this.availableScopes.set(scopeConfig.id, scopeConfig);
+
+                            // 使用 scope.name 作為識別符（新版本沒有 id 欄位）
+                            const scopeId = scopeConfig.name || entry.name;
+                            this.availableScopes.set(scopeId, scopeConfig);
                         } catch (error) {
                             this.platform.logWarning(`Failed to load scope config for ${entry.name}`, 'ScopeManager');
                         }
@@ -99,8 +120,8 @@ export class ScopeManager {
 
     private async createDefaultLocalScope(): Promise<void> {
         const defaultScope: ScopeConfig = {
-            id: 'local',
-            name: '本機範圍',
+            name: 'local',
+            title: '本機範圍',
             description: '本機開發環境的程式語言模板和主題',
             languages: [],
             favorites: [],
@@ -160,11 +181,11 @@ export class ScopeManager {
         };
 
         // 檢查 ID 是否已存在
-        if (this.availableScopes.has(scope.id)) {
-            throw new Error(`Scope with ID '${scope.id}' already exists`);
+        if (this.availableScopes.has(scope.name)) {
+            throw new Error(`Scope with ID '${scope.name}' already exists`);
         }
 
-        this.availableScopes.set(scope.id, scope);
+        this.availableScopes.set(scope.name, scope);
 
         // 保存到文件系統
         await this.saveScopeConfig(scope);
@@ -193,7 +214,7 @@ export class ScopeManager {
         this.availableScopes.set(scopeId, updatedScope);
 
         // 如果是當前 scope，更新引用
-        if (this.currentScope?.id === scopeId) {
+        if (this.currentScope?.name === scopeId) {
             this.currentScope = updatedScope;
         }
 
@@ -218,7 +239,7 @@ export class ScopeManager {
         this.availableScopes.delete(scopeId);
 
         // 如果刪除的是當前 scope，切換到 local scope
-        if (this.currentScope?.id === scopeId) {
+        if (this.currentScope?.name === scopeId) {
             await this.switchScope('local');
         }
 
@@ -296,15 +317,15 @@ export class ScopeManager {
         const { scope } = exportData;
 
         // 檢查是否已存在
-        if (this.availableScopes.has(scope.id) && !options.overwriteExisting) {
-            throw new Error(`Scope '${scope.id}' already exists`);
+        if (this.availableScopes.has(scope.name) && !options.overwriteExisting) {
+            throw new Error(`Scope '${scope.name}' already exists`);
         }
 
         let targetScope = scope;
 
         // 如果是合併模式
-        if (this.availableScopes.has(scope.id) && options.overwriteExisting) {
-            const existingScope = this.availableScopes.get(scope.id)!;
+        if (this.availableScopes.has(scope.name) && options.overwriteExisting) {
+            const existingScope = this.availableScopes.get(scope.name)!;
 
             targetScope = {
                 ...existingScope,
@@ -326,7 +347,7 @@ export class ScopeManager {
             };
         }
 
-        this.availableScopes.set(targetScope.id, targetScope);
+        this.availableScopes.set(targetScope.name, targetScope);
         await this.saveScopeConfig(targetScope);
 
         this.emitEvent({ type: 'scope-created', scope: targetScope });
@@ -339,22 +360,29 @@ export class ScopeManager {
             const { join } = await import('path');
             const { writeFile, mkdir } = await import('fs/promises');
 
-            const extensionPath = (this.platform as any).getExtensionPath?.() ||
-                                (this.platform as any).getExtensionContext?.()?.extensionPath;
+            this.platform.logInfo(`Saving scope: ${JSON.stringify({ name: scope.name, title: scope.title })}`, 'ScopeManager');
 
-            if (!extensionPath) {
-                throw new Error('Extension path not found');
+            const dataRootPath = await this.getDataRootPath();
+
+            if (!scope.name) {
+                this.platform.logError(new Error(`Scope name is undefined! Scope: ${JSON.stringify(scope)}`), 'ScopeManager.saveScopeConfig');
+                throw new Error('Scope name is undefined');
             }
 
-            const scopePath = join(extensionPath, 'data', scope.id);
+            const scopePath = join(dataRootPath, scope.name);
             const scopeConfigPath = join(scopePath, 'scope.json');
+
+            this.platform.logInfo(`Saving scope config to: ${scopeConfigPath}`, 'ScopeManager');
 
             // 確保目錄存在
             await mkdir(scopePath, { recursive: true });
 
             // 保存配置文件
             await writeFile(scopeConfigPath, JSON.stringify(scope, null, 2), 'utf-8');
+
+            this.platform.logInfo(`Scope config written successfully`, 'ScopeManager');
         } catch (error) {
+            this.platform.logError(error as Error, 'ScopeManager.saveScopeConfig');
             throw new Error(`Failed to save scope config: ${error}`);
         }
     }
@@ -364,14 +392,8 @@ export class ScopeManager {
             const { join } = await import('path');
             const { rm } = await import('fs/promises');
 
-            const extensionPath = (this.platform as any).getExtensionPath?.() ||
-                                (this.platform as any).getExtensionContext?.()?.extensionPath;
-
-            if (!extensionPath) {
-                throw new Error('Extension path not found');
-            }
-
-            const scopePath = join(extensionPath, 'data', scopeId);
+            const dataRootPath = await this.getDataRootPath();
+            const scopePath = join(dataRootPath, scopeId);
             await rm(scopePath, { recursive: true, force: true });
         } catch (error) {
             throw new Error(`Failed to delete scope from filesystem: ${error}`);
@@ -414,10 +436,19 @@ export class ScopeManager {
         }
 
         // 更新 usage 統計
-        this.currentScope.usage[itemPath] = (this.currentScope.usage[itemPath] || 0) + 1;
+        const oldCount = this.currentScope.usage[itemPath] || 0;
+        this.currentScope.usage[itemPath] = oldCount + 1;
+
+        this.platform.logInfo(`Updating usage for ${itemPath}: ${oldCount} -> ${this.currentScope.usage[itemPath]}`, 'ScopeManager');
 
         // 保存到檔案系統
-        await this.saveScopeConfig(this.currentScope);
+        try {
+            await this.saveScopeConfig(this.currentScope);
+            this.platform.logInfo(`Scope config saved successfully for ${this.currentScope.name}`, 'ScopeManager');
+        } catch (error) {
+            this.platform.logError(error as Error, 'ScopeManager.updateUsage');
+            throw error;
+        }
 
         // 觸發事件
         this.emitEvent({
