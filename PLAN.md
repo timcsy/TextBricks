@@ -16,6 +16,8 @@
   - [ ] 完善 TEMPLATE_GUIDE.md 的範例
 
 - [ ] **Provider 模組化拆分**
+  - ✅ Step 1: Manager.js 模組化拆分 (5,753 行 → 21 個模組)
+  - ✅ Step 2: Templates Panel 模組化拆分 (12 個功能模組)
   - [ ] Step 3: ManagerWebviewProvider 拆分 (2,088 行 → 模組化)
   - [ ] Step 4: TemplateWebviewProvider 拆分 (1,410 行 → 模組化)
 
@@ -43,8 +45,11 @@
 
 ## 📚 C 語言模板系統擴充（可選）
 
-> 當前已完成 223 個檔案，達成率 103.7%
-> 以下為可選的擴充方向
+> ✅ **已完成**: 223 個檔案，192 個模板，11 個主題層級
+> ✅ **達成率**: 103.7% (原目標 215-415 個項目)
+> ✅ **已納入版本控制**: data/local/c/ 現已加入 git
+>
+> 以下為可選的進一步擴充方向
 
 ### 01-basics 可擴充
 - [ ] 更多變數相關模板（const、型別轉換、變數範圍）
@@ -157,13 +162,15 @@
 ## 🛠️ 技術債務
 
 ### 程式碼品質
+- ✅ ESLint 警告修正和 Jest 配置清理
 - [ ] 完整的 TypeScript 嚴格模式檢查
 - [ ] 移除所有 console.log（改用 platform logging）
 - [ ] 統一錯誤處理模式
 
 ### 架構改進
+- ✅ CSS 模組化重組 (採用 `-panel` 命名慣例)
+- ✅ assets/js 目錄結構重組
 - [ ] HTML 模板完全分離（TemplateLoader 完成度）
-- [ ] CSS 模組化進一步細分
 - [ ] 前端狀態管理統一
 
 ### 效能優化
