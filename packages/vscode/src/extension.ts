@@ -27,8 +27,8 @@ export async function activate(context: vscode.ExtensionContext) {
         const dataPathService = DataPathService.getInstance(platform);
 
         // 嘗試自動初始化資料位置
-        const isInitialized = await dataPathService.autoInitialize();
-        if (!isInitialized) {
+        const wasJustInitialized = await dataPathService.autoInitialize();
+        if (!wasJustInitialized) {
             // 用戶取消了初始化，仍然嘗試使用預設路徑
             await dataPathService.initialize();
         }
@@ -46,6 +46,15 @@ export async function activate(context: vscode.ExtensionContext) {
         await scopeManager.initialize();
         await topicManager.initialize();
         await templateRepository.initialize();
+
+        // 如果剛剛完成初始化和資料複製，等待一小段時間確保檔案系統操作完成
+        if (wasJustInitialized) {
+            await new Promise(resolve => setTimeout(resolve, 500));
+            // 重新載入 managers 以讀取複製的資料
+            await scopeManager.initialize();
+            await topicManager.initialize();
+            await templateRepository.initialize();
+        }
 
         // 初始化核心服務，注入共享的管理器
         const textBricksEngine = new TextBricksEngine(

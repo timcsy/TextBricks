@@ -134,9 +134,11 @@ export class DataPathService {
                 this.currentDataPath = defaultPath;
                 await this.saveConfiguration();
 
-                if (shouldMigrate) {
-                    await this.migrateInitialData();
-                }
+                // 確保目錄結構存在
+                await this.initializeDefaultPath();
+
+                // 注意：initializeDefaultPath 已經調用了 migrateInitialData
+                // 如果有特殊需求可以在這裡再次調用
 
                 await this.platform.ui.showInformationMessage(
                     `TextBricks 資料位置已初始化：${defaultPath}`
