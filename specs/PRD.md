@@ -27,6 +27,15 @@
 
 TextBricks 基於**「序列-結構-圖譜」三形態理論**，認為程式/規格有三種本質性的表現形式：
 
+### 多形態知識單元
+
+每個模板都是一個**完整的多形態知識單元**，包含三種形態的檔案：
+- `sequence.*` - 序列形態（文字程式碼）
+- `structure.*` - 結構形態（積木表示）
+- `topology.*` - 圖譜形態（節點流程）
+
+**核心設計原則**：三種形態存放在同一個目錄下，不拆散，確保知識單元的完整性。
+
 ### 1. 序列（Sequence）- 文字模板
 
 **語法層面**：「這段程式怎麼寫」
@@ -59,6 +68,92 @@ TextBricks 基於**「序列-結構-圖譜」三形態理論**，認為程式/�
 - **劣勢**：細節隱藏、不適合細粒度編輯
 
 **當前狀態**: 🚧 **規劃中** (v0.5.0 目標)
+
+---
+
+## 🌍 跨語言層級支援
+
+### 統一的語言觀
+
+**核心洞察**：不論是自然語言、程式語言、還是硬體描述語言，本質上都是**語言** (Language)。
+
+TextBricks 的願景是成為**跨語言層級的多形態知識平台**，支援從最抽象的自然語言規格，到最具體的物理電路設計。
+
+### 完整的抽象層級
+
+```
+抽象層級 ↕️ 轉換工具 →
+
+🔸 Natural Language (自然語言)
+   例如：spec.md, requirements.txt
+   轉換：Coding Agent (Claude, Copilot)
+      ↓
+🔸 High-Level Programming (高階程式語言)
+   例如：Python, JavaScript, Java, C
+   轉換：Interpreter / Compiler
+      ↓
+🔸 Low-Level Programming (低階程式語言)
+   例如：Assembly (x86, ARM)
+   轉換：Assembler
+      ↓
+🔸 Machine Language (機器語言)
+   例如：x86 bytecode, ARM instructions
+   執行：CPU
+      ↓
+🔸 Hardware Description (硬體描述語言)
+   例如：Verilog, VHDL
+   綜合：Synthesis Tools
+      ↓
+🔸 Physical Circuit (實體電路)
+   例如：Netlist, PCB Layout
+   製造：Fabrication Process
+```
+
+### 每個層級都有三種形態
+
+**關鍵發現**：不論在哪個抽象層級，都可以用三種形態表達。
+
+#### 自然語言的三形態
+- **Sequence**: `spec.md` (Markdown 文字)
+- **Structure**: 結構化規格 (JSON/XML)
+- **Topology**: 需求關聯圖
+
+#### 程式語言的三形態
+- **Sequence**: `.py`, `.js`, `.c` (文字程式碼)
+- **Structure**: Blockly 積木
+- **Topology**: 呼叫圖、資料流圖
+
+#### 硬體描述語言的三形態
+- **Sequence**: `.v`, `.vhd` (HDL 文字碼)
+- **Structure**: 邏輯閘積木
+- **Topology**: 電路圖、時序圖
+
+#### 機器語言的三形態
+- **Sequence**: binary/hex code (位元組序列)
+- **Structure**: 指令區塊
+- **Topology**: 執行流水線圖
+
+### TextBricks 在各層級的角色
+
+每個語言層級都可以有 TextBricks 模板：
+
+- **自然語言模板**: API 規格模板、使用者故事模板、演算法描述模板
+- **高階語言模板**: for-loop、class、function、框架特定模板 (FastAPI, React)
+- **組合語言模板**: 函數序幕/結語、系統呼叫模式
+- **HDL 模板**: 計數器、狀態機、記憶體控制器
+- **電路模板**: 常見電路模式、佈線模式
+
+### 當前實現範圍
+
+**v0.3.x 階段**：
+- ✅ 支援高階程式語言（C, Python, JavaScript）
+- ✅ 序列形態（文字程式碼）完整實現
+
+**未來路線圖**：
+- 🚧 v0.4.0: 結構形態（Blockly 積木）
+- 🚧 v0.5.0: 圖譜形態（Node Flow）
+- 🚧 v0.6.0: 自然語言（規格模板）
+- 🚧 未來: Assembly、HDL、Machine Code 等其他語言層級
 
 ---
 
@@ -122,30 +217,55 @@ TextBricks 基於**「序列-結構-圖譜」三形態理論**，認為程式/�
 
 #### 1. 階層式主題系統
 
-**路徑基礎組織** - 不受語言限制的靈活內容組織
+**路徑基礎組織** - 支援跨語言層級的靈活內容組織
 
 ```
 scopes/
 └── local/
     ├── scope.json          # Scope 配置
-    ├── python/             # 語言作為頂層主題
-    │   ├── topic.json
-    │   ├── basic/          # 子主題
-    │   │   ├── topic.json
-    │   │   ├── templates/
-    │   │   └── links/
-    │   └── advanced/
-    └── algorithms/         # 語言無關主題
-        └── sorting/
+    │
+    └── templates/          # 按語言層級組織的知識單元
+        ├── _registry/      # Template Registry
+        │
+        ├── natural/        # 自然語言層級
+        │   └── english/
+        │       └── specs/
+        │           └── rest-api-endpoint/
+        │               ├── meta.json
+        │               ├── sequence.md
+        │               ├── structure.json
+        │               └── topology.json
+        │
+        ├── high-level/     # 高階程式語言
+        │   ├── python/
+        │   │   └── basics/
+        │   │       └── hello-world/    # 多形態知識單元 ⭐
+        │   │           ├── meta.json
+        │   │           ├── sequence.py
+        │   │           ├── structure.xml
+        │   │           ├── topology.json
+        │   │           └── README.md
+        │   ├── c/
+        │   └── javascript/
+        │
+        ├── low-level/      # 低階程式語言（Assembly）
+        ├── machine/        # 機器語言
+        ├── hdl/            # 硬體描述語言
+        └── physical/       # 物理電路
 ```
 
 **特色**：
-- 📁 **階層組織**：topic.json 定義子主題，支援無限嵌套
-- 🔗 **跨主題連結**：Link 機制支援主題間的引用
+- 🌍 **語言層級組織**：支援自然語言、高階語言、組合語言、HDL 等所有語言層級
+- 📦 **知識單元完整性**：每個模板包含完整的三種形態（sequence, structure, topology）
+- 🗂️ **統一路徑結構**：`templates/{language-level}/{language}/{topic}/{template-name}/`
+- 🔍 **Registry 索引**：集中式的模板註冊和查詢系統
+- 📁 **階層組織**：支援主題的無限嵌套
 - 🎨 **自訂顯示**：圖標、顏色、排序、摺疊狀態
-- 📊 **多維度組織**：可以按語言、應用場景、設計模式等多種維度組織
 
-**設計理由**：為未來的多語言比較、演算法模式、專案模板等內容提供彈性架構
+**設計理由**：
+- 統一的架構支援從規格到硬體的所有抽象層級
+- 為未來的跨語言層級轉換提供基礎
+- 清晰的組織方式便於管理和擴展
 
 #### 2. Scope 系統
 
@@ -365,8 +485,8 @@ interface ScopeConfig {
 }
 ```
 
-#### Template
-**模板結構** - 程式碼模板
+#### Template (Knowledge Unit)
+**多形態知識單元** - 包含三種形態的完整模板
 
 ```typescript
 interface Template {
@@ -374,9 +494,31 @@ interface Template {
   name: string;
   title: string;
   description?: string;
-  language: string;
-  code: string;
+
+  // 語言層級和語言
+  languageLevel: 'natural' | 'high-level' | 'low-level' | 'machine' | 'hdl' | 'physical';
+  language: string;           // python, c, javascript, verilog, etc.
+
+  // 三種形態檔案
+  forms: {
+    sequence: {
+      main: string;           // sequence.py, sequence.c, sequence.md, etc.
+      additional?: string[];  // 額外檔案 (e.g., sequence.h)
+    };
+    structure?: {
+      workspace: string;      // structure.xml (Blockly)
+      format: 'blockly' | 'json';
+    };
+    topology?: {
+      graphs: string[];       // topology.json
+      types: string[];        // call-graph, data-flow, etc.
+    };
+  };
+
+  // 元資料
   documentation?: string;
+  tags?: string[];
+  dependencies?: string[];
 }
 ```
 
