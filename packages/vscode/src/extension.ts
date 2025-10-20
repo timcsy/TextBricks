@@ -64,15 +64,17 @@ export async function activate(context: vscode.ExtensionContext) {
 
         // 如果剛剛完成初始化和資料複製，等待並重新載入
         if (wasJustInitialized) {
-            await new Promise(resolve => setTimeout(resolve, 500));
+            platform.logInfo?.('Data was just initialized, reloading all managers and templates');
+            await new Promise(resolve => setTimeout(resolve, 1000)); // 增加到 1 秒
             // 重新載入 managers 以讀取複製的資料
             await scopeManager.initialize();
             await topicManager.initialize();
             await templateRepository.initialize();
             // 重新載入 engine 的模板資料
             await textBricksEngine.loadTemplates();
+            platform.logInfo?.(`Templates reloaded: ${textBricksEngine.getTopics().length} topics`);
         }
-        
+
         // 初始化提供者（使用新架構）
         const webviewProvider = new TemplatesPanelProvider(
             context.extensionUri,
@@ -107,13 +109,9 @@ export async function activate(context: vscode.ExtensionContext) {
             platform.registerWebviewViewProvider(TemplatesPanelProvider.viewType, webviewProvider)
         );
 
-        // 如果剛完成初始化，等待 WebView 渲染後刷新以顯示新資料
+        // 如果剛完成初始化，顯示訊息
         if (wasJustInitialized) {
-            // 延遲刷新，確保 WebView 已經完全載入
-            setTimeout(async () => {
-                await webviewProvider.refresh();
-                vscode.window.showInformationMessage('TextBricks 模板已載入完成！');
-            }, 1000);
+            vscode.window.showInformationMessage('TextBricks 已初始化完成，模板已就緒！');
         }
 
         // 註冊所有命令
