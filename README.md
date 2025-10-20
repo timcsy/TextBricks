@@ -2,11 +2,11 @@
 
 A VS Code extension providing structured programming templates for multiple languages (C, Python, JavaScript) to help beginners learn programming efficiently and boost developer productivity.
 
-> **🚀 Version 0.3.2** - Latest stable release with version update data sync
+> **🚀 Version 0.3.3** - Latest stable release with improved version update logic
+>
+> **📋 v0.3.2** - Version update data sync mechanism
 >
 > **📋 v0.3.1** - UI layout improvements
->
-> **📋 v0.3.0** - Major architecture refactoring and C language template system
 
 ## ✨ Features
 
@@ -315,7 +315,19 @@ Access settings via `File > Preferences > Settings > Extensions > TextBricks`:
 - **Windows**: `%APPDATA%\TextBricks\`
 - **Linux**: `~/.config/TextBricks/`
 
-## 🔧 What's New in v0.3.2
+## 🔧 What's New in v0.3.3
+
+### 🐛 Bug Fixes & Improvements
+- **Fixed Version Update Dialog** - Dialog now shows correctly on every window reload until user makes a choice
+- **Improved Backup Structure** - Backups now saved in centralized `.backup/` directory
+- **Better User Control** - Closing dialog without choosing keeps showing it on next reload
+
+### Technical Details
+- Version tracking only updates after user explicitly chooses an option
+- Backup path: `.backup/local-{timestamp}` (easier to manage)
+- Safer backup process using copy-then-delete approach
+
+## 🔧 What's in v0.3.2
 
 ### ✨ Version Update Data Sync
 - **Smart Update Mechanism** - Automatically detects version updates

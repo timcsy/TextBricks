@@ -868,10 +868,11 @@ export class DataPathService {
             }
 
             const localScopePath = path.join(this.currentDataPath, 'scopes', 'local');
+            const backupRootPath = path.join(this.currentDataPath, '.backup');
 
             // 1. 建立備份
             const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
-            const backupPath = `${localScopePath}.backup-${timestamp}`;
+            const backupPath = path.join(backupRootPath, `local-${timestamp}`);
 
             const { promises: fs } = await import('fs');
 
@@ -885,13 +886,35 @@ export class DataPathService {
             }
 
             if (hasExistingData) {
-                // 重命名現有資料為備份
-                await fs.rename(localScopePath, backupPath);
-                result.backupPath = backupPath;
-                this.platform.logInfo?.(`Backed up existing data to: ${backupPath}`);
+                // 建立 .backup 目錄
+                await fs.mkdir(backupRootPath, { recursive: true });
+
+                // 複製現有資料到備份目錄
+                const copyResult: DataMigrationResult = {
+                    success: false,
+                    sourceLocation: localScopePath,
+                    targetLocation: backupPath,
+                    migratedFiles: 0,
+                    totalFiles: 0,
+                    duration: 0,
+                    errors: [],
+                    warnings: []
+                };
+
+                await this.copyDirectory(localScopePath, backupPath, copyResult);
+
+                if (copyResult.errors.length === 0) {
+                    result.backupPath = backupPath;
+                    this.platform.logInfo?.(`Backed up existing data to: ${backupPath}`);
+                } else {
+                    throw new Error(`Backup failed: ${copyResult.errors.join(', ')}`);
+                }
 
                 // 清理舊備份
-                await this.cleanupOldBackups(path.join(this.currentDataPath, 'scopes'), options?.maxBackups || 3);
+                await this.cleanupOldBackups(backupRootPath, options?.maxBackups || 3);
+
+                // 刪除原有資料
+                await fs.rm(localScopePath, { recursive: true });
             }
 
             // 2. 複製內建資料
@@ -956,18 +979,27 @@ export class DataPathService {
     /**
      * 清理舊備份
      */
-    private async cleanupOldBackups(scopesPath: string, maxBackups: number): Promise<void> {
+    private async cleanupOldBackups(backupRootPath: string, maxBackups: number): Promise<void> {
         try {
             const { promises: fs } = await import('fs');
-            const entries = await fs.readdir(scopesPath, { withFileTypes: true });
 
-            // 尋找所有備份目錄
+            // 檢查 .backup 目錄是否存在
+            try {
+                await fs.access(backupRootPath);
+            } catch {
+                // .backup 目錄不存在，不需要清理
+                return;
+            }
+
+            const entries = await fs.readdir(backupRootPath, { withFileTypes: true });
+
+            // 尋找所有備份目錄（格式：local-YYYY-MM-DDTHH-MM-SS）
             const backups = entries
-                .filter(e => e.isDirectory() && e.name.startsWith('local.backup-'))
+                .filter(e => e.isDirectory() && e.name.startsWith('local-'))
                 .map(e => ({
                     name: e.name,
-                    path: path.join(scopesPath, e.name),
-                    time: e.name.substring('local.backup-'.length)
+                    path: path.join(backupRootPath, e.name),
+                    time: e.name.substring('local-'.length)
                 }))
                 .sort((a, b) => b.time.localeCompare(a.time)); // 新的在前
 

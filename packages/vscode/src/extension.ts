@@ -93,22 +93,27 @@ export async function activate(context: vscode.ExtensionContext) {
                                 await context.globalState.update('textbricks.lastDataUpdate', new Date().toISOString());
 
                                 vscode.window.showInformationMessage(
-                                    `資料已更新！已備份舊資料到：\n${path.basename(result.backupPath || '')}`
+                                    `資料已更新！已備份舊資料到：\n.backup/${path.basename(result.backupPath || '')}`
                                 );
                             } else {
                                 throw new Error(result.errors.join(', '));
                             }
                         });
-                    } else {
+
+                        // 更新成功後才更新版本記錄
+                        await context.globalState.update('textbricks.lastVersion', currentVersion);
+                    } else if (choice === '保留現有資料') {
+                        // 使用者選擇保留現有資料，也更新版本記錄（避免每次都詢問）
                         platform.logInfo?.('User chose to keep existing data');
+                        await context.globalState.update('textbricks.lastVersion', currentVersion);
                     }
+                    // 如果使用者關閉對話框（choice === undefined），不更新版本記錄，下次還會詢問
                 } else {
                     // 版本更新但沒有現有資料，直接初始化
                     await dataPathService.autoInitialize();
+                    // 更新版本記錄
+                    await context.globalState.update('textbricks.lastVersion', currentVersion);
                 }
-
-                // 更新版本記錄
-                await context.globalState.update('textbricks.lastVersion', currentVersion);
 
             } catch (error) {
                 platform.logError?.(error as Error, 'Version update check failed');

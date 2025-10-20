@@ -9,6 +9,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.3.3] - 2025-10-21
+
+### 🐛 Bug Fixes
+- **版本更新提示邏輯修正**
+  - 修正版本記錄更新時機，避免重新載入後對話框消失
+  - 只在使用者明確選擇後才更新版本記錄
+  - 使用者關閉對話框時不更新版本，下次啟動時仍會提示
+
+### 🔧 Improvements
+- **備份路徑優化**
+  - 備份位置從 `scopes/local.backup-{timestamp}` 改為 `.backup/local-{timestamp}`
+  - 所有備份集中在 `.backup/` 目錄，更易於管理
+  - 改用複製後刪除的方式，確保備份過程更安全
+
+---
+
 ## [0.3.2] - 2025-10-21
 
 ### ✨ New Features
