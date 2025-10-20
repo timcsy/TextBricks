@@ -97,3 +97,21 @@ export interface DataLocationEvent {
     data: unknown;
     message?: string;
 }
+
+/**
+ * 資料更新相關
+ */
+export interface VersionInfo {
+    version: string;
+    installedAt: Date;
+    lastDataUpdate?: Date;
+}
+
+export interface DataUpdateResult {
+    success: boolean;
+    backupPath?: string;
+    updatedFiles: number;
+    errors: string[];
+    warnings: string[];
+    duration: number;
+}

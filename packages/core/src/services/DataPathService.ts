@@ -11,7 +11,9 @@ import {
     DataLocationValidation,
     DataLocationConfig,
     DataLocationStats,
-    DataMigrationResult
+    DataMigrationResult,
+    DataUpdateResult,
+    VersionInfo
 } from '@textbricks/shared';
 import { IPlatform } from '../interfaces/IPlatform';
 
@@ -160,7 +162,6 @@ export class DataPathService {
      */
     async getDataPath(): Promise<string> {
         if (!this.currentDataPath) {
-            this.platform.logWarning?.('currentDataPath is undefined, initializing...', 'DataPathService');
             await this.initialize();
         }
 
@@ -841,6 +842,149 @@ export class DataPathService {
             this.platform.logInfo?.(`Data path changed from ${oldPath} to ${newPath}`);
         } catch (error) {
             this.platform.logError?.(error as Error, 'DataPathService.notifyPathChanged');
+        }
+    }
+
+    // ==================== 版本更新與資料同步 ====================
+
+    /**
+     * 備份現有資料並用內建資料取代
+     */
+    async backupAndReplace(options?: {
+        maxBackups?: number;
+    }): Promise<DataUpdateResult> {
+        const startTime = Date.now();
+        const result: DataUpdateResult = {
+            success: false,
+            updatedFiles: 0,
+            errors: [],
+            warnings: [],
+            duration: 0
+        };
+
+        try {
+            if (!this.currentDataPath) {
+                throw new Error('Data path not initialized');
+            }
+
+            const localScopePath = path.join(this.currentDataPath, 'scopes', 'local');
+
+            // 1. 建立備份
+            const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
+            const backupPath = `${localScopePath}.backup-${timestamp}`;
+
+            const { promises: fs } = await import('fs');
+
+            // 檢查是否有現有資料
+            let hasExistingData = false;
+            try {
+                await fs.access(localScopePath);
+                hasExistingData = true;
+            } catch {
+                // 沒有現有資料，不需要備份
+            }
+
+            if (hasExistingData) {
+                // 重命名現有資料為備份
+                await fs.rename(localScopePath, backupPath);
+                result.backupPath = backupPath;
+                this.platform.logInfo?.(`Backed up existing data to: ${backupPath}`);
+
+                // 清理舊備份
+                await this.cleanupOldBackups(path.join(this.currentDataPath, 'scopes'), options?.maxBackups || 3);
+            }
+
+            // 2. 複製內建資料
+            const extensionPath = typeof (this.platform as any).getExtensionPath === 'function'
+                ? (this.platform as any).getExtensionPath()
+                : (this.platform as any).getExtensionContext?.()?.extensionPath;
+
+            if (!extensionPath) {
+                throw new Error('Cannot get extension path');
+            }
+
+            // 尋找內建資料來源
+            let sourceDataPath: string | null = null;
+
+            // 嘗試項目根目錄的資料（開發模式）
+            const projectRootDataPath = path.join(extensionPath, '..', '..', '..', 'data', 'local');
+            try {
+                await fs.access(projectRootDataPath);
+                sourceDataPath = projectRootDataPath;
+            } catch {
+                // 嘗試打包後的資料（發布模式）
+                const distDataPath = path.join(extensionPath, 'data', 'local');
+                try {
+                    await fs.access(distDataPath);
+                    sourceDataPath = distDataPath;
+                } catch {
+                    throw new Error('Cannot find bundled data');
+                }
+            }
+
+            // 3. 複製資料
+            await fs.mkdir(localScopePath, { recursive: true });
+            const copyResult: DataMigrationResult = {
+                success: false,
+                sourceLocation: sourceDataPath,
+                targetLocation: localScopePath,
+                migratedFiles: 0,
+                totalFiles: 0,
+                duration: 0,
+                errors: [],
+                warnings: []
+            };
+
+            await this.copyDirectory(sourceDataPath, localScopePath, copyResult);
+
+            result.updatedFiles = copyResult.migratedFiles;
+            result.errors = copyResult.errors;
+            result.warnings = copyResult.warnings;
+            result.success = copyResult.errors.length === 0;
+
+            this.platform.logInfo?.(`✓ Replaced data with bundled version: ${result.updatedFiles} files`);
+
+        } catch (error) {
+            result.errors.push(error instanceof Error ? error.message : String(error));
+            this.platform.logError?.(error as Error, 'DataPathService.backupAndReplace');
+        }
+
+        result.duration = Date.now() - startTime;
+        return result;
+    }
+
+    /**
+     * 清理舊備份
+     */
+    private async cleanupOldBackups(scopesPath: string, maxBackups: number): Promise<void> {
+        try {
+            const { promises: fs } = await import('fs');
+            const entries = await fs.readdir(scopesPath, { withFileTypes: true });
+
+            // 尋找所有備份目錄
+            const backups = entries
+                .filter(e => e.isDirectory() && e.name.startsWith('local.backup-'))
+                .map(e => ({
+                    name: e.name,
+                    path: path.join(scopesPath, e.name),
+                    time: e.name.substring('local.backup-'.length)
+                }))
+                .sort((a, b) => b.time.localeCompare(a.time)); // 新的在前
+
+            // 刪除超過數量的舊備份
+            if (backups.length > maxBackups) {
+                const toDelete = backups.slice(maxBackups);
+                for (const backup of toDelete) {
+                    try {
+                        await fs.rm(backup.path, { recursive: true });
+                        this.platform.logInfo?.(`Removed old backup: ${backup.name}`);
+                    } catch (error) {
+                        this.platform.logWarning?.(`Failed to remove backup ${backup.name}: ${error}`, 'DataPathService');
+                    }
+                }
+            }
+        } catch (error) {
+            this.platform.logWarning?.(`Failed to cleanup old backups: ${error}`, 'DataPathService');
         }
     }
 

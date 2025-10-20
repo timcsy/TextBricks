@@ -9,6 +9,40 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.3.2] - 2025-10-21
+
+### ✨ New Features
+- **版本更新資料同步機制**
+  - 首次安裝時自動初始化模板資料
+  - 版本更新時詢問使用者是否更新模板資料
+  - 支援備份現有資料（自動清理舊備份，預設保留 3 個）
+
+### ⚙️ Configuration
+- 新增設定選項 `textbricks.maxDataBackups` - 設定保留的備份數量上限（預設：3，範圍：0-10）
+
+### 🐛 Bug Fixes
+- 移除不必要的 "currentDataPath is undefined" 警告訊息
+- 改善首次安裝流程，確保資料正確初始化
+
+### 🔧 Internal
+- 新增 `DataPathService.backupAndReplace()` 方法
+- 新增版本追蹤機制（使用 globalState）
+- 改進資料初始化邏輯，支援三種情境（首次安裝、版本更新、正常啟動）
+
+---
+
+## [0.3.1] - 2025-10-20
+
+### 🎨 UI Layout Improvements
+- 重組 Templates Panel header，改善視覺層次
+- 優化資訊流動和導航結構
+
+### 🐛 Bug Fixes
+- 修復初始化流程 - 模板現在會在首次安裝時立即載入
+- 改善啟動可靠性
+
+---
+
 ## [Unreleased] - 0.3.0 Development
 
 ### 🏗️ Core Architecture Overhaul (2025-09-30)

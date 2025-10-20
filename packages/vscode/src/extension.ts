@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import * as path from 'path';
 import { VSCodePlatform } from './adapters/vscode';
 import { TextBricksEngine, CodeOperationService, SearchService, DocumentationService, DataPathService, ScopeManager, TopicManager, TemplateRepository } from '@textbricks/core';
 import { TemplatesPanelProvider } from './providers/templates-panel/TemplatesPanelProvider';
@@ -26,11 +27,119 @@ export async function activate(context: vscode.ExtensionContext) {
         // 初始化資料路徑服務
         const dataPathService = DataPathService.getInstance(platform);
 
-        // 嘗試自動初始化資料位置
-        try {
-            await dataPathService.autoInitialize();
-        } catch (error) {
-            platform.logError?.(error as Error, 'autoInitialize failed');
+        // 版本檢查與資料更新
+        const currentVersion = context.extension.packageJSON.version;
+        const lastVersion = context.globalState.get<string>('textbricks.lastVersion');
+        const isFirstInstall = !lastVersion;
+        const isVersionUpdated = lastVersion && lastVersion !== currentVersion;
+
+        platform.logInfo?.(`Version check: current=${currentVersion}, last=${lastVersion}, isFirstInstall=${isFirstInstall}, isUpdated=${isVersionUpdated}`);
+
+        // 首次安裝：直接初始化，不詢問
+        if (isFirstInstall) {
+            try {
+                const initialized = await dataPathService.autoInitialize();
+                if (initialized) {
+                    await context.globalState.update('textbricks.lastVersion', currentVersion);
+                    await context.globalState.update('textbricks.lastDataUpdate', new Date().toISOString());
+                    platform.logInfo?.('First install: data initialized successfully');
+                }
+            } catch (error) {
+                platform.logError?.(error as Error, 'First install initialization failed');
+            }
+        }
+        // 版本更新：詢問是否更新資料
+        else if (isVersionUpdated) {
+            try {
+                const dataPath = await dataPathService.getDataPath();
+                const localScopePath = path.join(dataPath, 'scopes', 'local');
+
+                // 檢查是否有現有資料
+                const { promises: fs } = await import('fs');
+                let hasExistingData = false;
+                try {
+                    await fs.access(localScopePath);
+                    const contents = await fs.readdir(localScopePath);
+                    hasExistingData = contents.length > 0;
+                } catch {
+                    hasExistingData = false;
+                }
+
+                if (hasExistingData) {
+                    // 詢問使用者是否要更新資料
+                    const choice = await vscode.window.showInformationMessage(
+                        `TextBricks 已更新至 v${currentVersion}\n\n是否要使用最新的模板資料取代現有資料？\n\n（現有資料將會備份到 .backup 資料夾）`,
+                        { modal: true },
+                        '使用最新資料',
+                        '保留現有資料'
+                    );
+
+                    if (choice === '使用最新資料') {
+                        // 顯示進度訊息
+                        await vscode.window.withProgress({
+                            location: vscode.ProgressLocation.Notification,
+                            title: 'TextBricks',
+                            cancellable: false
+                        }, async (progress) => {
+                            progress.report({ message: '正在備份現有資料...' });
+
+                            const maxBackups = vscode.workspace.getConfiguration('textbricks').get<number>('maxDataBackups') || 3;
+                            const result = await dataPathService.backupAndReplace({ maxBackups });
+
+                            if (result.success) {
+                                progress.report({ message: '資料更新完成！' });
+                                platform.logInfo?.(`Data updated successfully: ${result.updatedFiles} files, backup: ${result.backupPath}`);
+
+                                await context.globalState.update('textbricks.lastDataUpdate', new Date().toISOString());
+
+                                vscode.window.showInformationMessage(
+                                    `資料已更新！已備份舊資料到：\n${path.basename(result.backupPath || '')}`
+                                );
+                            } else {
+                                throw new Error(result.errors.join(', '));
+                            }
+                        });
+                    } else {
+                        platform.logInfo?.('User chose to keep existing data');
+                    }
+                } else {
+                    // 版本更新但沒有現有資料，直接初始化
+                    await dataPathService.autoInitialize();
+                }
+
+                // 更新版本記錄
+                await context.globalState.update('textbricks.lastVersion', currentVersion);
+
+            } catch (error) {
+                platform.logError?.(error as Error, 'Version update check failed');
+                vscode.window.showErrorMessage(`資料更新失敗：${error instanceof Error ? error.message : String(error)}`);
+            }
+        }
+        // 既不是首次安裝也不是版本更新，但仍需確保資料存在
+        else {
+            try {
+                const dataPath = await dataPathService.getDataPath();
+                const localScopePath = path.join(dataPath, 'scopes', 'local');
+                const { promises: fs } = await import('fs');
+
+                // 檢查資料是否存在
+                let hasData = false;
+                try {
+                    await fs.access(localScopePath);
+                    const contents = await fs.readdir(localScopePath);
+                    hasData = contents.length > 0;
+                } catch {
+                    hasData = false;
+                }
+
+                // 如果沒有資料，自動初始化
+                if (!hasData) {
+                    platform.logInfo?.('No data found, initializing...');
+                    await dataPathService.autoInitialize();
+                }
+            } catch (error) {
+                platform.logError?.(error as Error, 'Data check failed');
+            }
         }
 
         // 檢查是否剛剛完成資料複製（而不是只檢查是否初始化）
