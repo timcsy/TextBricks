@@ -388,8 +388,8 @@ export class TemplatesPanelProvider implements vscode.WebviewViewProvider {
                     <h2><span class="logo"><img src="${webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'assets', 'icons', 'TextBricks.svg'))}" alt="TextBricks"></span>TextBricks</h2>
                     ${this.navigationRenderer.generateCollapseControlsHtml()}
                 </div>
-                <p class="subtitle">點擊複製 • 拖曳插入</p>
             </div>
+            <p class="subtitle">點擊複製 • 拖曳插入</p>
             <div class="breadcrumb-nav">
                 <div class="navigation-controls">
                     ${this.navigationRenderer.generateNavigationButtonsHtml()}

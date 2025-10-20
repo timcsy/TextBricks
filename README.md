@@ -2,9 +2,9 @@
 
 A VS Code extension providing structured programming templates for multiple languages (C, Python, JavaScript) to help beginners learn programming efficiently and boost developer productivity.
 
-> **🚀 Version 0.2.5** - Latest stable release with UI/UX improvements
+> **🚀 Version 0.3.1** - Latest stable release with UI layout improvements
 >
-> **🔧 v0.3.0** - Currently in development with major architecture refactoring
+> **📋 v0.3.0** - Major architecture refactoring and C language template system
 
 ## ✨ Features
 
@@ -313,7 +313,17 @@ Access settings via `File > Preferences > Settings > Extensions > TextBricks`:
 - **Windows**: `%APPDATA%\TextBricks\`
 - **Linux**: `~/.config/TextBricks/`
 
-## 🔧 What's New in v0.3.0 (In Development)
+## 🔧 What's New in v0.3.1
+
+### 🎨 UI Layout Improvements
+- Reorganized Templates Panel header for better visual hierarchy
+- Improved information flow and navigation structure
+
+### 🐛 Bug Fixes
+- Fixed initialization flow - templates now load immediately on first installation
+- Improved startup reliability
+
+## 🔧 What's in v0.3.0
 
 ### 🏗️ Core Architecture Overhaul
 - **Hierarchical Topic System**: topic.json-based nested topics replacing flat structure

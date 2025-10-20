@@ -5,6 +5,43 @@ All notable changes to the TextBricks extension will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.1] - 2025-10-20
+
+**UI 改進版本**: Templates Panel 介面佈局優化
+
+### 🎨 UI/UX 改進
+
+#### Templates Panel 標題區域重構
+- **調整介面階層結構**: 優化資訊組織的視覺流程
+  - 標題列維持在最上方 (TextBricks logo + 展開/收合按鈕)
+  - 使用說明移至標題下方 ("點擊複製 • 拖曳插入")
+  - 導航麵包屑移至最下方 (← → local)
+- **CSS 佈局調整**:
+  - `.header-top` 改為 `flex-direction: column` 實現垂直排列
+  - `.subtitle` 移除居中對齊，改為靠左對齊
+  - 間距調整以達到更好的視覺平衡
+
+### 🐛 Bug 修復
+
+#### 初始化流程優化
+- **移除阻塞訊息框**: `DataPathService.autoInitialize()` 中的 `showInformationMessage()` 會中斷初始化流程
+  - 改由 `extension.ts` 根據 `wasJustMigrated()` 狀態決定是否顯示訊息
+  - 確保首次安裝時模板能立即載入，無需重啟 VSCode
+- **清理診斷日誌**: 移除 `DataPathService` 中過多的 "===" 診斷日誌
+  - 保留關鍵資訊日誌 (如遷移完成訊息)
+  - 改善日誌可讀性
+- **增強錯誤處理**: `extension.ts` 中為 `autoInitialize()` 和 `wasJustMigrated()` 增加 try-catch
+
+### 📝 文件更新
+- 更新 README.md 版本資訊和變更說明
+- 更新所有 package.json 版本號至 0.3.1
+
+**變更檔案**:
+- `packages/vscode/src/providers/templates-panel/TemplatesPanelProvider.ts`: HTML 結構調整
+- `assets/css/templates-panel/templates-panel.css`: CSS 佈局更新
+- `packages/core/src/services/DataPathService.ts`: 移除阻塞訊息和診斷日誌
+- `packages/vscode/src/extension.ts`: 增強錯誤處理
+
 ## [0.3.0] - 2025-10-19
 
 **重大版本發布**: 完整的 C 語言模板系統、Usage 統計重構、Provider 模組化拆分、UI 增強
