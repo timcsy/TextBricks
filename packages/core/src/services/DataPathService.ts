@@ -609,27 +609,31 @@ export class DataPathService {
             }
 
             // 檢查新位置是否已經有資料
+            let needsCopy = false;
             try {
                 const newDirContents = await fs.readdir(newLocalScopePath);
-                if (newDirContents.length === 0) {
-                    // 複製資料到新位置
-                    const migrationResult = {
-                        success: false,
-                        sourceLocation: sourceDataPath,
-                        targetLocation: newLocalScopePath,
-                        migratedFiles: 0,
-                        totalFiles: 0,
-                        duration: 0,
-                        errors: [],
-                        warnings: []
-                    };
-
-                    await this.copyDirectory(sourceDataPath, newLocalScopePath, migrationResult);
-                    this.platform.logInfo?.(`Migrated initial data from ${sourceDataPath} to ${newLocalScopePath}. Files: ${migrationResult.migratedFiles}`);
-                }
+                needsCopy = newDirContents.length === 0;
             } catch {
-                // 新目錄讀取失敗，可能需要重新創建
+                // 新目錄不存在，需要創建並複製
                 await fs.mkdir(newLocalScopePath, { recursive: true });
+                needsCopy = true;
+            }
+
+            // 如果需要複製資料
+            if (needsCopy) {
+                const migrationResult = {
+                    success: false,
+                    sourceLocation: sourceDataPath,
+                    targetLocation: newLocalScopePath,
+                    migratedFiles: 0,
+                    totalFiles: 0,
+                    duration: 0,
+                    errors: [],
+                    warnings: []
+                };
+
+                await this.copyDirectory(sourceDataPath, newLocalScopePath, migrationResult);
+                this.platform.logInfo?.(`Migrated initial data from ${sourceDataPath} to ${newLocalScopePath}. Files: ${migrationResult.migratedFiles}`);
             }
         } catch (error) {
             this.platform.logError?.(error as Error, 'DataPathService.migrateInitialData');
