@@ -27,11 +27,11 @@ export async function activate(context: vscode.ExtensionContext) {
         const dataPathService = DataPathService.getInstance(platform);
 
         // 嘗試自動初始化資料位置
-        const wasJustInitialized = await dataPathService.autoInitialize();
-        if (!wasJustInitialized) {
-            // 用戶取消了初始化，仍然嘗試使用預設路徑
-            await dataPathService.initialize();
-        }
+        await dataPathService.autoInitialize();
+
+        // 檢查是否剛剛完成資料複製（而不是只檢查是否初始化）
+        const wasJustMigrated = dataPathService.wasJustMigrated();
+        platform.logInfo?.(`Data migration status: ${wasJustMigrated ? 'Just migrated' : 'Already existed'}`);
 
         // 獲取當前資料路徑
         const dataPath = await dataPathService.getDataPath();
@@ -62,9 +62,9 @@ export async function activate(context: vscode.ExtensionContext) {
         // 初始化核心引擎，使用動態資料路徑
         await textBricksEngine.initialize(localScopePath);
 
-        // 如果剛剛完成初始化和資料複製，等待並重新載入
-        if (wasJustInitialized) {
-            platform.logInfo?.('Data was just initialized, reloading all managers and templates');
+        // 如果剛剛完成資料複製，等待並重新載入
+        if (wasJustMigrated) {
+            platform.logInfo?.('⚠️ Data was just migrated, reloading all managers and templates');
             await new Promise(resolve => setTimeout(resolve, 1000)); // 增加到 1 秒
             // 重新載入 managers 以讀取複製的資料
             await scopeManager.initialize();
@@ -72,7 +72,7 @@ export async function activate(context: vscode.ExtensionContext) {
             await templateRepository.initialize();
             // 重新載入 engine 的模板資料
             await textBricksEngine.loadTemplates();
-            platform.logInfo?.(`Templates reloaded: ${textBricksEngine.getTopics().length} topics`);
+            platform.logInfo?.(`✓ Templates reloaded: ${textBricksEngine.getTopics().length} topics`);
         }
 
         // 初始化提供者（使用新架構）
@@ -109,8 +109,8 @@ export async function activate(context: vscode.ExtensionContext) {
             platform.registerWebviewViewProvider(TemplatesPanelProvider.viewType, webviewProvider)
         );
 
-        // 如果剛完成初始化，顯示訊息
-        if (wasJustInitialized) {
+        // 如果剛完成資料複製，顯示訊息
+        if (wasJustMigrated) {
             vscode.window.showInformationMessage('TextBricks 已初始化完成，模板已就緒！');
         }
 
