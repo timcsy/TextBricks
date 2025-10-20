@@ -27,11 +27,20 @@ export async function activate(context: vscode.ExtensionContext) {
         const dataPathService = DataPathService.getInstance(platform);
 
         // 嘗試自動初始化資料位置
-        await dataPathService.autoInitialize();
+        try {
+            await dataPathService.autoInitialize();
+        } catch (error) {
+            platform.logError?.(error as Error, 'autoInitialize failed');
+        }
 
         // 檢查是否剛剛完成資料複製（而不是只檢查是否初始化）
-        const wasJustMigrated = dataPathService.wasJustMigrated();
-        platform.logInfo?.(`Data migration status: ${wasJustMigrated ? 'Just migrated' : 'Already existed'}`);
+        let wasJustMigrated = false;
+        try {
+            wasJustMigrated = dataPathService.wasJustMigrated();
+            platform.logInfo?.(`Data migration status: ${wasJustMigrated ? 'Just migrated' : 'Already existed'}`);
+        } catch (error) {
+            platform.logError?.(error as Error, 'wasJustMigrated check failed');
+        }
 
         // 獲取當前資料路徑
         const dataPath = await dataPathService.getDataPath();

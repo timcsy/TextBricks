@@ -140,9 +140,8 @@ export class DataPathService {
                 // 注意：initializeDefaultPath 已經調用了 migrateInitialData
                 // 如果有特殊需求可以在這裡再次調用
 
-                await this.platform.ui.showInformationMessage(
-                    `TextBricks 資料位置已初始化：${defaultPath}`
-                );
+                // 不在這裡顯示訊息，讓 extension.ts 根據 wasJustMigrated 來決定
+                // 這樣可以避免訊息框阻塞執行流程
                 return true;
             }
 
@@ -568,18 +567,12 @@ export class DataPathService {
      */
     private async migrateInitialData(): Promise<void> {
         try {
-            this.platform.logInfo?.('=== Starting migrateInitialData ===');
-
             // 獲取擴展路徑
             const extensionPath = typeof (this.platform as any).getExtensionPath === 'function'
                 ? (this.platform as any).getExtensionPath()
                 : (this.platform as any).getExtensionContext?.()?.extensionPath;
 
-            this.platform.logInfo?.(`Extension path: ${extensionPath}`);
-            this.platform.logInfo?.(`Current data path: ${this.currentDataPath}`);
-
             if (!extensionPath || !this.currentDataPath) {
-                this.platform.logInfo?.('Missing extension path or current data path, aborting migration');
                 return;
             }
 
@@ -592,43 +585,32 @@ export class DataPathService {
             // 如果上面的路徑不存在，嘗試其他可能的路徑
             try {
                 await fs.access(projectRootDataPath);
-                this.platform.logInfo?.(`Project root data path exists: ${projectRootDataPath}`);
             } catch {
-                this.platform.logInfo?.(`Project root data path not found: ${projectRootDataPath}`);
                 // 嘗試從 packages/vscode 向上查找
                 projectRootDataPath = path.join(extensionPath, '..', '..', 'data', 'local');
                 try {
                     await fs.access(projectRootDataPath);
-                    this.platform.logInfo?.(`Alternative project root data path exists: ${projectRootDataPath}`);
                 } catch {
-                    this.platform.logInfo?.(`Alternative project root data path not found: ${projectRootDataPath}`);
                     // 最後嘗試相對於當前目錄
                     projectRootDataPath = path.resolve(process.cwd(), 'data', 'local');
-                    this.platform.logInfo?.(`Fallback to cwd-relative path: ${projectRootDataPath}`);
                 }
             }
 
             // 檢查打包後的 data/local（發布模式）
             const distDataPath = path.join(extensionPath, 'data', 'local');
-            this.platform.logInfo?.(`Checking dist data path: ${distDataPath}`);
-
             const newLocalScopePath = path.join(this.currentDataPath, 'scopes', 'local');
-            this.platform.logInfo?.(`Target path: ${newLocalScopePath}`);
 
             // 先嘗試項目根目錄的資料（開發模式）
             let sourceDataPath = projectRootDataPath;
             try {
                 await fs.access(projectRootDataPath);
-                this.platform.logInfo?.(`✓ Found development data at ${projectRootDataPath}`);
             } catch {
                 // 如果開發資料不存在，嘗試發布資料
                 try {
                     await fs.access(distDataPath);
                     sourceDataPath = distDataPath;
-                    this.platform.logInfo?.(`✓ Found distribution data at ${distDataPath}`);
                 } catch {
                     // 兩個都不存在，這是正常的新安裝
-                    this.platform.logInfo?.('✗ No existing data found in any location, starting fresh');
                     return;
                 }
             }
@@ -638,10 +620,8 @@ export class DataPathService {
             try {
                 const newDirContents = await fs.readdir(newLocalScopePath);
                 needsCopy = newDirContents.length === 0;
-                this.platform.logInfo?.(`Target directory has ${newDirContents.length} items, needsCopy: ${needsCopy}`);
             } catch {
                 // 新目錄不存在，需要創建並複製
-                this.platform.logInfo?.('Target directory does not exist, creating and will copy');
                 await fs.mkdir(newLocalScopePath, { recursive: true });
                 needsCopy = true;
             }
@@ -659,14 +639,11 @@ export class DataPathService {
                     warnings: []
                 };
 
-                this.platform.logInfo?.(`Starting copy from ${sourceDataPath} to ${newLocalScopePath}`);
                 await this.copyDirectory(sourceDataPath, newLocalScopePath, migrationResult);
-                this.platform.logInfo?.(`✓ Migrated initial data. Files: ${migrationResult.migratedFiles}`);
+                this.platform.logInfo?.(`✓ Migrated initial data: ${migrationResult.migratedFiles} files from ${sourceDataPath}`);
 
                 // 設置標記，表示剛剛完成資料複製
                 (this as any)._justMigrated = true;
-            } else {
-                this.platform.logInfo?.('Target directory already has data, skipping migration');
             }
         } catch (error) {
             this.platform.logError?.(error as Error, 'DataPathService.migrateInitialData');
